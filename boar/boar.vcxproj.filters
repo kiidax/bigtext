@@ -21,10 +21,10 @@
     <ClCompile Include="boar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="win32main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
