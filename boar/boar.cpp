@@ -5,36 +5,21 @@
 #include "stdafx.h"
 
 #include "boar.h"
+#include "buffer.h"
 
 namespace boar
 {
-    using namespace std;
-
-    int Main(const vector<u16string>& args)
+    int Main(const std::vector<std::u16string>& args)
     {
-        Buffer<char8_t> buffer;
-        Cursor<char8_t> cursor(buffer);
+        Buffer<char> buffer;
 
-        ifstream fin;
-        fin.open("test.txt");
-        if (fin.is_open())
-        {
-            string line;
-            while (getline(fin, line))
-            {
-                c8string c8line(line.begin(), line.end());
-                c8line += '\n';
-                cursor.Append(c8line.c_str(), c8line.c_str() + c8line.length());
-            }
-        }
-
-        cursor.MoveBeginningOfBuffer();
+        buffer.Open(args[0].c_str());
+        buffer.MoveBeginningOfBuffer();
         while (true)
         {
-            auto c8line = cursor.GetLineAndMoveNext();
-            if (c8line.empty()) break;
-            string line(c8line.begin(), c8line.end());
-            std::cout << line << endl;
+            auto line = buffer.GetLineAndMoveNext();
+            if (line.empty()) break;
+            std::cout << line << std::endl;
         }
 
         return 0;
