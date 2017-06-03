@@ -56,11 +56,10 @@ namespace boar {
         L2Node<charT>* _l2node;
         charT* _gapStart;
         charT* _gapEnd;
-        charT* _current;
 
     public:
         Cursor(Buffer<charT>& buffer) : _buffer(buffer), _l1node(), _l2node(),
-            _gapStart(nullptr), _gapEnd(nullptr), _current(nullptr)
+            _gapStart(), _gapEnd()
         {
         }
         ~Cursor() {}

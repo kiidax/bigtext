@@ -58,7 +58,6 @@ namespace boar
         {
             assert(_gapStart == nullptr);
             assert(_gapEnd == nullptr);
-            assert(_current == nullptr);
 
             (*_l1node)._children.push_back(L2Node<charT>());
             _l2node = &(*_l1node)._children.back();
@@ -70,12 +69,10 @@ namespace boar
 
             _gapStart = _l2node->_data;
             _gapEnd = _l2node->_data + _l2node->_length;
-            _current = _l2node->_data;
         }
 
         assert(_gapStart != nullptr);
         assert(_gapEnd != nullptr);
-        assert(_current != nullptr);
 
         if (_gapEnd - _gapStart < end - start)
         {
@@ -86,7 +83,6 @@ namespace boar
             // Adjust the pointers.
             _gapStart = newData + (_gapStart - _l2node->_data);
             _gapEnd = newData + (_gapEnd - _l2node->_data);
-            _current = newData + (_current - _l2node->_data);
 
             _l2node->_data = newData;
             _l2node->_length = newLength;
@@ -94,7 +90,6 @@ namespace boar
 
         memcpy(_gapStart, start, (end - start) * sizeof(charT));
         _gapStart += end - start;
-        _current += end - start;
     }
 
     template<typename charT>
@@ -106,20 +101,20 @@ namespace boar
         }
 
         charT *it;
-        for (it = _current; it != _l2node->_data + _l2node->_length; ++it)
+        for (it = _gapStart; it != _l2node->_data + _l2node->_length; ++it)
         {
             if (*it == '\n')
                 break;
         }
 
-        basic_string<charT> ret(_current, it - _current);
+        basic_string<charT> ret(_gapStart, it - _gapStart);
 
-        _current = it + 1;
-        if (_current == _l2node->_data + _l2node->_length)
+        _gapStart = it + 1;
+        _gapEnd = _gapEnd;
+        if (_gapStart == _l2node->_data + _l2node->_length)
         {
             _l1node = nullptr;
             _l2node = nullptr;
-            _current = nullptr;
             _gapStart = nullptr;
             _gapEnd = nullptr;
         }
@@ -135,11 +130,11 @@ namespace boar
         _l2node = _l1node->_children.data();
         _gapStart = _l2node->_data + _l2node->_length;
         _gapEnd = _gapStart;
-        _current = _l2node->_data;
+        _gapStart = _l2node->_data;
     }
     template<typename charT>
     void Cursor<charT>::_CloseNode()
     {
-        _l2node->_length = _current - _l2node->_data;
+        _l2node->_length = _gapStart - _l2node->_data;
     }
 }
