@@ -34,4 +34,7 @@
     <None Include="LICENSE.md" />
     <None Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="test.txt" />
+  </ItemGroup>
 </Project>
