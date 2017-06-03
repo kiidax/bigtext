@@ -1,3 +1,3 @@
-# TextKit
+# Boar
 
-TextKit is a toolkit to modify text files.
+Boar is a toolkit to modify text files.
