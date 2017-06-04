@@ -6,15 +6,16 @@
 
 #include "boar.h"
 #include "buffer.h"
+#include "cursor.h"
 
 namespace boar
 {
     int Main(const std::vector<std::u16string>& args)
     {
         Buffer<char> buffer;
+        buffer.Open(args[0].c_str());
         Cursor<char> cursor(buffer);
 
-        cursor.Open(args[0].c_str());
         cursor.MoveBeginningOfBuffer();
         while (true)
         {

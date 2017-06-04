@@ -6,22 +6,24 @@
 
 #include "boar.h"
 #include "buffer.h"
+#include "cursor.h"
 
 namespace boar
 {
     template<>
-    void Cursor<char>::Open(const char16_t* fileName)
+    void Buffer<char>::Open(const char16_t* fileName)
     {
         std::ifstream fin;
         fin.open((char*)FromUnicode(fileName).c_str());
         if (fin.is_open())
         {
+            Cursor<char> cursor(*this);
             std::string line;
             while (std::getline(fin, line))
             {
                 std::string line(line.begin(), line.end());
                 line += '\n';
-                Append(line.c_str(), line.c_str() + line.length());
+                cursor.Append(line.c_str(), line.c_str() + line.length());
             }
         }
     }
