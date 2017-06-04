@@ -71,10 +71,9 @@ namespace boar {
     private:
         ChildNodeType _root;
     public:
-        Buffer() :
-            _node2(&_root), _node1(),
-            _gap0()
+        Buffer() : _gap2(), _gap1(), _gap0()
         {
+            _gap2.node = &_root;
         }
         ~Buffer() {}
         void Open(const char16_t * fileName);
@@ -86,8 +85,8 @@ namespace boar {
         void _CloseNode();
 
     private:
-        BufferNode<charT, 2>* _node2;
-        BufferNode<charT, 1>* _node1;
+        BufferGap<charT, 2> _gap2;
+        BufferGap<charT, 1> _gap1;
         BufferGap<charT, 0> _gap0;
     };
 
@@ -98,14 +97,14 @@ namespace boar {
         assert(end != nullptr);
 
         // This is the root and always there.
-        assert(_node2 != &_root);
+        assert(_gap2.node != &_root);
 
-        if (_node1 == nullptr)
+        if (_gap1.node == nullptr)
         {
             assert(_gap0.node == nullptr);
 
-            _node2->_children.push_back(BufferNode<charT, 1>());
-            _node1 = &_node2->_children.back();
+            _gap2.node->_children.push_back(BufferNode<charT, 1>());
+            _gap1.node = &_gap2.node->_children.back();
         }
 
         if (_gap0.node == nullptr)
@@ -113,8 +112,8 @@ namespace boar {
             assert(_gap0.start == 0);
             assert(_gap0.end == 0);
 
-            (*_node1)._children.push_back(BufferNode<charT, 0>());
-            _gap0.node = &(*_node1)._children.back();
+            (*_gap1.node)._children.push_back(BufferNode<charT, 0>());
+            _gap0.node = &(*_gap1.node)._children.back();
         }
 
         _gap0.Reserve(end - start);
@@ -125,7 +124,7 @@ namespace boar {
     template<typename charT>
     std::basic_string<charT> Buffer<charT>::GetLineAndMoveNext()
     {
-        if (_node1 == nullptr)
+        if (_gap1.node == nullptr)
         {
             return std::basic_string<charT>();
         }
@@ -143,7 +142,7 @@ namespace boar {
         _gap0.end = _gap0.end;
         if (_gap0.start == _gap0.node->_children.size())
         {
-            _node1 = nullptr;
+            _gap1.node = nullptr;
             _gap0.node = nullptr;
             _gap0.start = 0;
             _gap0.end = 0;
@@ -156,9 +155,9 @@ namespace boar {
     void Buffer<charT>::MoveBeginningOfBuffer()
     {
         _CloseNode();
-        _node2 = &_root;
-        _node1 = &_node2->_children.front();
-        _gap0.node = &_node1->_children.front();
+        _gap2.node = &_root;
+        _gap1.node = &_gap2.node->_children.front();
+        _gap0.node = &_gap1.node->_children.front();
         _gap0.start = 0;
         _gap0.end = 0;
     }
