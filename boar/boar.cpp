@@ -6,7 +6,6 @@
 
 #include "boar.h"
 #include "buffer.h"
-#include "cursor.h"
 
 namespace boar
 {
@@ -14,12 +13,11 @@ namespace boar
     {
         Buffer<char> buffer;
         buffer.Open(args[0].c_str());
-        Cursor<char> cursor(buffer);
 
-        cursor.MoveBeginningOfBuffer();
+        buffer.MoveBeginningOfBuffer();
         while (true)
         {
-            auto line = cursor.GetLineAndMoveNext();
+            auto line = buffer.GetLineAndMoveNext();
             if (line.empty()) break;
             std::cout << line << std::endl;
         }

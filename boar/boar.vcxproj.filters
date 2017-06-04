@@ -47,8 +47,5 @@
     <ClInclude Include="boar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cursor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
