@@ -81,11 +81,13 @@ namespace boar {
     public:
         Buffer() : _gap2(), _gap1(), _gap0()
         {
+            _lineSeparator = '\n';
             _gap2.Visit(&_root, 0);
         }
         ~Buffer() {}
         void Open(const char16_t* fileName);
-        void Insert(const charT* start, const charT* end);
+        template<typename charIterator>
+        void Insert(charIterator start, charIterator end);
         std::basic_string<charT> GetLineAndMoveNext();
         void MoveBeginningOfBuffer();
 
@@ -93,17 +95,28 @@ namespace boar {
         void _CloseNode();
 
     private:
+#ifdef _DEBUG
+        const int MaxNode0Size = 1024;
+        const int MaxNode1Size = 5;
+        const int MaxNode2Size = 3;
+#else
+        const int MaxNode0Size = 1024;
+        const int MaxNode1Size = 5;
+        const int MaxNode2Size = 3;
+#endif
+        charT _lineSeparator;
         BufferGap<charT, 2> _gap2;
         BufferGap<charT, 1> _gap1;
         BufferGap<charT, 0> _gap0;
     };
 
     template<typename charT>
-    void Buffer<charT>::Insert(const charT* start, const charT* end)
+    template<typename charIterator>
+    void Buffer<charT>::Insert(charIterator first, charIterator last)
     {
-        assert(start != nullptr);
-        assert(end != nullptr);
-        assert(start < end);
+        assert(first != nullptr);
+        assert(last != nullptr);
+        assert(first < last);
 
         // This is the root and always there.
         assert(_gap2.IsVisited());
@@ -130,9 +143,20 @@ namespace boar {
         assert(_gap1.IsVisited());
         assert(_gap0.IsVisited());
 
-        _gap0.Reserve(end - start);
-        memcpy(&_gap0.node->_children.front() + _gap0.start, start, (end - start) * sizeof(charT));
-        _gap0.start += end - start;
+        if (_gap0.start + (last - first) > MaxNode0Size)
+        {
+            // The data before the gap and the inserted data won't fit in the node,
+            // So make a new node.
+            _gap0.Reserve(0);
+            _gap1.Reserve(1);
+            _gap0.node = &_gap1.node->_children[_gap1.start++];
+            _gap0.start = 0;
+            _gap0.end = 0;
+        }
+
+        _gap0.Reserve(last - first);
+        std::copy(first, last, _gap0.node->_children.begin() + _gap0.start);
+        _gap0.start += last - first;
     }
 
     template<typename charT>
@@ -146,7 +170,7 @@ namespace boar {
         charT *it;
         for (it = &_gap0.node->_children.at(_gap0.start); it != &(_gap0.node->_children.back()) + 1; ++it)
         {
-            if (*it == '\n')
+            if (*it == _lineSeparator)
                 break;
         }
 

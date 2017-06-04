@@ -143,9 +143,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="test.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="boar.cpp" />
     <ClCompile Include="buffer.cpp" />
     <ClCompile Include="win32main.cpp" />

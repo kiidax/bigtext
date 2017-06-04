@@ -20,7 +20,24 @@ namespace boar
             while (std::getline(fin, line))
             {
                 std::string line(line.begin(), line.end());
-                line += '\n';
+                line += _lineSeparator;
+                Insert(line.c_str(), line.c_str() + line.length());
+            }
+        }
+    }
+
+    template<>
+    void Buffer<wchar_t>::Open(const char16_t* fileName)
+    {
+        std::ifstream fin;
+        fin.open((char*)FromUnicode(fileName).c_str());
+        if (fin.is_open())
+        {
+            std::string line;
+            while (std::getline(fin, line))
+            {
+                std::wstring line(line.begin(), line.end());
+                line += _lineSeparator;
                 Insert(line.c_str(), line.c_str() + line.length());
             }
         }

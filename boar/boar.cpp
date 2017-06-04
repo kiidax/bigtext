@@ -11,7 +11,7 @@ namespace boar
 {
     int Main(const std::vector<std::u16string>& args)
     {
-        Buffer<char> buffer;
+        Buffer<wchar_t> buffer;
         buffer.Open(args[0].c_str());
 
         buffer.MoveBeginningOfBuffer();
@@ -19,7 +19,7 @@ namespace boar
         {
             auto line = buffer.GetLineAndMoveNext();
             if (line.empty()) break;
-            std::cout << line << std::endl;
+            std::wcout << line << std::endl;
         }
 
         return 0;
