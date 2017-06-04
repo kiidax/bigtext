@@ -44,9 +44,18 @@ namespace boar {
     template<typename charT, int level>
     class BufferGap
     {
+        typedef BufferNode<charT, level> NodeType;
     public:
         BufferGap() : node(), start(), end() {}
         ~BufferGap() {}
+        bool IsVisited() { return node != nullptr; }
+        void Visit(NodeType* newNode, int newPos)
+        {
+            assert(node == nullptr);
+            node = newNode;
+            start = newPos;
+            end = newPos;
+        }
         void Reserve(int size) 
         {
             if (end - start < size)
@@ -57,7 +66,6 @@ namespace boar {
         }
 
     public:
-        typedef BufferNode<charT, level> NodeType;
         NodeType* node;
         int start;
         int end;
@@ -73,10 +81,10 @@ namespace boar {
     public:
         Buffer() : _gap2(), _gap1(), _gap0()
         {
-            _gap2.node = &_root;
+            _gap2.Visit(&_root, 0);
         }
         ~Buffer() {}
-        void Open(const char16_t * fileName);
+        void Open(const char16_t* fileName);
         void Insert(const charT* start, const charT* end);
         std::basic_string<charT> GetLineAndMoveNext();
         void MoveBeginningOfBuffer();
@@ -95,26 +103,32 @@ namespace boar {
     {
         assert(start != nullptr);
         assert(end != nullptr);
+        assert(start < end);
 
         // This is the root and always there.
-        assert(_gap2.node != &_root);
+        assert(_gap2.IsVisited());
+        assert(_gap2.node == &_root);
 
-        if (_gap1.node == nullptr)
+        if (!_gap1.IsVisited())
         {
             assert(_gap0.node == nullptr);
-
-            _gap2.node->_children.push_back(BufferNode<charT, 1>());
-            _gap1.node = &_gap2.node->_children.back();
+            _gap2.Reserve(10);
+            _gap1.Visit(&_gap2.node->_children.at(_gap2.start), 0);
+            _gap2.start++;
         }
 
-        if (_gap0.node == nullptr)
+        if (!_gap0.IsVisited())
         {
             assert(_gap0.start == 0);
             assert(_gap0.end == 0);
-
-            (*_gap1.node)._children.push_back(BufferNode<charT, 0>());
-            _gap0.node = &(*_gap1.node)._children.back();
+            _gap1.Reserve(10);
+            _gap0.Visit(&_gap1.node->_children.at(_gap1.start), 0);
+            _gap1.start++;
         }
+
+        assert(_gap2.IsVisited());
+        assert(_gap1.IsVisited());
+        assert(_gap0.IsVisited());
 
         _gap0.Reserve(end - start);
         memcpy(&_gap0.node->_children.front() + _gap0.start, start, (end - start) * sizeof(charT));
@@ -136,10 +150,10 @@ namespace boar {
                 break;
         }
 
-        std::basic_string<charT> ret(&_gap0.node->_children.at(_gap0.start), it - _gap0.start);
+        std::basic_string<charT> ret(&_gap0.node->_children.at(_gap0.start), it);
 
         _gap0.start = it - &_gap0.node->_children.front() + 1;
-        _gap0.end = _gap0.end;
+        _gap0.end = _gap0.start;
         if (_gap0.start == _gap0.node->_children.size())
         {
             _gap1.node = nullptr;
