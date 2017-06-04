@@ -12,29 +12,33 @@ namespace boar {
 
     const int BufferLevel = 2;
 
+    template<typename ChildNodeType>
     class BufferNodeBase {
     public:
         int numLines;
         BufferNodeBase() : numLines() {}
         ~BufferNodeBase() {}
+        void ReserveGap(int currentGapStart, int currentGapEnd, int newGapSize)
+        {
+            assert(_children.size() == currentGapEnd); // TODO
+            int currentGapSize = currentGapEnd - currentGapStart;
+            int newSize = _children.size() + (newGapSize - currentGapSize);
+            _children.resize(newSize);
+        }
+    protected:
+        std::vector<ChildNodeType> _children;
     };
 
     template<typename charT, int level>
-    class BufferNode : BufferNodeBase
+    class BufferNode : public BufferNodeBase<BufferNode<charT, level - 1>>
     {
-        typedef BufferNode<charT, level - 1> ChildNodeType;
         friend class Buffer<charT>;
-    private:
-        std::vector<ChildNodeType> _children;
     };
 
     template<typename charT>
-    class BufferNode<charT, 0> : BufferNodeBase
+    class BufferNode<charT, 0> : public BufferNodeBase<charT>
     {
-        typedef charT ChildNodeType;
         friend class Buffer<charT>;
-    private:
-        std::vector<ChildNodeType> _children;
     };
 
     template<typename charT, int level>
@@ -43,6 +47,14 @@ namespace boar {
     public:
         BufferGap() : node(), start(), end() {}
         ~BufferGap() {}
+        void Reserve(int size) 
+        {
+            if (end - start < size)
+            {
+                node->ReserveGap(start, end, size);
+                end = start + size;
+            }
+        }
 
     public:
         typedef BufferNode<charT, level> NodeType;
@@ -85,7 +97,8 @@ namespace boar {
         assert(start != nullptr);
         assert(end != nullptr);
 
-        assert(_node2 != nullptr);
+        // This is the root and always there.
+        assert(_node2 != &_root);
 
         if (_node1 == nullptr)
         {
@@ -104,17 +117,8 @@ namespace boar {
             _gap0.node = &(*_node1)._children.back();
         }
 
-        if (_gap0.end - _gap0.start < end - start)
-        {
-            size_t newSize = _gap0.node->_children.size() + (end - start) - (_gap0.end - _gap0.start);
-            _gap0.node->_children.resize(newSize);
-
-            // Adjust the pointers.
-            _gap0.start = 0;
-            _gap0.end = newSize;
-        }
-
-        memcpy(_gap0.node + _gap0.start, start, (end - start) * sizeof(charT));
+        _gap0.Reserve(end - start);
+        memcpy(&_gap0.node->_children.front() + _gap0.start, start, (end - start) * sizeof(charT));
         _gap0.start += end - start;
     }
 
