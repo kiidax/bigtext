@@ -21,7 +21,7 @@ namespace boar
             {
                 std::string line(line.begin(), line.end());
                 line += '\n';
-                Append(line.c_str(), line.c_str() + line.length());
+                Insert(line.c_str(), line.c_str() + line.length());
             }
         }
     }

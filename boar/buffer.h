@@ -37,6 +37,20 @@ namespace boar {
         std::vector<ChildNodeType> _children;
     };
 
+    template<typename charT, int level>
+    class BufferGap
+    {
+    public:
+        BufferGap() : node(), start(), end() {}
+        ~BufferGap() {}
+
+    public:
+        typedef BufferNode<charT, level> NodeType;
+        NodeType* node;
+        int start;
+        int end;
+    };
+
     template<typename charT>
     class Buffer
     {
@@ -47,12 +61,12 @@ namespace boar {
     public:
         Buffer() :
             _node2(&_root), _node1(),
-            _node0(), _gapStart(), _gapEnd()
+            _gap0()
         {
         }
         ~Buffer() {}
         void Open(const char16_t * fileName);
-        void Append(const charT* start, const charT* end);
+        void Insert(const charT* start, const charT* end);
         std::basic_string<charT> GetLineAndMoveNext();
         void MoveBeginningOfBuffer();
 
@@ -62,13 +76,11 @@ namespace boar {
     private:
         BufferNode<charT, 2>* _node2;
         BufferNode<charT, 1>* _node1;
-        BufferNode<charT, 0>* _node0;
-        charT* _gapStart;
-        charT* _gapEnd;
+        BufferGap<charT, 0> _gap0;
     };
 
     template<typename charT>
-    void Buffer<charT>::Append(const charT* start, const charT* end)
+    void Buffer<charT>::Insert(const charT* start, const charT* end)
     {
         assert(start != nullptr);
         assert(end != nullptr);
@@ -77,33 +89,33 @@ namespace boar {
 
         if (_node1 == nullptr)
         {
-            assert(_node0 == nullptr);
+            assert(_gap0.node == nullptr);
 
             _node2->_children.push_back(BufferNode<charT, 1>());
             _node1 = &_node2->_children.back();
         }
 
-        if (_node0 == nullptr)
+        if (_gap0.node == nullptr)
         {
-            assert(_gapStart == nullptr);
-            assert(_gapEnd == nullptr);
+            assert(_gap0.start == 0);
+            assert(_gap0.end == 0);
 
             (*_node1)._children.push_back(BufferNode<charT, 0>());
-            _node0 = &(*_node1)._children.back();
+            _gap0.node = &(*_node1)._children.back();
         }
 
-        if (_gapStart == nullptr || _gapEnd - _gapStart < end - start)
+        if (_gap0.end - _gap0.start < end - start)
         {
-            size_t newSize = _node0->_children.size() + (end - start) - (_gapStart == nullptr ? 0 : _gapEnd - _gapStart);
-            _node0->_children.resize(newSize);
+            size_t newSize = _gap0.node->_children.size() + (end - start) - (_gap0.end - _gap0.start);
+            _gap0.node->_children.resize(newSize);
 
             // Adjust the pointers.
-            _gapStart = &_node0->_children.front();
-            _gapEnd = &_node0->_children.back() + 1;
+            _gap0.start = 0;
+            _gap0.end = newSize;
         }
 
-        memcpy(_gapStart, start, (end - start) * sizeof(charT));
-        _gapStart += end - start;
+        memcpy(_gap0.node + _gap0.start, start, (end - start) * sizeof(charT));
+        _gap0.start += end - start;
     }
 
     template<typename charT>
@@ -115,22 +127,22 @@ namespace boar {
         }
 
         charT *it;
-        for (it = _gapStart; it != &_node0->_children.back() + 1; ++it)
+        for (it = &_gap0.node->_children.at(_gap0.start); it != &(_gap0.node->_children.back()) + 1; ++it)
         {
             if (*it == '\n')
                 break;
         }
 
-        std::basic_string<charT> ret(_gapStart, it - _gapStart);
+        std::basic_string<charT> ret(&_gap0.node->_children.at(_gap0.start), it - _gap0.start);
 
-        _gapStart = it + 1;
-        _gapEnd = _gapEnd;
-        if (_gapStart == &_node0->_children.back() + 1)
+        _gap0.start = it - &_gap0.node->_children.front() + 1;
+        _gap0.end = _gap0.end;
+        if (_gap0.start == _gap0.node->_children.size())
         {
             _node1 = nullptr;
-            _node0 = nullptr;
-            _gapStart = nullptr;
-            _gapEnd = nullptr;
+            _gap0.node = nullptr;
+            _gap0.start = 0;
+            _gap0.end = 0;
         }
 
         return ret;
@@ -142,14 +154,14 @@ namespace boar {
         _CloseNode();
         _node2 = &_root;
         _node1 = &_node2->_children.front();
-        _node0 = &_node1->_children.front();
-        _gapStart = &_node0->_children.front();
-        _gapEnd = _gapStart;
+        _gap0.node = &_node1->_children.front();
+        _gap0.start = 0;
+        _gap0.end = 0;
     }
 
     template<typename charT>
     void Buffer<charT>::_CloseNode()
     {
-        _node0->_children.resize(_gapStart - &_node0->_children.front());
+        _gap0.node->_children.resize(_gap0.start);
     }
 }
