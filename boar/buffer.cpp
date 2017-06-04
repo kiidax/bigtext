@@ -10,7 +10,7 @@
 namespace boar
 {
     template<>
-    void Buffer<char>::Open(const char16_t* fileName)
+    void Cursor<char>::Open(const char16_t* fileName)
     {
         std::ifstream fin;
         fin.open((char*)FromUnicode(fileName).c_str());

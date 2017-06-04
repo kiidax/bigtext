@@ -6,46 +6,61 @@
 
 #include <boar/base.h>
 
-#include <new>
-
 namespace boar {
-    template<typename charT> class Buffer;
 
-    template<typename charT> class L2Node
-    {
-        // A buffer node to hold texts, which can hold about 1m Unicode chars.
-    private:
-        friend class Buffer<charT>;
-        charT* _data;
-        size_t _length;
+    template<typename charT> class Cursor;
 
+    const int BufferLevel = 2;
+
+    class BufferNodeBase {
     public:
-        L2Node() {}
-        ~L2Node() {}
+        int numLines;
+        BufferNodeBase() : numLines() {}
+        ~BufferNodeBase() {}
     };
 
-    template<typename charT> class L1Node
+    template<typename charT, int level>
+    class BufferNode : BufferNodeBase
     {
-        // A buffer node to hold texts, which can hold about 1m Unicode chars.
+        typedef BufferNode<charT, level - 1> ChildNodeType;
+        friend class Cursor<charT>;
     private:
-        friend class Buffer<charT>;
-        // This can hold 1k nodes.
-        std::vector<L2Node<charT>> _children;
-
-    public:
-        L1Node() {}
-        ~L1Node() {}
+        std::vector<ChildNodeType> _children;
     };
 
-    template<typename charT> class Buffer
+    template<typename charT>
+    class BufferNode<charT, 0> : BufferNodeBase
     {
-        friend class Buffer<charT>;
+        typedef charT ChildNodeType;
+        friend class Cursor<charT>;
+    private:
+        std::vector<ChildNodeType> _children;
+    };
 
+    template<typename charT>
+    class Buffer
+    {
+        typedef BufferNode<charT, BufferLevel> ChildNodeType;
+        friend class Cursor<charT>;
+    private:
+        ChildNodeType _root;
     public:
-        Buffer() : _l1node(), _l2node(), _gapStart(), _gapEnd()
+        Buffer() {}
+        ~Buffer() {}
+    };
+
+    template<typename charT> class Cursor;
+
+    template<typename charT>
+    class Cursor
+    {
+    public:
+        Cursor(Buffer<charT>& buffer) :
+            _buffer(buffer), _l0node(&buffer._root), _l1node(),
+            _l2node(), _gapStart(), _gapEnd()
         {
         }
-        ~Buffer() {}
+        ~Cursor() {}
         void Open(const char16_t * fileName);
         void Append(const charT* start, const charT* end);
         std::basic_string<charT> GetLineAndMoveNext();
@@ -56,25 +71,28 @@ namespace boar {
 
     private:
         // This can hold 1k nodes.
-        std::vector<L1Node<charT>> _children;
-        L1Node<charT>* _l1node;
-        L2Node<charT>* _l2node;
+        Buffer<charT>& _buffer;
+        BufferNode<charT, 2>* _l0node;
+        BufferNode<charT, 1>* _l1node;
+        BufferNode<charT, 0>* _l2node;
         charT* _gapStart;
         charT* _gapEnd;
     };
 
     template<typename charT>
-    void Buffer<charT>::Append(const charT* start, const charT* end)
+    void Cursor<charT>::Append(const charT* start, const charT* end)
     {
         assert(start != nullptr);
         assert(end != nullptr);
+
+        assert(_l0node != nullptr);
 
         if (_l1node == nullptr)
         {
             assert(_l2node == nullptr);
 
-            _children.push_back(L1Node<charT>());
-            _l1node = &_children.back();
+            _l0node->_children.push_back(BufferNode<charT, 1>());
+            _l1node = &_l0node->_children.back();
         }
 
         if (_l2node == nullptr)
@@ -82,33 +100,18 @@ namespace boar {
             assert(_gapStart == nullptr);
             assert(_gapEnd == nullptr);
 
-            (*_l1node)._children.push_back(L2Node<charT>());
+            (*_l1node)._children.push_back(BufferNode<charT, 0>());
             _l2node = &(*_l1node)._children.back();
-            charT* newData = (charT*)malloc(1024 * sizeof(charT));
-            if (newData == nullptr) throw std::bad_alloc();
-
-            _l2node->_data = newData;
-            _l2node->_length = 1024;
-
-            _gapStart = _l2node->_data;
-            _gapEnd = _l2node->_data + _l2node->_length;
         }
 
-        assert(_gapStart != nullptr);
-        assert(_gapEnd != nullptr);
-
-        if (_gapEnd - _gapStart < end - start)
+        if (_gapStart == nullptr || _gapEnd - _gapStart < end - start)
         {
-            size_t newLength = _l2node->_length + (end - start) - (_gapEnd - _gapStart);
-            charT* newData = (charT*)realloc(_l2node->_data, newLength * sizeof(charT));
-            if (newData == nullptr) throw std::bad_alloc();
+            size_t newSize = _l2node->_children.size() + (end - start) - (_gapStart == nullptr ? 0 : _gapEnd - _gapStart);
+            _l2node->_children.resize(newSize);
 
             // Adjust the pointers.
-            _gapStart = newData + (_gapStart - _l2node->_data);
-            _gapEnd = newData + (_gapEnd - _l2node->_data);
-
-            _l2node->_data = newData;
-            _l2node->_length = newLength;
+            _gapStart = &_l2node->_children.front();
+            _gapEnd = &_l2node->_children.back() + 1;
         }
 
         memcpy(_gapStart, start, (end - start) * sizeof(charT));
@@ -116,7 +119,7 @@ namespace boar {
     }
 
     template<typename charT>
-    std::basic_string<charT> Buffer<charT>::GetLineAndMoveNext()
+    std::basic_string<charT> Cursor<charT>::GetLineAndMoveNext()
     {
         if (_l1node == nullptr)
         {
@@ -124,7 +127,7 @@ namespace boar {
         }
 
         charT *it;
-        for (it = _gapStart; it != _l2node->_data + _l2node->_length; ++it)
+        for (it = _gapStart; it != &_l2node->_children.back() + 1; ++it)
         {
             if (*it == '\n')
                 break;
@@ -134,7 +137,7 @@ namespace boar {
 
         _gapStart = it + 1;
         _gapEnd = _gapEnd;
-        if (_gapStart == _l2node->_data + _l2node->_length)
+        if (_gapStart == &_l2node->_children.back() + 1)
         {
             _l1node = nullptr;
             _l2node = nullptr;
@@ -146,19 +149,19 @@ namespace boar {
     }
 
     template<typename charT>
-    void Buffer<charT>::MoveBeginningOfBuffer()
+    void Cursor<charT>::MoveBeginningOfBuffer()
     {
         _CloseNode();
-        _l1node = _children.data();
-        _l2node = _l1node->_children.data();
-        _gapStart = _l2node->_data + _l2node->_length;
+        _l0node = &(_buffer._root);
+        _l1node = &_l0node->_children.front();
+        _l2node = &_l1node->_children.front();
+        _gapStart = &_l2node->_children.front();
         _gapEnd = _gapStart;
-        _gapStart = _l2node->_data;
     }
 
     template<typename charT>
-    void Buffer<charT>::_CloseNode()
+    void Cursor<charT>::_CloseNode()
     {
-        _l2node->_length = _gapStart - _l2node->_data;
+        _l2node->_children.resize(_gapStart - &_l2node->_children.front());
     }
 }

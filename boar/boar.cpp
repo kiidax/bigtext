@@ -12,12 +12,13 @@ namespace boar
     int Main(const std::vector<std::u16string>& args)
     {
         Buffer<char> buffer;
+        Cursor<char> cursor(buffer);
 
-        buffer.Open(args[0].c_str());
-        buffer.MoveBeginningOfBuffer();
+        cursor.Open(args[0].c_str());
+        cursor.MoveBeginningOfBuffer();
         while (true)
         {
-            auto line = buffer.GetLineAndMoveNext();
+            auto line = cursor.GetLineAndMoveNext();
             if (line.empty()) break;
             std::cout << line << std::endl;
         }
