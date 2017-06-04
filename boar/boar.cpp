@@ -11,15 +11,15 @@ namespace boar
 {
     int Main(const std::vector<std::u16string>& args)
     {
-        Buffer<wchar_t> buffer;
+        Buffer<char> buffer;
         buffer.Open(args[0].c_str());
-
+        buffer.Dump();
         buffer.MoveBeginningOfBuffer();
         while (true)
         {
             auto line = buffer.GetLineAndMoveNext();
             if (line.empty()) break;
-            std::wcout << line << std::endl;
+            std::cout << line << std::endl;
         }
 
         return 0;

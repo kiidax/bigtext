@@ -42,4 +42,26 @@ namespace boar
             }
         }
     }
+
+    template<>
+    void Buffer<char>::Dump()
+    {
+        std::cout << "Items: " << _root._children.size() << std::endl;
+        auto children2 = _root._children;
+        for (auto it2 = children2.begin(); it2 != children2.end(); ++it2)
+        {
+            std::cout << ">> Items: " << (*it2)._children.size() << std::endl;
+            auto children1 = (*it2)._children;
+            for (auto it1 = children1.begin(); it1 != children1.end(); ++it1)
+            {
+                std::cout << ">>>> Items: " << (*it1)._children.size();
+                auto children0 = (*it1)._children;
+                std::string str(children0.begin(), children0.end());
+                int len = str.size();
+                if (len > 30) len = 30;
+                str.resize(len);
+                std::cout << " " << str << std::endl;
+            }
+        }
+    }
 }

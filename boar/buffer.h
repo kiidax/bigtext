@@ -48,14 +48,27 @@ namespace boar {
     public:
         BufferGap() : node(), start(), end() {}
         ~BufferGap() {}
-        bool IsVisited() { return node != nullptr; }
-        void Visit(NodeType* newNode, int newPos)
+        bool IsEntered() { return node != nullptr; }
+        void Enter(NodeType* newNode, int newPos)
         {
-            assert(node == nullptr);
+            assert(!IsEntered());
             node = newNode;
             start = newPos;
             end = newPos;
         }
+        void Leave()
+        {
+            assert(IsEntered());
+            //assert(node->_children.size() == end); // TODO
+            node->ReserveGap(start, end, 0);
+            node = nullptr;
+#ifdef _DEBUG
+            start = 0xdeadbeef;
+            end = 0xbeefdead;
+#endif
+        }
+        // Reserve the size of the gap. Do nothing if
+        // the current gap size is larger than the given size.
         void Reserve(int size) 
         {
             if (end - start < size)
@@ -82,7 +95,7 @@ namespace boar {
         Buffer() : _gap2(), _gap1(), _gap0()
         {
             _lineSeparator = '\n';
-            _gap2.Visit(&_root, 0);
+            _gap2.Enter(&_root, 0);
         }
         ~Buffer() {}
         void Open(const char16_t* fileName);
@@ -90,19 +103,20 @@ namespace boar {
         void Insert(charIterator start, charIterator end);
         std::basic_string<charT> GetLineAndMoveNext();
         void MoveBeginningOfBuffer();
+#ifdef _DEBUG
+        void Dump();
+#endif
 
     private:
         void _CloseNode();
 
     private:
 #ifdef _DEBUG
-        const int MaxNode0Size = 1024;
+        const int MaxNode0Size = 200;
         const int MaxNode1Size = 5;
-        const int MaxNode2Size = 3;
 #else
         const int MaxNode0Size = 1024;
         const int MaxNode1Size = 5;
-        const int MaxNode2Size = 3;
 #endif
         charT _lineSeparator;
         BufferGap<charT, 2> _gap2;
@@ -119,34 +133,46 @@ namespace boar {
         assert(first < last);
 
         // This is the root and always there.
-        assert(_gap2.IsVisited());
+        assert(_gap2.IsEntered());
         assert(_gap2.node == &_root);
 
-        if (!_gap1.IsVisited())
+        if (!_gap1.IsEntered())
         {
             assert(_gap0.node == nullptr);
             _gap2.Reserve(10);
-            _gap1.Visit(&_gap2.node->_children.at(_gap2.start), 0);
+            _gap1.Enter(&_gap2.node->_children.at(_gap2.start), 0);
             _gap2.start++;
         }
 
-        if (!_gap0.IsVisited())
+        if (!_gap0.IsEntered())
         {
             assert(_gap0.start == 0);
             assert(_gap0.end == 0);
             _gap1.Reserve(10);
-            _gap0.Visit(&_gap1.node->_children.at(_gap1.start), 0);
+            _gap0.Enter(&_gap1.node->_children.at(_gap1.start), 0);
             _gap1.start++;
         }
 
-        assert(_gap2.IsVisited());
-        assert(_gap1.IsVisited());
-        assert(_gap0.IsVisited());
+        assert(_gap2.IsEntered());
+        assert(_gap1.IsEntered());
+        assert(_gap0.IsEntered());
 
         if (_gap0.start + (last - first) > MaxNode0Size)
         {
-            // The data before the gap and the inserted data won't fit in the node,
+            // The data before the L0 gap and the inserted data won't fit in the node,
             // So make a new node.
+            if (_gap1.start + 1 > MaxNode1Size)
+            {
+                // The data before the L1 gap won't fit.
+
+                // _gap1.node must always points to the one node before _gap2.start.
+                assert(_gap1.node == &_gap2.node->_children[_gap2.start - 1]);
+                _gap1.node = nullptr;
+                _gap2.Reserve(1);
+                _gap1.node = &_gap2.node->_children[_gap2.start++];
+                _gap1.start = 0;
+                _gap1.end = 0;
+            }
             _gap0.Reserve(0);
             _gap1.Reserve(1);
             _gap0.node = &_gap1.node->_children[_gap1.start++];
