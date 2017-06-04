@@ -41,47 +41,47 @@ namespace boar {
         friend class Buffer<charT>;
     };
 
-    template<typename charT, int level>
+    template<typename BufferNodeType>
     class BufferGap
     {
-        typedef BufferNode<charT, level> NodeType;
     public:
-        BufferGap() : node(), start(), end() {}
-        ~BufferGap() {}
-        bool IsEntered() { return node != nullptr; }
-        void Enter(NodeType* newNode, int newPos)
+        BufferGap() : _node(), _start(), _end() {}
+        BufferGap(BufferNodeType* node, size_t start=0, size_t end=0) : _node(node), _start(start), _end(end)
         {
-            assert(!IsEntered());
-            node = newNode;
-            start = newPos;
-            end = newPos;
+            assert(IsArgInRange(start, end));
         }
-        void Leave()
-        {
-            assert(IsEntered());
-            //assert(node->_children.size() == end); // TODO
-            node->ReserveGap(start, end, 0);
-            node = nullptr;
-#ifdef _DEBUG
-            start = 0xdeadbeef;
-            end = 0xbeefdead;
-#endif
+        ~BufferGap() {}
+        operator bool() const { return _node != nullptr; }
+        bool IsArgInRange(size_t start, size_t end) const {
+            return start < INT_MAX && end < INT_MAX && start <= end;
+        }
+        BufferGap& operator = (BufferNodeType* node) {
+            _node = node;
+            _start = 0;
+            _end = 0;
+            return *this;
         }
         // Reserve the size of the gap. Do nothing if
         // the current gap size is larger than the given size.
-        void Reserve(int size) 
+        void Reserve(size_t size) 
         {
-            if (end - start < size)
+            if (_end - _start < size)
             {
-                node->ReserveGap(start, end, size);
-                end = start + size;
+                _node->ReserveGap(_start, _end, size);
+                _end = _start + size;
             }
+        }
+        void Unreserve()
+        {
+            _node->ReserveGap(_start, _end, 0);
+            _start = 0;
+            _end = 0;
         }
 
     public:
-        NodeType* node;
-        int start;
-        int end;
+        BufferNodeType* _node;
+        size_t _start;
+        size_t _end;
     };
 
     template<typename charT>
@@ -92,10 +92,9 @@ namespace boar {
     private:
         ChildNodeType _root;
     public:
-        Buffer() : _gap2(), _gap1(), _gap0()
+        Buffer() : _gap2(&_root), _gap1(), _gap0()
         {
             _lineSeparator = '\n';
-            _gap2.Enter(&_root, 0);
         }
         ~Buffer() {}
         void Open(const char16_t* fileName);
@@ -112,16 +111,16 @@ namespace boar {
 
     private:
 #ifdef _DEBUG
-        const int MaxNode0Size = 200;
-        const int MaxNode1Size = 5;
+        const unsigned MaxNode0Size = 200;
+        const unsigned MaxNode1Size = 5;
 #else
         const int MaxNode0Size = 1024;
         const int MaxNode1Size = 5;
 #endif
         charT _lineSeparator;
-        BufferGap<charT, 2> _gap2;
-        BufferGap<charT, 1> _gap1;
-        BufferGap<charT, 0> _gap0;
+        BufferGap<BufferNode<charT, 2>> _gap2;
+        BufferGap<BufferNode<charT, 1>> _gap1;
+        BufferGap<BufferNode<charT, 0>> _gap0;
     };
 
     template<typename charT>
@@ -133,83 +132,94 @@ namespace boar {
         assert(first < last);
 
         // This is the root and always there.
-        assert(_gap2.IsEntered());
-        assert(_gap2.node == &_root);
+        assert(static_cast<bool>(_gap2));
+        assert(_gap2._node == &_root);
 
-        if (!_gap1.IsEntered())
+        if (!_gap1)
         {
-            assert(_gap0.node == nullptr);
-            _gap2.Reserve(10);
-            _gap1.Enter(&_gap2.node->_children.at(_gap2.start), 0);
-            _gap2.start++;
+            assert(!_gap0);
+            _gap2.Reserve(2);
+            _gap1 = &_gap2._node->_children.at(_gap2._start);
+            _gap2._start++;
         }
 
-        if (!_gap0.IsEntered())
+        if (!_gap0)
         {
-            assert(_gap0.start == 0);
-            assert(_gap0.end == 0);
-            _gap1.Reserve(10);
-            _gap0.Enter(&_gap1.node->_children.at(_gap1.start), 0);
-            _gap1.start++;
+            _gap1.Reserve(2);
+            _gap0 = &_gap1._node->_children.at(_gap1._start);
+            _gap1._start++;
         }
 
-        assert(_gap2.IsEntered());
-        assert(_gap1.IsEntered());
-        assert(_gap0.IsEntered());
+        assert(_gap2);
+        assert(_gap1);
+        assert(_gap0);
 
-        if (_gap0.start + (last - first) > MaxNode0Size)
+        if (_gap0._start + (last - first) > MaxNode0Size)
         {
             // The data before the L0 gap and the inserted data won't fit in the node,
-            // So make a new node.
-            if (_gap1.start + 1 > MaxNode1Size)
+            // so make a new L1 node.
+            if (_gap1._start + 1 > MaxNode1Size)
             {
-                // The data before the L1 gap won't fit.
+                // The data before the L1 gap won't fit, so make a new L2 node.
 
                 // _gap1.node must always points to the one node before _gap2.start.
-                assert(_gap1.node == &_gap2.node->_children[_gap2.start - 1]);
-                _gap1.node = nullptr;
-                _gap2.Reserve(1);
-                _gap1.node = &_gap2.node->_children[_gap2.start++];
-                _gap1.start = 0;
-                _gap1.end = 0;
+                assert(_gap1._node == &_gap2._node->_children[_gap2._start - 1]);
+
+                int oldGapStart = _gap1._start;
+                int oldGapEnd = _gap1._end;
+                _gap1.Unreserve();
+
+                if (_gap1._end < _gap1._node->_children.size())
+                {
+                    _gap2.Reserve(2);
+                    auto oldNode = &_gap2._node->_children[_gap2._start - 1];
+                }
+                else
+                {
+                    _gap2.Reserve(1);
+                    auto oldNode = &_gap2._node->_children[_gap2._start - 1];
+                }
+                _gap1._node = &_gap2._node->_children[_gap2._start++];
+                _gap1._start = 0;
+                _gap1._end = 0;
             }
             _gap0.Reserve(0);
             _gap1.Reserve(1);
-            _gap0.node = &_gap1.node->_children[_gap1.start++];
-            _gap0.start = 0;
-            _gap0.end = 0;
+            _gap0._node = &_gap1._node->_children[_gap1._start++];
+            _gap0._start = 0;
+            _gap0._end = 0;
         }
 
         _gap0.Reserve(last - first);
-        std::copy(first, last, _gap0.node->_children.begin() + _gap0.start);
-        _gap0.start += last - first;
+        std::copy(first, last, _gap0._node->_children.begin() + _gap0._start);
+        _gap0._start += last - first;
     }
 
     template<typename charT>
     std::basic_string<charT> Buffer<charT>::GetLineAndMoveNext()
     {
-        if (_gap1.node == nullptr)
+        if (_gap1._node == nullptr)
         {
             return std::basic_string<charT>();
         }
 
         charT *it;
-        for (it = &_gap0.node->_children.at(_gap0.start); it != &(_gap0.node->_children.back()) + 1; ++it)
+        for (it = &_gap0._node->_children.at(_gap0._start); it != &(_gap0._node->_children.back()) + 1; ++it)
         {
             if (*it == _lineSeparator)
                 break;
         }
 
-        std::basic_string<charT> ret(&_gap0.node->_children.at(_gap0.start), it);
+        std::basic_string<charT> ret(&_gap0._node->_children.at(_gap0._start), it);
 
-        _gap0.start = it - &_gap0.node->_children.front() + 1;
-        _gap0.end = _gap0.start;
-        if (_gap0.start == _gap0.node->_children.size())
+        _gap0._start = it - &_gap0._node->_children.front() + 1;
+        _gap0._end = _gap0._start;
+        if (_gap0._start == _gap0._node->_children.size())
         {
-            _gap1.node = nullptr;
-            _gap0.node = nullptr;
-            _gap0.start = 0;
-            _gap0.end = 0;
+            _gap1._node = nullptr;
+            _gap0._node = nullptr;
+            _gap0._start = 0;
+            _gap0._end = 0;
         }
 
         return ret;
@@ -219,16 +229,16 @@ namespace boar {
     void Buffer<charT>::MoveBeginningOfBuffer()
     {
         _CloseNode();
-        _gap2.node = &_root;
-        _gap1.node = &_gap2.node->_children.front();
-        _gap0.node = &_gap1.node->_children.front();
-        _gap0.start = 0;
-        _gap0.end = 0;
+        _gap2._node = &_root;
+        _gap1._node = &_gap2._node->_children.front();
+        _gap0._node = &_gap1._node->_children.front();
+        _gap0._start = 0;
+        _gap0._end = 0;
     }
 
     template<typename charT>
     void Buffer<charT>::_CloseNode()
     {
-        _gap0.node->_children.resize(_gap0.start);
+        _gap0._node->_children.resize(_gap0._start);
     }
 }
