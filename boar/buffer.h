@@ -37,17 +37,11 @@ namespace boar {
     template<typename charT, int level>
     class BufferNode : public BufferNodeBase<BufferNode<charT, level - 1>>
     {
-        friend class BufferGap<BufferNode>;
-        template<typename charT>
-        friend void Buffer<charT>::Dump();
     };
 
     template<typename charT>
     class BufferNode<charT, 0> : public BufferNodeBase<charT>
     {
-        friend class BufferGap<BufferNode>;
-        template<typename charT>
-        friend void Buffer<charT>::Dump();
     };
 
     template<typename BufferNodeType>
@@ -89,7 +83,7 @@ namespace boar {
         template<typename IteratorType>
         void CopyToGap(IteratorType first, IteratorType last)
         {
-            std::copy(first, last, _node->_children.begin() + _start);
+            std::copy(first, last, _node->Begin() + _start);
             _start += last - first;
         }
 
@@ -103,7 +97,6 @@ namespace boar {
     class Buffer
     {
         typedef BufferNode<charT, BufferLevel> ChildNodeType;
-        friend class Buffer<charT>;
     private:
         ChildNodeType _root;
     public:

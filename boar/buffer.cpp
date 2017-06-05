@@ -46,17 +46,17 @@ namespace boar
     template<>
     void Buffer<char>::Dump()
     {
-        std::cout << "Items: " << _root.Size() << std::endl;
-        auto children2 = _root._children;
-        for (auto it2 = children2.begin(); it2 != children2.end(); ++it2)
+        auto& node2 = _root;
+        std::cout << "Items: " << node2.Size() << std::endl;
+        for (auto it2 = _root.Begin(); it2 != _root.End(); ++it2)
         {
-            std::cout << ">> Items: " << (*it2).Size() << std::endl;
-            auto children1 = (*it2)._children;
-            for (auto it1 = children1.begin(); it1 != children1.end(); ++it1)
+            auto& node1 = (*it2);
+            std::cout << ">> Items: " << node1.Size() << std::endl;
+            for (auto it1 = node1.Begin(); it1 != node1.End(); ++it1)
             {
-                std::cout << ">>>> Items: " << (*it1).Size();
-                auto children0 = (*it1)._children;
-                std::string str(children0.begin(), children0.end());
+                auto& node0 = (*it1);
+                std::cout << ">>>> Items: " << node0.Size();
+                std::string str(node0.Begin(), node0.End());
                 int len = str.size();
                 if (len > 30) len = 30;
                 str.resize(len);
