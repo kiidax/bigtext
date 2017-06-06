@@ -16,12 +16,14 @@ namespace boar {
     template<typename ChildNodeType>
     class BufferNodeBase {
     public:
-        int numLines;
-        BufferNodeBase() : numLines() {}
+        typedef typename std::vector<ChildNodeType>::iterator IteratorType;
+
+    public:
+        BufferNodeBase() : _numLines() {}
         ~BufferNodeBase() {}
         ChildNodeType& operator [](size_t n) { return _children[n]; }
-        typename std::vector<ChildNodeType>::iterator Begin() { return _children.begin(); }
-        typename std::vector<ChildNodeType>::iterator End() { return _children.end(); }
+        typename IteratorType Begin() { return _children.begin(); }
+        typename IteratorType End() { return _children.end(); }
         size_t Size() const { return _children.size(); }
         void ReserveGap(int currentGapStart, int currentGapEnd, int newGapSize)
         {
@@ -30,7 +32,9 @@ namespace boar {
             int newSize = _children.size() + (newGapSize - currentGapSize);
             _children.resize(newSize);
         }
+
     protected:
+        int _numLines;
         std::vector<ChildNodeType> _children;
     };
 
@@ -48,6 +52,9 @@ namespace boar {
     class BufferGap
     {
     public:
+        typedef typename BufferNodeType::IteratorType IteratorType;
+
+    public:
         BufferGap() : _node(), _start(), _end() {}
         BufferGap(BufferNodeType* node, size_t start=0, size_t end=0) : _node(node), _start(start), _end(end)
         {
@@ -64,6 +71,8 @@ namespace boar {
             _end = 0;
             return *this;
         }
+        IteratorType BeginGap() { return _node->Begin() + _start; }
+        IteratorType EndGap() { return _node->Begin() + _end; }
         // Reserve the size of the gap. Do nothing if
         // the current gap size is larger than the given size.
         void Reserve(size_t size) 
@@ -87,10 +96,13 @@ namespace boar {
             _start += last - first;
         }
 
-    public:
+    private:
         BufferNodeType* _node;
         size_t _start;
         size_t _end;
+
+        template<typename charT>
+        friend class Buffer;
     };
 
     template<typename charT>
@@ -147,14 +159,14 @@ namespace boar {
         {
             assert(!_gap0);
             _gap2.Reserve(2);
-            _gap1 = &(*_gap2._node)[_gap2._start];
+            _gap1 = &*_gap2.BeginGap();
             _gap2._start++;
         }
 
         if (!_gap0)
         {
             _gap1.Reserve(2);
-            _gap0 = &(*_gap1._node)[_gap1._start];
+            _gap0 = &*_gap1.BeginGap();
             _gap1._start++;
         }
 
@@ -205,19 +217,19 @@ namespace boar {
     template<typename charT>
     std::basic_string<charT> Buffer<charT>::GetLineAndMoveNext()
     {
-        if (_gap1._node == nullptr)
+        if (!_gap1)
         {
             return std::basic_string<charT>();
         }
 
         typename std::vector<charT>::iterator it;
-        for (it = _gap0._node->Begin() + _gap0._start; it != _gap0._node->End(); ++it)
+        for (it = _gap0.BeginGap(); it != _gap0.EndGap(); ++it)
         {
             if (*it == _lineSeparator)
                 break;
         }
 
-        std::basic_string<charT> ret(_gap0._node->Begin() + _gap0._start, it);
+        std::basic_string<charT> ret(_gap0.BeginGap(), it);
 
         _gap0._start = it - _gap0._node->Begin() + 1;
         _gap0._end = _gap0._start;
