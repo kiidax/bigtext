@@ -127,6 +127,13 @@ namespace boar {
 #endif
 
     private:
+        template<int level>
+        void AllocNode(BufferNode<charT, level>& gap,
+            typename BufferNode<charT, level>::ChildNodeType& newGap1,
+            typename BufferNode<charT, level>::ChildNodeType& newGap2)
+        {
+
+        }
         void _CloseNode();
 
     private:
@@ -158,16 +165,14 @@ namespace boar {
         if (!_gap1)
         {
             assert(!_gap0);
-            _gap2.Reserve(2);
+            _gap2.Reserve(1);
             _gap1 = &*_gap2.BeginGap();
-            _gap2._start++;
         }
 
         if (!_gap0)
         {
-            _gap1.Reserve(2);
+            _gap1.Reserve(1);
             _gap0 = &*_gap1.BeginGap();
-            _gap1._start++;
         }
 
         assert(_gap2);
@@ -176,6 +181,7 @@ namespace boar {
 
         if (_gap0._start + (last - first) > MaxNode0Size)
         {
+            ++_gap1._start;
             // The data before the L0 gap and the inserted data won't fit in the node,
             // so make a new L1 node.
             if (_gap1._start + 1 > MaxNode1Size)
@@ -183,7 +189,7 @@ namespace boar {
                 // The data before the L1 gap won't fit, so make a new L2 node.
 
                 // _gap1.node must always points to the one node before _gap2.start.
-                assert(_gap1._node == &(*_gap2._node)[_gap2._start - 1]);
+                assert(_gap1._node == &(*_gap2._node)[_gap2._start]);
 
                 int oldGapStart = _gap1._start;
                 int oldGapEnd = _gap1._end;
@@ -192,20 +198,20 @@ namespace boar {
                 if (_gap1._end < _gap1._node->Size())
                 {
                     _gap2.Reserve(2);
-                    auto oldNode = &(*_gap2._node)[_gap2._start - 1];
+                    auto oldNode = &(*_gap2._node)[_gap2._start];
                 }
                 else
                 {
                     _gap2.Reserve(1);
-                    auto oldNode = &(*_gap2._node)[_gap2._start - 1];
+                    auto oldNode = &(*_gap2._node)[_gap2._start];
                 }
-                _gap1._node = &(*_gap2._node)[_gap2._start++];
+                _gap1._node = &(*_gap2._node)[++_gap2._start];
                 _gap1._start = 0;
                 _gap1._end = 0;
             }
             _gap0.Reserve(0);
-            _gap1.Reserve(1);
-            _gap0._node = &(*_gap1._node)[_gap1._start++];
+            _gap1.Reserve(2);
+            _gap0._node = &(*_gap1._node)[_gap1._start];
             _gap0._start = 0;
             _gap0._end = 0;
         }
