@@ -13,6 +13,7 @@ namespace boar
     {
         Buffer<char> buffer;
         buffer.Open(args[0].c_str());
+        buffer.Test();
         buffer.Dump();
         buffer.MoveBeginningOfBuffer();
         while (true)
