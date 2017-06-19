@@ -19,9 +19,9 @@ namespace boar
             std::string line;
             while (std::getline(fin, line))
             {
-                std::string line(line.begin(), line.end());
-                line += _lineSeparator;
-                Insert(line.c_str(), line.c_str() + line.length());
+                std::string linenl(line.begin(), line.end());
+                linenl += _lineSeparator;
+                Insert(linenl.c_str(), linenl.c_str() + linenl.length());
             }
         }
     }
@@ -46,22 +46,16 @@ namespace boar
     template<>
     void Buffer<char>::Dump()
     {
-        auto& node2 = _root;
-        std::cout << "Items: " << node2.Size() << std::endl;
-        for (auto it2 = _root.Begin(); it2 != _root.End(); ++it2)
+        BufferNode<char>* node = _startNode;
+        do
         {
-            auto& node1 = (*it2);
-            std::cout << ">> Items: " << node1.Size() << std::endl;
-            for (auto it1 = node1.Begin(); it1 != node1.End(); ++it1)
-            {
-                auto& node0 = (*it1);
-                std::cout << ">>>> Items: " << node0.Size();
-                std::string str(node0.Begin(), node0.End());
-                int len = str.size();
-                if (len > 30) len = 30;
-                str.resize(len);
-                std::cout << " " << str << std::endl;
-            }
-        }
+            std::cout << ">>>> Items: " << node->Size();
+            std::string str(node->Begin(), node->End());
+            int len = str.size();
+            if (len > 30) len = 30;
+            str.resize(len);
+            std::cout << " " << str << std::endl;
+            node = node->Next();
+        } while (node != _startNode);
     }
 }
