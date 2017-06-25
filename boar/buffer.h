@@ -22,7 +22,7 @@ namespace boar {
         static const size_t MinCapacity = 64 * 1024 * 1024;
 #endif
 
-    protected:
+    public:
         GapVector() : _numLines() {
             _capacity = MinCapacity;
             _gapStart = 0;
@@ -80,47 +80,83 @@ namespace boar {
         charT* _ptr;
     };
 
-    template<typename charT>
-    class BufferNode : public GapVector<charT>
+    template<typename elemT>
+    class LinkedListNode
     {
     public:
-        BufferNode() : _prev(this), _next(this) {}
-        ~BufferNode() {}
-        BufferNode<charT>* Split()
+        LinkedListNode() : _prev(this), _next(this) {}
+        ~LinkedListNode() {}
+        LinkedListNode* Next() { return _next; }
+        void InsertAfter(LinkedListNode* other)
         {
-            auto newNode = new BufferNode<charT>();
-            newNode->_prev = this;
-            newNode->_next = this->_next;
-            _next = newNode;
-            newNode->_next->_prev = newNode;
+            other->_prev = this;
+            other->_next = this->_next;
+            _next = other;
+            other->_next->_prev = other;
+        }
+
+    protected:
+        LinkedListNode* _prev;
+        LinkedListNode* _next;
+    };
+
+    template<typename elemT>
+    class LinkedListNodeElem : public LinkedListNode<elemT>
+    {
+    public:
+        elemT* Get() { return &_elem; }
+        LinkedListNodeElem* Split()
+        {
+            auto newNode = new LinkedListNodeElem();
+            InsertAfter(newNode);
             return newNode;
         }
-        BufferNode<charT>* Next() { return _next; }
 
     protected:
-        BufferNode<charT>* _prev;
-        BufferNode<charT>* _next;
+        elemT _elem;
     };
 
-    class BufferBase
+    template<typename elemT>
+    class LinkedListIterator
     {
     public:
-        BufferBase() {}
-        ~BufferBase() {}
+        LinkedListIterator(LinkedListNode<elemT> *elem) : _current(elem) {}
+        LinkedListIterator() : LinkedListIterator(nullptr) {}
+        LinkedListNodeElem<elemT>* Get() { return reinterpret_cast<LinkedListNodeElem<elemT>*>(_current); }
+        bool operator ==(const LinkedListIterator& other) const { return _current == other._current; }
+        bool operator !=(const LinkedListIterator& other) const { return _current != other._current; }
+        elemT* operator ->()
+        {
+            return Get()->Get();
+        }
+        LinkedListIterator& operator ++() { _current = _current->Next(); return *this; }
+
     protected:
+        LinkedListNode<elemT>* _current;
+    };
+
+    template<typename elemT>
+    class LinkedList : LinkedListNode<elemT>
+    {
+    public:
+        LinkedList()
+        {
+            _prev = _next = new LinkedListNodeElem<elemT>();
+        }
+        LinkedListIterator<elemT> Begin() { return _next; }
+        LinkedListIterator<elemT> End() { return this; }
     };
 
     template<typename charT>
-    class Buffer : BufferBase
+    class Buffer
     {
     public:
         Buffer() : _lineSeparator('\n')
         {
-            _startNode = _endNode = _currentNode = new BufferNode<charT>();
+            _currentNode = _nodeList.Begin();
         }
         ~Buffer()
         {
-            delete _startNode;
         }
         void Open(const char16_t* fileName);
         void Dump();
@@ -138,7 +174,7 @@ namespace boar {
             size_t size = end - begin;
             if (size > _currentNode->Capacity() - _currentNode->Size())
             {
-                _currentNode = _currentNode->Split();
+                _currentNode = _currentNode.Get()->Split();
             }
             _currentNode->Insert<IteratorType>(begin, end, _currentNode->Size());
         }
@@ -147,8 +183,7 @@ namespace boar {
         std::basic_string<charT> GetLineAndMoveNext() { return std::basic_string<charT>(); }
     protected:
         charT _lineSeparator;
-        BufferNode<charT>* _startNode;
-        BufferNode<charT>* _endNode;
-        BufferNode<charT>* _currentNode;
+        LinkedList<GapVector<charT>> _nodeList;
+        LinkedListIterator<GapVector<charT>> _currentNode;
     };
 }
