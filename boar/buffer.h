@@ -12,7 +12,8 @@ namespace boar {
 
     template<typename charT> class Buffer;
 
-    class BufferNodeBase
+    template<typename T>
+    class GapVector
     {
     public:
 #if _DEBUG
@@ -22,53 +23,69 @@ namespace boar {
 #endif
 
     protected:
-        BufferNodeBase() : _numLines() {}
+        GapVector() : _numLines() {
+            _capacity = MinCapacity;
+            _gapStart = 0;
+            _gapSize = _capacity;
+            _ptr = new T[_capacity];
+        }
+        ~GapVector()
+        {
+            delete _ptr;
+        }
 
     public:
-        size_t Size() const { return _capacity - (_gapEnd - _gapStart); }
+        size_t Size() const { return _capacity - _gapSize; }
         size_t Capacity() const { return _capacity; }
+        T* Begin() { return _gapStart == 0 ? _ptr + _gapStart + _gapSize : _ptr; }
+        T* End() { return _ptr + _capacity; }
+        template<typename IteratorType>
+        void Insert(IteratorType start, IteratorType end, size_t pos)
+        {
+            assert(pos <= Size() && Size() + (end - start) <= Capacity());
+            if (pos != _gapStart)
+            {
+                _MoveGapStart(pos);
+            }
+            T* p = _ptr + _gapStart;
+            size_t c = 0;
+            for (auto it = start; it != end; ++it)
+            {
+                *(p++) = *it;
+                ++c;
+            }
+            _gapStart += c;
+            _gapSize -= c;
+        }
+
+    protected:
+        void _MoveGapStart(size_t newGapStart)
+        {
+            assert(newGapStart < _capacity);
+            if (newGapStart > _gapStart)
+            {
+                memmove(_ptr + _gapStart, _ptr + _gapStart + _gapSize, (newGapStart - _gapStart));
+            }
+            else
+            {
+                memmove(_ptr + newGapStart, _ptr + newGapStart + _gapSize, (_gapStart - newGapStart));
+            }
+        }
 
     protected:
         int _numLines;
         size_t _capacity;
         size_t _gapStart;
-        size_t _gapEnd;
+        size_t _gapSize;
+        T* _ptr;
     };
 
     template<typename charT>
-    class BufferNode : public BufferNodeBase
+    class BufferNode : public GapVector<charT>
     {
     public:
-        BufferNode() : _prev(this), _next(this)
-        {
-            _capacity = MinCapacity;
-            _gapStart = 0;
-            _gapEnd = _capacity;
-            _ptr = new charT[_capacity];
-        }
-        ~BufferNode()
-        {
-            delete _ptr;
-        }
-        charT* Begin() { return _ptr; }
-        charT* End() { return _ptr + _gapStart; }
-        void Insert(size_t pos, void* data, size_t size)
-        {
-            assert(pos < _capacity && pos + size < _capacity);
-            memcpy(_ptr + pos, data, size);
-            _gapStart += size;
-        }
-        template<typename IteratorType>
-        void Insert(IteratorType start, IteratorType end, size_t pos)
-        {
-            assert(pos < _capacity && pos + (end - start) < _capacity);
-            charT* p = _ptr + pos;
-            for (auto it = start; it != end; ++it)
-            {
-                *(p++) = *it;
-            }
-            _gapStart += end - start;
-        }
+        BufferNode() : _prev(this), _next(this) {}
+        ~BufferNode() {}
         BufferNode<charT>* Split()
         {
             auto newNode = new BufferNode<charT>();
@@ -83,7 +100,6 @@ namespace boar {
     protected:
         BufferNode<charT>* _prev;
         BufferNode<charT>* _next;
-        charT* _ptr;
     };
 
     class BufferBase
