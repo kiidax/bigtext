@@ -72,9 +72,16 @@ namespace boar {
     public:
         LinkedList()
         {
-            _prev = _next = new LinkedListNodeElem<elemT>();
+            InsertAfter(this);
         }
         LinkedListIterator<elemT> Begin() { return _next; }
         LinkedListIterator<elemT> End() { return this; }
+        LinkedListIterator<elemT> InsertAfter(LinkedListIterator<elemT> pos)
+        {
+            auto node = pos.Get();
+            auto newNode = new LinkedListNodeElem<elemT>();
+            node->InsertAfter(newNode);
+            return newNode;
+        }
     };
 }
