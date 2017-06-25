@@ -12,7 +12,7 @@ namespace boar {
 
     template<typename charT> class Buffer;
 
-    template<typename T>
+    template<typename charT>
     class GapVector
     {
     public:
@@ -27,7 +27,7 @@ namespace boar {
             _capacity = MinCapacity;
             _gapStart = 0;
             _gapSize = _capacity;
-            _ptr = new T[_capacity];
+            _ptr = new charT[_capacity];
         }
         ~GapVector()
         {
@@ -37,8 +37,8 @@ namespace boar {
     public:
         size_t Size() const { return _capacity - _gapSize; }
         size_t Capacity() const { return _capacity; }
-        T* Begin() { return _gapStart == 0 ? _ptr + _gapStart + _gapSize : _ptr; }
-        T* End() { return _ptr + _capacity; }
+        charT* Begin() { return _gapStart == 0 ? _ptr + _gapStart + _gapSize : _ptr; }
+        charT* End() { return _ptr + _capacity; }
         template<typename IteratorType>
         void Insert(IteratorType start, IteratorType end, size_t pos)
         {
@@ -47,7 +47,7 @@ namespace boar {
             {
                 _MoveGapStart(pos);
             }
-            T* p = _ptr + _gapStart;
+            charT* p = _ptr + _gapStart;
             size_t c = 0;
             for (auto it = start; it != end; ++it)
             {
@@ -77,7 +77,7 @@ namespace boar {
         size_t _capacity;
         size_t _gapStart;
         size_t _gapSize;
-        T* _ptr;
+        charT* _ptr;
     };
 
     template<typename charT>
