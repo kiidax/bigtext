@@ -5,10 +5,9 @@
 #pragma once
 
 #include "base.h"
-#include "linkedlist.h"
 
-#include <string>
 #include <cassert>
+#include <cstring>
 
 namespace boar {
 
@@ -30,7 +29,8 @@ namespace boar {
         }
 
     public:
-        void Reserve(size_t capacity) {
+        void Reserve(size_t capacity)
+        {
             if (capacity < Size()) capacity = Size();
             capacity = (capacity + BlockSize - 1);
             capacity -= capacity % BlockSize;
@@ -74,6 +74,23 @@ namespace boar {
             }
             _gapStart += c;
             _gapSize -= c;
+        }
+        void SplitInto(size_t pos, GapVector& other)
+        {
+            if (pos < _gapStart)
+            {
+                other.Reserve(Size() - pos);
+                other._gapStart = _gapStart - pos;
+                other._gapSize = other._capacity - (Size() - pos);
+                std::memcpy(other._ptr, _ptr + pos, _gapStart - pos);
+                std::memcpy(other._ptr + other._gapStart + other._gapSize, _ptr + _gapStart + _gapSize, _capacity - _gapStart - _gapSize);
+                _gapStart = pos;
+                _gapSize = _capacity - pos;
+            }
+            else
+            {
+                assert(false);
+            }
         }
 
     protected:
