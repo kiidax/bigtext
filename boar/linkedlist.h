@@ -74,8 +74,8 @@ namespace boar {
         {
             InsertAfter(this);
         }
-        LinkedListIterator<elemT> Begin() { return _next; }
-        LinkedListIterator<elemT> End() { return this; }
+        LinkedListIterator<elemT> begin() { return _next; }
+        LinkedListIterator<elemT> end() { return this; }
         LinkedListIterator<elemT> InsertAfter(LinkedListIterator<elemT> pos)
         {
             auto node = pos.Get();

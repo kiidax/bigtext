@@ -46,10 +46,10 @@ namespace boar
     template<>
     void Buffer<char>::Dump()
     {
-        for (auto it = _nodeList.Begin(); it != _nodeList.End(); ++it)
+        for (auto it = _nodeList.begin(); it != _nodeList.end(); ++it)
         {
-            std::cout << ">>>> Items: " << it->Size();
-            std::string str(it->Begin(), it->End());
+            std::cout << ">>>> Items: " << it->size();
+            std::string str(it->begin(), it->end());
             int len = str.size();
             if (len > 30) len = 30;
             str.resize(len);

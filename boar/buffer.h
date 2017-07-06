@@ -25,7 +25,7 @@ namespace boar {
     public:
         Buffer() : _lineSeparator('\n')
         {
-            _currentNode = _nodeList.Begin();
+            _currentNode = _nodeList.begin();
         }
         ~Buffer()
         {
@@ -34,7 +34,7 @@ namespace boar {
         void Dump();
         void Insert(const charT* data, size_t size)
         {
-            if (size > _currentNode->Capacity() - _currentNode->Size())
+            if (size > _currentNode->Capacity() - _currentNode->size())
             {
                 _currentNode = _currentNode->Split();
             }
@@ -44,11 +44,11 @@ namespace boar {
         void Insert(IteratorType begin, IteratorType end)
         {
             size_t size = end - begin;
-            if (size > _currentNode->Capacity() - _currentNode->Size())
+            if (size > _currentNode->Capacity() - _currentNode->size())
             {
                 _currentNode = _currentNode.Get()->Split();
             }
-            _currentNode->Insert<IteratorType>(begin, end, _currentNode->Size());
+            _currentNode->Insert<IteratorType>(begin, end, _currentNode->size());
         }
         void Test() {}
         void MoveBeginningOfBuffer() {}

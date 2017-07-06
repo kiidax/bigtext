@@ -9,15 +9,25 @@
 
 namespace boar
 {
+    std::wostream& operator << (std::wostream& os, GapVector<wchar_t>& v)
+    {
+        os << std::wstring(v.begin(), v.end());
+        return os;
+    }
+
     void Test_GapVector()
     {
         GapVector<wchar_t> v1;
+        assert(v1.size() == 0);
         GapVector<wchar_t> v2;
-        std::wstring s1(L"Hello World!");
+        std::wstring s1(L"Hellold!");
         v1.Insert(s1.cbegin(), s1.cend(), 0);
-        std::wstring s2(L",");
+        std::wcout << v1 << std::endl;
+        std::wstring s2(L", Wor");
         v1.Insert(s2.cbegin(), s2.cend(), 5);
+        std::wcout << v1 << std::endl;
         v1.SplitInto(3, v2);
+        std::wcout << v1 << "***" << v2 << std::endl;
     }
 
     int Main(const std::vector<std::u16string>& args)
