@@ -15,7 +15,7 @@ namespace boar {
     class GapVector
     {
     private:
-        class Iterator : public std::iterator<std::input_iterator_tag, charT>
+        struct Iterator : public std::iterator<std::input_iterator_tag, charT>
         {
         private:
             GapVector& _vector;
@@ -46,7 +46,7 @@ namespace boar {
 
     private:
 #if _DEBUG
-        static const size_t BlockSize = 100;
+        static const size_t BlockSize = 10;
 #else
         static const size_t BlockSize = 64 * 1024 * 1024;
 #endif
@@ -138,7 +138,12 @@ namespace boar {
             }
             else
             {
-                assert(false);
+                other.Reserve(size() - pos);
+                other._gapStart = size() - pos;
+                other._gapSize = other._capacity - other._gapStart;
+                std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (size() - pos));
+                _gapStart = pos;
+                _gapSize = _capacity - pos;
             }
         }
 
@@ -148,13 +153,16 @@ namespace boar {
             assert(newGapStart < _capacity);
             if (newGapStart > _gapStart)
             {
-                memmove(_ptr + _gapStart, _ptr + _gapStart + _gapSize, sizeof (charT) * (newGapStart - _gapStart));
+                std::memmove(_ptr + _gapStart, _ptr + _gapStart + _gapSize, sizeof (charT) * (newGapStart - _gapStart));
             }
             else if (newGapStart < _gapStart)
             {
-                memmove(_ptr + newGapStart + _gapSize, _ptr + newGapStart, sizeof (charT) * (_gapStart - newGapStart));
+                std::memmove(_ptr + newGapStart + _gapSize, _ptr + newGapStart, sizeof (charT) * (_gapStart - newGapStart));
             }
             _gapStart = newGapStart;
+#ifdef _DEBUG
+            std::memset(_ptr + _gapStart, 0xcc, _gapSize);
+#endif
         }
 
     protected:
