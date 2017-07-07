@@ -53,12 +53,19 @@ namespace boar {
 
     public:
         GapVector() : _ptr(), _gapStart(0), _gapSize(0), _capacity() {}
+        GapVector(const GapVector& other)
+            : _gapStart(other._gapStart),
+            _gapSize(other._gapSize),
+            _capacity(other._capacity)
+        {
+            _ptr = new charT[_capacity];
+            std::memcpy(_ptr, other._ptr, sizeof(charT) * _capacity);
+        }
         ~GapVector()
         {
             delete _ptr;
         }
 
-    public:
         void Reserve(size_t capacity)
         {
             if (capacity < size()) capacity = size();
@@ -86,6 +93,7 @@ namespace boar {
             }
         }
         size_t size() const { return _capacity - _gapSize; }
+        bool empty() const { return size() == 0; }
         size_t Capacity() const { return _capacity; }
         charT& operator [] (size_t position)
         {
