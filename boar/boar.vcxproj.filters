@@ -47,7 +47,7 @@
     <ClInclude Include="linkedlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gapvector.h">
+    <ClInclude Include="minibuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

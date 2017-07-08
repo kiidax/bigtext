@@ -5,7 +5,7 @@
 #pragma once
 
 #include "base.h"
-#include "gapvector.h"
+#include "minibuffer.h"
 #include "linkedlist.h"
 
 #include <string>
@@ -14,7 +14,7 @@
 namespace boar {
 
     template<typename charT>
-    class BufferNode : public GapVector<charT>
+    class BufferNode : public MiniBuffer<charT>
     {
 
     };
@@ -32,23 +32,23 @@ namespace boar {
         }
         void Open(const char16_t* fileName);
         void Dump();
-        void Insert(const charT* data, size_t size)
+        void insert(const charT* data, size_t size)
         {
-            if (size > _currentNode->Capacity() - _currentNode->size())
+            if (size > _currentNode->capacity() - _currentNode->size())
             {
                 _currentNode = _currentNode->Split();
             }
-            _currentNode->Insert(data, size);
+            _currentNode->insert(data, size);
         }
         template<typename IteratorType>
-        void Insert(IteratorType begin, IteratorType end)
+        void insert(IteratorType begin, IteratorType end)
         {
             size_t size = end - begin;
-            if (size > _currentNode->Capacity() - _currentNode->size())
+            if (size > _currentNode->capacity() - _currentNode->size())
             {
                 _currentNode = _currentNode.Get()->Split();
             }
-            _currentNode->Insert<IteratorType>(begin, end, _currentNode->size());
+            _currentNode->insert<IteratorType>(begin, end, _currentNode->size());
         }
         void Test() {}
         void MoveBeginningOfBuffer() {}

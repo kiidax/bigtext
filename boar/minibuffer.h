@@ -12,17 +12,17 @@
 namespace boar {
 
     template<typename charT>
-    class GapVector
+    class MiniBuffer
     {
     private:
         struct Iterator : public std::iterator<std::input_iterator_tag, charT>
         {
         private:
-            GapVector& _vector;
+            MiniBuffer& _vector;
             size_t _position;
 
         public:
-            Iterator(GapVector& vector, size_t position)
+            Iterator(MiniBuffer& vector, size_t position)
                 : _vector(vector), _position(position) {}
             bool operator ==(const Iterator& other) const
             {
@@ -52,8 +52,8 @@ namespace boar {
 #endif
 
     public:
-        GapVector() : _ptr(), _gapStart(0), _gapSize(0), _capacity() {}
-        GapVector(const GapVector& other)
+        MiniBuffer() : _ptr(), _gapStart(0), _gapSize(0), _capacity() {}
+        MiniBuffer(const MiniBuffer& other)
             : _gapStart(other._gapStart),
             _gapSize(other._gapSize),
             _capacity(other._capacity)
@@ -61,40 +61,14 @@ namespace boar {
             _ptr = new charT[_capacity];
             std::memcpy(_ptr, other._ptr, sizeof(charT) * _capacity);
         }
-        ~GapVector()
+        ~MiniBuffer()
         {
             delete _ptr;
         }
 
-        void Reserve(size_t capacity)
-        {
-            if (capacity < size()) capacity = size();
-            capacity = (capacity + BlockSize - 1);
-            capacity -= capacity % BlockSize;
-            if (_capacity != capacity)
-            {
-                auto newPtr = new charT[capacity];
-                if (_ptr != nullptr)
-                {
-                    std::memcpy(newPtr, _ptr, sizeof (charT) * _gapStart);
-                    size_t copySize = _capacity - (_gapStart + _gapSize);
-                    std::memcpy(newPtr + capacity - copySize, _ptr + _capacity - copySize, sizeof (charT) * copySize);
-                    _gapSize += capacity - _capacity;
-                }
-                else
-                {
-                    assert(_gapStart == 0);
-                    _gapStart = 0;
-                    _gapSize = capacity;
-                }
-                _capacity = capacity;
-                delete _ptr;
-                _ptr = newPtr;
-            }
-        }
         size_t size() const { return _capacity - _gapSize; }
         bool empty() const { return size() == 0; }
-        size_t Capacity() const { return _capacity; }
+        size_t capacity() const { return _capacity; }
         charT& operator [] (size_t position)
         {
             if (position < _gapStart)
@@ -108,12 +82,38 @@ namespace boar {
         }
         Iterator begin() { return Iterator(*this, 0); }
         Iterator end() { return Iterator(*this, size()); }
-        template<typename IteratorType>
-        void Insert(IteratorType start, IteratorType end, size_t pos)
+        void reserve(size_t capacity)
         {
-            Reserve(size() + (end - start));
-            assert(pos <= size() && size() + (end - start) <= Capacity());
-            _SetGapStart(pos);
+            if (capacity < size()) capacity = size();
+            capacity = (capacity + BlockSize - 1);
+            capacity -= capacity % BlockSize;
+            if (_capacity != capacity)
+            {
+                auto newPtr = new charT[capacity];
+                if (_ptr != nullptr)
+                {
+                    std::memcpy(newPtr, _ptr, sizeof(charT) * _gapStart);
+                    size_t copySize = _capacity - (_gapStart + _gapSize);
+                    std::memcpy(newPtr + capacity - copySize, _ptr + _capacity - copySize, sizeof(charT) * copySize);
+                    _gapSize += capacity - _capacity;
+                }
+                else
+                {
+                    assert(_gapStart == 0);
+                    _gapStart = 0;
+                    _gapSize = capacity;
+                }
+                _capacity = capacity;
+                delete _ptr;
+                _ptr = newPtr;
+            }
+        }
+        template<typename IteratorType>
+        void insert(IteratorType start, IteratorType end, size_t pos)
+        {
+            reserve(size() + (end - start));
+            assert(pos <= size() && size() + (end - start) <= capacity());
+            _setgapstart(pos);
             charT* p = _ptr + _gapStart;
             size_t c = 0;
             for (auto it = start; it != end; ++it)
@@ -124,11 +124,11 @@ namespace boar {
             _gapStart += c;
             _gapSize -= c;
         }
-        void SplitInto(size_t pos, GapVector& other)
+        void splitinto(size_t pos, MiniBuffer& other)
         {
             if (pos < _gapStart)
             {
-                other.Reserve(size() - pos);
+                other.reserve(size() - pos);
                 other._gapStart = _gapStart - pos;
                 other._gapSize = other._capacity - (size() - pos);
                 std::memcpy(other._ptr, _ptr + pos, sizeof (charT) * _gapStart - pos);
@@ -138,7 +138,7 @@ namespace boar {
             }
             else
             {
-                other.Reserve(size() - pos);
+                other.reserve(size() - pos);
                 other._gapStart = size() - pos;
                 other._gapSize = other._capacity - other._gapStart;
                 std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (size() - pos));
@@ -148,7 +148,7 @@ namespace boar {
         }
 
     protected:
-        void _SetGapStart(size_t newGapStart)
+        void _setgapstart(size_t newGapStart)
         {
             assert(newGapStart < _capacity);
             if (newGapStart > _gapStart)
