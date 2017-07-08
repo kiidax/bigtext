@@ -89,21 +89,19 @@ namespace boar {
                 _ptr = newPtr;
             }
         }
-        template<typename IteratorType>
-        void Insert(IteratorType first, IteratorType last, size_t pos)
+        void Insert(size_t pos, const charT* s, size_t n)
         {
-            Reserve(GetSize() + (last - first));
-            assert(pos <= GetSize() && GetSize() + (last - first) <= GetCapacity());
+            Reserve(GetSize() + n);
+            assert(pos <= GetSize() && GetSize() + n <= GetCapacity());
             _SetGapPosition(pos);
-            charT* p = _ptr + _gapStart;
-            size_t c = 0;
-            for (auto it = first; it != last; ++it)
-            {
-                *(p++) = *it;
-                ++c;
-            }
-            _gapStart += c;
-            _gapSize -= c;
+            assert(n <= _gapSize);
+            std::memcpy(_ptr + _gapStart, s, sizeof (charT) * n);
+            _gapStart += n;
+            _gapSize -= n;
+        }
+        void Insert(size_t pos, const std::basic_string<charT> str)
+        {
+            Insert(pos, str.c_str(), str.length());
         }
         void SplitTo(size_t pos, MiniBuffer& other)
         {

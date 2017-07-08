@@ -21,7 +21,7 @@ namespace boar
             {
                 std::string linenl(line.begin(), line.end());
                 linenl += _lineSeparator;
-                Insert(linenl.c_str(), linenl.c_str() + linenl.length());
+                Insert(linenl.c_str(), linenl.length());
             }
         }
     }
@@ -38,7 +38,7 @@ namespace boar
             {
                 std::wstring line(line.begin(), line.end());
                 line += _lineSeparator;
-                Insert(line.c_str(), line.c_str() + line.length());
+                Insert(line.c_str(), line.length());
             }
         }
     }

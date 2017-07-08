@@ -24,14 +24,14 @@ namespace boar
 
         // Insert to an empty vector.
         std::wstring s1(L"Hellorld!");
-        v1.Insert(s1.cbegin(), s1.cend(), 0);
+        v1.Insert(0, s1);
         assert(v1.GetSize() == s1.size());
         assert(!v1.IsEmpty());
         std::wcout << v1 << std::endl;
 
         // Insert to the middle.
         std::wstring s2(L"o, W");
-        v1.Insert(s2.cbegin(), s2.cend(), 4);
+        v1.Insert(4, s2);
         assert(v1.GetSize() == s1.size() + s2.size());
         std::wcout << v1 << std::endl;
 
