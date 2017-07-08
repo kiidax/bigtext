@@ -11,7 +11,7 @@ namespace boar
 {
     std::wostream& operator << (std::wostream& os, MiniBuffer<wchar_t>& v)
     {
-        os << std::wstring(v.begin(), v.end());
+        os << std::wstring(v);
         return os;
     }
 

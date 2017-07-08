@@ -15,36 +15,6 @@ namespace boar {
     class MiniBuffer
     {
     private:
-        struct Iterator : public std::iterator<std::input_iterator_tag, charT>
-        {
-        private:
-            MiniBuffer& _vector;
-            size_t _position;
-
-        public:
-            Iterator(MiniBuffer& vector, size_t position)
-                : _vector(vector), _position(position) {}
-            bool operator ==(const Iterator& other) const
-            {
-                assert(&_vector == &other._vector);
-                return _position == other._position;
-            }
-            bool operator !=(const Iterator& other) const
-            {
-                return !(*this == other);
-            }
-            Iterator& operator ++()
-            {
-                ++_position;
-                return *this;
-            }
-            charT& operator *()
-            {
-                return _vector[_position];
-            }
-        };
-
-    private:
 #if _DEBUG
         static const size_t BlockSize = 10;
 #else
@@ -80,8 +50,19 @@ namespace boar {
                 return _ptr[position + _gapSize];
             }
         }
-        Iterator begin() { return Iterator(*this, 0); }
-        Iterator end() { return Iterator(*this, size()); }
+        operator std::basic_string<charT>()
+        {
+            std::basic_string<charT> res;
+            if (_gapStart > 0)
+            {
+                res.append(_ptr, _gapStart);
+            }
+            if (_capacity > _gapStart + _gapSize)
+            {
+                res.append(_ptr + _gapStart + _gapSize, _capacity - (_gapStart + _gapSize));
+            }
+            return res;
+        }
         void reserve(size_t capacity)
         {
             if (capacity < size()) capacity = size();

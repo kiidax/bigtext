@@ -49,7 +49,7 @@ namespace boar
         for (auto it = _nodeList.begin(); it != _nodeList.end(); ++it)
         {
             std::cout << ">>>> Items: " << it->size();
-            std::string str(it->begin(), it->end());
+            std::string str(*(it.Get()->Get()));
             int len = str.size();
             if (len > 30) len = 30;
             str.resize(len);
