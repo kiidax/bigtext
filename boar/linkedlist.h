@@ -16,7 +16,7 @@ namespace boar {
         public:
             LinkedListNode() : _prev(this), _next(this) {}
             ~LinkedListNode() {}
-            LinkedListNode* Next() { return _next; }
+            LinkedListNode* GetNext() { return _next; }
             void InsertAfter(LinkedListNode* other)
             {
                 other->_prev = this;
@@ -48,7 +48,7 @@ namespace boar {
     }
 
     template<typename elemT>
-    class LinkedListIterator
+    struct LinkedListIterator : public std::iterator<std::bidirectional_iterator_tag, LinkedListNode<elemT>>
     {
     public:
         LinkedListIterator(LinkedListNode<elemT> *elem) : _current(elem) {}
@@ -64,7 +64,10 @@ namespace boar {
         {
             return *(GetCurrent()->Get());
         }
-        LinkedListIterator& operator ++() { _current = _current->Next(); return *this; }
+        LinkedListIterator& operator ++() {
+            _current = _current->GetNext();
+            return *this;
+        }
 
     protected:
         LinkedListNode<elemT>* _current;
@@ -77,6 +80,22 @@ namespace boar {
         LinkedList()
         {
             InsertAfter(this);
+        }
+        ~LinkedList()
+        {
+            Clear();
+        }
+        void Clear()
+        {
+            LinkedListNode<elemT>* node = _next;
+            while (node != this)
+            {
+                LinkedListNode<elemT>* nextNode = node->GetNext();
+                delete node;
+                node = nextNode;
+            }
+            _next = this;
+            _prev = this;
         }
         LinkedListIterator<elemT> begin() { return _next; }
         LinkedListIterator<elemT> end() { return this; }

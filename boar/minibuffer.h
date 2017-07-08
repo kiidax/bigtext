@@ -91,8 +91,9 @@ namespace boar {
         }
         void Insert(size_t pos, const charT* s, size_t n)
         {
+            assert(pos <= GetSize());
             Reserve(GetSize() + n);
-            assert(pos <= GetSize() && GetSize() + n <= GetCapacity());
+            assert(GetSize() + n <= GetCapacity());
             _SetGapPosition(pos);
             assert(n <= _gapSize);
             std::memcpy(_ptr + _gapStart, s, sizeof (charT) * n);
