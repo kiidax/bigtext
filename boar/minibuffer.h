@@ -36,9 +36,9 @@ namespace boar {
             delete _ptr;
         }
 
-        size_t Size() const { return _capacity - _gapSize; }
-        bool empty() const { return Size() == 0; }
-        size_t Capacity() const { return _capacity; }
+        size_t GetSize() const { return _capacity - _gapSize; }
+        bool IsEmpty() const { return GetSize() == 0; }
+        size_t GetCapacity() const { return _capacity; }
         charT& operator [] (size_t position)
         {
             if (position < _gapStart)
@@ -65,7 +65,7 @@ namespace boar {
         }
         void Reserve(size_t capacity)
         {
-            if (capacity < Size()) capacity = Size();
+            if (capacity < GetSize()) capacity = GetSize();
             capacity = (capacity + BlockSize - 1);
             capacity -= capacity % BlockSize;
             if (_capacity != capacity)
@@ -92,9 +92,9 @@ namespace boar {
         template<typename IteratorType>
         void Insert(IteratorType first, IteratorType last, size_t pos)
         {
-            Reserve(Size() + (last - first));
-            assert(pos <= Size() && Size() + (last - first) <= Capacity());
-            _setgapstart(pos);
+            Reserve(GetSize() + (last - first));
+            assert(pos <= GetSize() && GetSize() + (last - first) <= GetCapacity());
+            _SetGapPosition(pos);
             charT* p = _ptr + _gapStart;
             size_t c = 0;
             for (auto it = first; it != last; ++it)
@@ -105,31 +105,30 @@ namespace boar {
             _gapStart += c;
             _gapSize -= c;
         }
-        void splitinto(size_t pos, MiniBuffer& other)
+        void SplitTo(size_t pos, MiniBuffer& other)
         {
+            other.Reserve(GetSize() - pos);
             if (pos < _gapStart)
             {
-                other.Reserve(Size() - pos);
                 other._gapStart = _gapStart - pos;
-                other._gapSize = other._capacity - (Size() - pos);
-                std::memcpy(other._ptr, _ptr + pos, sizeof (charT) * _gapStart - pos);
+                other._gapSize = other._capacity - (GetSize() - pos);
+                std::memcpy(other._ptr, _ptr + pos, sizeof (charT) * (_gapStart - pos));
                 std::memcpy(other._ptr + other._gapStart + other._gapSize, _ptr + _gapStart + _gapSize, sizeof (charT) * (_capacity - _gapStart - _gapSize));
                 _gapStart = pos;
                 _gapSize = _capacity - pos;
             }
             else
             {
-                other.Reserve(Size() - pos);
-                other._gapStart = Size() - pos;
+                other._gapStart = GetSize() - pos;
                 other._gapSize = other._capacity - other._gapStart;
-                std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (Size() - pos));
+                std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (GetSize() - pos));
                 _gapStart = pos;
                 _gapSize = _capacity - pos;
             }
         }
 
     protected:
-        void _setgapstart(size_t newGapStart)
+        void _SetGapPosition(size_t newGapStart)
         {
             assert(newGapStart < _capacity);
             if (newGapStart > _gapStart)

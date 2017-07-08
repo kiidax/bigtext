@@ -34,7 +34,7 @@ namespace boar {
         void Dump();
         void Insert(const charT* data, size_t size)
         {
-            if (size > _currentNode->Capacity() - _currentNode->Size())
+            if (size > _currentNode->GetCapacity() - _currentNode->GetSize())
             {
                 _currentNode = _currentNode->Split();
             }
@@ -44,11 +44,11 @@ namespace boar {
         void Insert(IteratorType first, IteratorType last)
         {
             size_t size = last - first;
-            if (size > _currentNode->Capacity() - _currentNode->Size())
+            if (size > _currentNode->GetCapacity() - _currentNode->GetSize())
             {
                 _currentNode = _currentNode.GetCurrent()->Split();
             }
-            _currentNode->Insert<IteratorType>(first, last, _currentNode->Size());
+            _currentNode->Insert<IteratorType>(first, last, _currentNode->GetSize());
         }
         void Test() {}
         void MoveBeginningOfBuffer() {}

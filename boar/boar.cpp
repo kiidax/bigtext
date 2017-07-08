@@ -19,39 +19,39 @@ namespace boar
     {
         // Empty constructor.
         MiniBuffer<wchar_t> v1;
-        assert(v1.Size() == 0);
-        assert(v1.empty());
+        assert(v1.GetSize() == 0);
+        assert(v1.IsEmpty());
 
         // Insert to an empty vector.
         std::wstring s1(L"Hellorld!");
         v1.Insert(s1.cbegin(), s1.cend(), 0);
-        assert(v1.Size() == s1.size());
-        assert(!v1.empty());
+        assert(v1.GetSize() == s1.size());
+        assert(!v1.IsEmpty());
         std::wcout << v1 << std::endl;
 
         // Insert to the middle.
         std::wstring s2(L"o, W");
         v1.Insert(s2.cbegin(), s2.cend(), 4);
-        assert(v1.Size() == s1.size() + s2.size());
+        assert(v1.GetSize() == s1.size() + s2.size());
         std::wcout << v1 << std::endl;
 
         // Splitting before the gap.
         MiniBuffer<wchar_t> v2;
-        v1.splitinto(2, v2);
-        assert(v1.Size() == 2);
-        assert(v2.Size() == s1.size() + s2.size() - 2);
+        v1.SplitTo(2, v2);
+        assert(v1.GetSize() == 2);
+        assert(v2.GetSize() == s1.size() + s2.size() - 2);
         std::wcout << v1 << "***" << v2 << std::endl;
 
         // Splitting after the gap.
         MiniBuffer<wchar_t> v3;
-        v2.splitinto(4, v3);
-        assert(v2.Size() == 4);
-        assert(v3.Size() == s1.size() + s2.size() - 2 - 4);
+        v2.SplitTo(4, v3);
+        assert(v2.GetSize() == 4);
+        assert(v3.GetSize() == s1.size() + s2.size() - 2 - 4);
         std::wcout << v1 << "***" << v2 << "***" << v3 << std::endl;
 
         // Copy constructor.
         MiniBuffer<wchar_t> v4(v2);
-        assert(v4.Size() == 4);
+        assert(v4.GetSize() == 4);
         std::wcout << v1 << "***" << v4 << "***" << v3 << std::endl;
     }
 

@@ -48,7 +48,7 @@ namespace boar
     {
         for (auto it = _nodeList.begin(); it != _nodeList.end(); ++it)
         {
-            std::cout << ">>>> Items: " << it->Size();
+            std::cout << ">>>> Items: " << it->GetSize();
             std::string str(*it);
             int len = str.size();
             if (len > 30) len = 30;
