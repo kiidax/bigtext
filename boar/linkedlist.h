@@ -53,12 +53,16 @@ namespace boar {
     public:
         LinkedListIterator(LinkedListNode<elemT> *elem) : _current(elem) {}
         LinkedListIterator() : LinkedListIterator(nullptr) {}
-        LinkedListNodeElem<elemT>* Get() { return reinterpret_cast<LinkedListNodeElem<elemT>*>(_current); }
+        LinkedListNodeElem<elemT>* GetCurrent() { return reinterpret_cast<LinkedListNodeElem<elemT>*>(_current); }
         bool operator ==(const LinkedListIterator& other) const { return _current == other._current; }
         bool operator !=(const LinkedListIterator& other) const { return _current != other._current; }
         elemT* operator ->()
         {
-            return Get()->Get();
+            return GetCurrent()->Get();
+        }
+        elemT& operator *()
+        {
+            return *(GetCurrent()->Get());
         }
         LinkedListIterator& operator ++() { _current = _current->Next(); return *this; }
 
@@ -78,7 +82,7 @@ namespace boar {
         LinkedListIterator<elemT> end() { return this; }
         LinkedListIterator<elemT> InsertAfter(LinkedListIterator<elemT> pos)
         {
-            auto node = pos.Get();
+            auto node = pos.GetCurrent();
             auto newNode = new LinkedListNodeElem<elemT>();
             node->InsertAfter(newNode);
             return newNode;

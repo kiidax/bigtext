@@ -21,7 +21,7 @@ namespace boar
             {
                 std::string linenl(line.begin(), line.end());
                 linenl += _lineSeparator;
-                insert(linenl.c_str(), linenl.c_str() + linenl.length());
+                Insert(linenl.c_str(), linenl.c_str() + linenl.length());
             }
         }
     }
@@ -38,7 +38,7 @@ namespace boar
             {
                 std::wstring line(line.begin(), line.end());
                 line += _lineSeparator;
-                insert(line.c_str(), line.c_str() + line.length());
+                Insert(line.c_str(), line.c_str() + line.length());
             }
         }
     }
@@ -48,8 +48,8 @@ namespace boar
     {
         for (auto it = _nodeList.begin(); it != _nodeList.end(); ++it)
         {
-            std::cout << ">>>> Items: " << it->size();
-            std::string str(*(it.Get()->Get()));
+            std::cout << ">>>> Items: " << it->Size();
+            std::string str(*it);
             int len = str.size();
             if (len > 30) len = 30;
             str.resize(len);

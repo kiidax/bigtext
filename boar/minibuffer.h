@@ -36,9 +36,9 @@ namespace boar {
             delete _ptr;
         }
 
-        size_t size() const { return _capacity - _gapSize; }
-        bool empty() const { return size() == 0; }
-        size_t capacity() const { return _capacity; }
+        size_t Size() const { return _capacity - _gapSize; }
+        bool empty() const { return Size() == 0; }
+        size_t Capacity() const { return _capacity; }
         charT& operator [] (size_t position)
         {
             if (position < _gapStart)
@@ -63,9 +63,9 @@ namespace boar {
             }
             return res;
         }
-        void reserve(size_t capacity)
+        void Reserve(size_t capacity)
         {
-            if (capacity < size()) capacity = size();
+            if (capacity < Size()) capacity = Size();
             capacity = (capacity + BlockSize - 1);
             capacity -= capacity % BlockSize;
             if (_capacity != capacity)
@@ -90,14 +90,14 @@ namespace boar {
             }
         }
         template<typename IteratorType>
-        void insert(IteratorType start, IteratorType end, size_t pos)
+        void Insert(IteratorType first, IteratorType last, size_t pos)
         {
-            reserve(size() + (end - start));
-            assert(pos <= size() && size() + (end - start) <= capacity());
+            Reserve(Size() + (last - first));
+            assert(pos <= Size() && Size() + (last - first) <= Capacity());
             _setgapstart(pos);
             charT* p = _ptr + _gapStart;
             size_t c = 0;
-            for (auto it = start; it != end; ++it)
+            for (auto it = first; it != last; ++it)
             {
                 *(p++) = *it;
                 ++c;
@@ -109,9 +109,9 @@ namespace boar {
         {
             if (pos < _gapStart)
             {
-                other.reserve(size() - pos);
+                other.Reserve(Size() - pos);
                 other._gapStart = _gapStart - pos;
-                other._gapSize = other._capacity - (size() - pos);
+                other._gapSize = other._capacity - (Size() - pos);
                 std::memcpy(other._ptr, _ptr + pos, sizeof (charT) * _gapStart - pos);
                 std::memcpy(other._ptr + other._gapStart + other._gapSize, _ptr + _gapStart + _gapSize, sizeof (charT) * (_capacity - _gapStart - _gapSize));
                 _gapStart = pos;
@@ -119,10 +119,10 @@ namespace boar {
             }
             else
             {
-                other.reserve(size() - pos);
-                other._gapStart = size() - pos;
+                other.Reserve(Size() - pos);
+                other._gapStart = Size() - pos;
                 other._gapSize = other._capacity - other._gapStart;
-                std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (size() - pos));
+                std::memcpy(other._ptr, _ptr + pos + _gapSize, sizeof(charT) * (Size() - pos));
                 _gapStart = pos;
                 _gapSize = _capacity - pos;
             }

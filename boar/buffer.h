@@ -32,23 +32,23 @@ namespace boar {
         }
         void Open(const char16_t* fileName);
         void Dump();
-        void insert(const charT* data, size_t size)
+        void Insert(const charT* data, size_t size)
         {
-            if (size > _currentNode->capacity() - _currentNode->size())
+            if (size > _currentNode->Capacity() - _currentNode->Size())
             {
                 _currentNode = _currentNode->Split();
             }
-            _currentNode->insert(data, size);
+            _currentNode->Insert(data, size);
         }
         template<typename IteratorType>
-        void insert(IteratorType begin, IteratorType end)
+        void Insert(IteratorType first, IteratorType last)
         {
-            size_t size = end - begin;
-            if (size > _currentNode->capacity() - _currentNode->size())
+            size_t size = last - first;
+            if (size > _currentNode->Capacity() - _currentNode->Size())
             {
-                _currentNode = _currentNode.Get()->Split();
+                _currentNode = _currentNode.GetCurrent()->Split();
             }
-            _currentNode->insert<IteratorType>(begin, end, _currentNode->size());
+            _currentNode->Insert<IteratorType>(first, last, _currentNode->Size());
         }
         void Test() {}
         void MoveBeginningOfBuffer() {}
