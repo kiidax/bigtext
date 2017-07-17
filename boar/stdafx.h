@@ -2,6 +2,8 @@
 
 #include "targetver.h"
 
+#include <Windows.h>
+
 #include <tchar.h>
 #include <cstdint>
 #include <cassert>

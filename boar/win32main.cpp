@@ -1,6 +1,6 @@
 /* Boar - Boar is a toolkit to modify text files.
-* Copyright (C) 2017 Katsuya Iida. All rights reserved.
-*/
+ * Copyright (C) 2017 Katsuya Iida. All rights reserved.
+ */
 
 #include "stdafx.h"
 
@@ -17,4 +17,3 @@ int _tmain(int argc, TCHAR** argv)
     }
     return Main(args);
 }
-

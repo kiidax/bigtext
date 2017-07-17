@@ -1,73 +1,51 @@
 /* Boar - Boar is a toolkit to modify text files.
-* Copyright (C) 2017 Katsuya Iida. All rights reserved.
-*/
+ * Copyright (C) 2017 Katsuya Iida. All rights reserved.
+ */
 
 #include "stdafx.h"
 
 #include "boar.h"
-#include "buffer.h"
 
 namespace boar
 {
-    std::wostream& operator << (std::wostream& os, MiniBuffer<wchar_t>& v)
-    {
-        os << std::wstring(v);
-        return os;
-    }
-
-    void Test_MiniBuffer()
-    {
-        // Empty constructor.
-        MiniBuffer<wchar_t> v1;
-        assert(v1.GetSize() == 0);
-        assert(v1.IsEmpty());
-
-        // Insert to an empty vector.
-        std::wstring s1(L"Hellorld!");
-        v1.Insert(0, s1);
-        assert(v1.GetSize() == s1.size());
-        assert(!v1.IsEmpty());
-        std::wcout << v1 << std::endl;
-
-        // Insert to the middle.
-        std::wstring s2(L"o, W");
-        v1.Insert(4, s2);
-        assert(v1.GetSize() == s1.size() + s2.size());
-        std::wcout << v1 << std::endl;
-
-        // Splitting before the gap.
-        MiniBuffer<wchar_t> v2;
-        v1.SplitTo(2, v2);
-        assert(v1.GetSize() == 2);
-        assert(v2.GetSize() == s1.size() + s2.size() - 2);
-        std::wcout << v1 << "***" << v2 << std::endl;
-
-        // Splitting after the gap.
-        MiniBuffer<wchar_t> v3;
-        v2.SplitTo(4, v3);
-        assert(v2.GetSize() == 4);
-        assert(v3.GetSize() == s1.size() + s2.size() - 2 - 4);
-        std::wcout << v1 << "***" << v2 << "***" << v3 << std::endl;
-
-        // Copy constructor.
-        MiniBuffer<wchar_t> v4(v2);
-        assert(v4.GetSize() == 4);
-        std::wcout << v1 << "***" << v4 << "***" << v3 << std::endl;
-    }
-
     int Main(const std::vector<std::u16string>& args)
     {
-        Test_MiniBuffer();
-        Buffer<char> buffer;
-        buffer.Open(args[0].c_str());
-        buffer.Test();
-        buffer.Dump();
-        buffer.MoveBeginningOfBuffer();
-        while (true)
+        bool success = false;
+        HANDLE hFile = CreateFile(_T("test.txt"), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
         {
-            auto line = buffer.GetLineAndMoveNext();
-            if (line.empty()) break;
-            std::cout << line << std::endl;
+            BYTE buf[1024];
+            DWORD bytesRead;
+            BOOL res = ReadFile(hFile, buf, sizeof buf, &bytesRead, NULL);
+            std::cout << std::string(reinterpret_cast<char*>(buf), bytesRead) << std::endl;
+
+            HANDLE hMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+            if (hMapping != NULL)
+            {
+                VOID* lpAddress = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+                if (lpAddress != NULL)
+                {
+                    MEMORY_BASIC_INFORMATION mbi;
+                    if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
+                    {
+                        std::cout << mbi.RegionSize << std::endl;
+                        std::string s(reinterpret_cast<char*>(lpAddress), mbi.RegionSize);
+                        std::cout << s << std::endl;
+                        success = true;
+                    }
+                    UnmapViewOfFile(lpAddress);
+                }
+                CloseHandle(hMapping);
+            }
+            CloseHandle(hFile);
+        }
+        if (!success)
+        {
+            DWORD dwErrorCode = GetLastError();
+            TCHAR buf[1024];
+            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwErrorCode, 0, buf, sizeof buf, NULL);
+            std::wstring s(reinterpret_cast<wchar_t*>(buf));
+            std::wcout << s.substr(0, s.length() - 2) << std::endl;
         }
 
         return 0;

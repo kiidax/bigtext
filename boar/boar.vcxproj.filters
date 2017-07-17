@@ -24,9 +24,6 @@
     <ClCompile Include="win32main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="buffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -39,15 +36,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="boar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linkedlist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="minibuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
