@@ -49,79 +49,92 @@ namespace boar
         }
     }
 
-    size_t g = 0;
-
-    clock_t startTime;
-    clock_t endTime;
-    boost::mutex test4mutex;
-    boost::condition_variable test4cond;
-    int i;
-    void Test4a()
+    struct ChunkInfo
     {
-        const boost::filesystem::path filename(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
-        TestWithFile(filename, [](const void* addr, size_t n) {
-            TaskQueue queue;
-            g = 0;
-            i = 0;
-            queue.Start();
-            startTime = clock();
-            const char* first = reinterpret_cast<const char*>(addr);
-            const char* last = first + n;
-            const size_t step = 64 * 1024;
-            for (auto cur = first; cur < last; cur += step)
-            {
-                const char* cfirst = cur;
-                const char* clast = min(cur + step, last);
-                auto f = [cfirst, clast]() {
-                    size_t count = 0;
-                    for (auto cur = cfirst; cur < clast; ++cur)
-                    {
-                        if (*cur == '\n') ++count;
-                    }
-                    boost::mutex::scoped_lock lock(test4mutex);
-                    g += count;
-                    --i;
-                    //std::cout << "local\t" << i << '\t' << (void*)cfirst << '\t' << (void*)clast << '\t' << count << std::endl;
-                    if (i == 0)
-                    {
-                        test4cond.notify_one();
-                        //std::cout << "done" << std::endl;
-                    }
-                };
-                {
-                    boost::mutex::scoped_lock lock(test4mutex);
-                    ++i;
-                }
-                queue.PushTask(f);
-            }
-            while (true)
-            {
-                boost::mutex::scoped_lock lock(test4mutex);
-                if (i != 0) 
-                {
-                    //std::cout << "wait" << std::endl;
-                    test4cond.wait(lock);
-                    //std::cout << "wake" << i << std::endl;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            endTime = clock();
-        });
-    }
+    public:
+        size_t lineCount;
+    };
 
-    void Test4()
+    class TestClass
     {
-        Test4a();
-        clock_t t = endTime - startTime;
-        std::cout << g << '\t' << t << std::endl;
-    }
+    private:
+        TaskQueue& _queue;
+        boost::circular_buffer<ChunkInfo> _buffer;
+
+        size_t lineCount = 0;
+        clock_t startTime;
+        clock_t endTime;
+        boost::mutex _mutex;
+        boost::condition_variable test4cond;
+        static const size_t CHUNK_SIZE = 64 * 1024;
+        int i;
+
+    public:
+        TestClass(TaskQueue& queue)
+            : _queue(queue) {}
+        void LineCount(const boost::filesystem::path& fileName)
+        {
+            TestWithFile(fileName, [this](const void* addr, size_t n) {
+                lineCount = 0;
+                i = 0;
+                _queue.Start();
+                startTime = clock();
+                const char* first = reinterpret_cast<const char*>(addr);
+                const char* last = first + n;
+                for (auto cur = first; cur < last; cur += CHUNK_SIZE)
+                {
+                    const char* cfirst = cur;
+                    const char* clast = min(cur + CHUNK_SIZE, last);
+                    ChunkInfo info;
+                    //_buffer.push_back(info);
+                    auto f = [this, cfirst, clast]() {
+                        size_t count = 0;
+                        for (auto cur = cfirst; cur < clast; ++cur)
+                        {
+                            if (*cur == '\n') ++count;
+                        }
+                        boost::mutex::scoped_lock lock(_mutex);
+                        lineCount += count;
+                        --i;
+                        if (i == 0)
+                        {
+                            test4cond.notify_one();
+                        }
+                    };
+                    {
+                        boost::mutex::scoped_lock lock(_mutex);
+                        ++i;
+                    }
+                    _queue.PushTask(f);
+                }
+                while (true)
+                {
+                    boost::mutex::scoped_lock lock(_mutex);
+                    if (i != 0)
+                    {
+                        test4cond.wait(lock);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                endTime = clock();
+            });
+        }
+        void DumpProfile()
+        {
+            clock_t t = endTime - startTime;
+            std::cout << lineCount << '\t' << t << std::endl;
+        }
+    };
 
     int Main(const std::vector<std::u16string>& args)
     {
-        Test4();
+        TaskQueue queue;
+        TestClass test(queue);
+        const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
+        test.LineCount(fileName);
         return 0;
     }
 }
