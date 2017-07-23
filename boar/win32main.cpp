@@ -6,7 +6,13 @@
 
 #include "boar.h"
 
-using namespace boar;
+namespace boar
+{
+    void OpenFileMap()
+    {
+
+    }
+}
 
 int _tmain(int argc, TCHAR** argv)
 {
@@ -15,5 +21,5 @@ int _tmain(int argc, TCHAR** argv)
     {
         args.push_back(std::u16string((char16_t*)argv[i]));
     }
-    return Main(args);
+    return boar::Main(args);
 }

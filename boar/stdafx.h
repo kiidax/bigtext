@@ -14,3 +14,6 @@
 #include <vector>
 #include <new>
 #include <memory>
+
+#include <boost/thread/thread.hpp>
+#include <boost/circular_buffer.hpp>
