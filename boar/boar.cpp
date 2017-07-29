@@ -105,7 +105,10 @@ namespace boar
                         boost::mutex::scoped_lock lock(_mutex);
                         ++i;
                     }
-                    _queue.PushTask(f);
+                    TaskInfo task;
+                    task.func = f;
+                    task.done = false;
+                    _queue.PushTask(task);
                 }
                 while (true)
                 {
@@ -131,10 +134,30 @@ namespace boar
 
     int Main(const std::vector<std::u16string>& args)
     {
-        TaskQueue queue;
-        TestClass test(queue);
-        const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
-        test.LineCount(fileName);
+        for (int i = 0; i < 10; i++)
+        {
+            TaskQueue queue;
+            TestClass test(queue);
+            const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
+            test.LineCount(fileName);
+            test.DumpProfile();
+
+            {
+                TestWithFile(fileName, [](const void *_addr, size_t n) {
+                    clock_t startTime = clock();
+                    const char* first = reinterpret_cast<const char*>(_addr);
+                    const char* end = reinterpret_cast<const char*>(_addr) + n;
+                    int lineCount = 0;
+                    for (auto cur = first; cur != end; ++cur)
+                    {
+                        if (*cur == '\n') lineCount++;
+                    }
+                    clock_t endTime = clock();
+                    clock_t t = endTime - startTime;
+                    std::cout << lineCount << '\t' << t << std::endl;
+                });
+            }
+        }
         return 0;
     }
 }
