@@ -59,7 +59,7 @@ namespace boar
     {
     private:
         TaskQueue& _queue;
-        boost::circular_buffer<ChunkInfo> _buffer;
+        boost::circular_buffer<ChunkInfo> _tasks;
 
         size_t lineCount = 0;
         clock_t startTime;
@@ -122,6 +122,7 @@ namespace boar
                         break;
                     }
                 }
+                _queue.Stop();
                 endTime = clock();
             });
         }
@@ -134,7 +135,7 @@ namespace boar
 
     int Main(const std::vector<std::u16string>& args)
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 30; i++)
         {
             TaskQueue queue;
             TestClass test(queue);

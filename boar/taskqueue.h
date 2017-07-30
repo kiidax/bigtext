@@ -19,11 +19,19 @@ namespace boar
     class TaskQueue
     {
     private:
+        static const int _INVALID_TASKID = -1;
+
         boost::mutex _mutex;
         boost::condition_variable _condEmpty;
         boost::condition_variable _condFull;
-        boost::circular_buffer<TaskInfo> _buffer;
-        int _aaa;
+
+        // Circular buffer
+        TaskInfo* _tasks;
+        int _maxTasks;
+        int _taskOffset;
+        int _numTasks;
+        int _numWaitingTasks;
+
         boost::thread_group _threadGroup;
         unsigned _numThreads;
         bool _done;
@@ -37,15 +45,32 @@ namespace boar
         }
         static unsigned _GetDefaultMaxTasks()
         {
-            return _GetDefaultNumThreads() * 5;
+            return _GetDefaultNumThreads() * 3;
         }
 
     public:
         TaskQueue() : TaskQueue(_GetDefaultNumThreads(), _GetDefaultMaxTasks()) {}
-        TaskQueue(unsigned numThreads, unsigned maxJobs) : _buffer(maxJobs), _aaa(0), _numThreads(numThreads), _done(false)
+        TaskQueue(unsigned numThreads, unsigned maxTasks) : _numThreads(numThreads), _done(false)
         {
+            _tasks = new TaskInfo[maxTasks];
+            _maxTasks = maxTasks;
+            _taskOffset = 0;
+            _numTasks = 0;
+            _numWaitingTasks = 0;
         }
         ~TaskQueue()
+        {
+            assert(_done);
+            delete[] _tasks;
+        }
+        void Start()
+        {
+            for (unsigned i = 0; i < _numThreads; i++)
+            {
+                _threadGroup.create_thread(std::bind(&TaskQueue::Run, this));
+            }
+        }
+        void Stop()
         {
             {
                 boost::mutex::scoped_lock lock(_mutex);
@@ -54,76 +79,86 @@ namespace boar
             }
             _threadGroup.join_all();
         }
-        void Start()
-        {
-            for (unsigned i = 0; i < _numThreads; i++)
-            {
-                _threadGroup.create_thread([this]() {
-                    while (true)
-                    {
-                        boost::circular_buffer<TaskInfo>::iterator it;
-                        if (!_NextTask(it)) break;
-                        it->func();
-                        {
-                            boost::mutex::scoped_lock lock(_mutex);
-                            it->done = true;
-                            _condFull.notify_one();
-                        }
-                    }
-                });
-            }
-        }
         void PushTask(TaskInfo job)
         {
-            TaskInfo task;
-            while (!_SendOrReceive(job, task))
+            TaskInfo* task;
+            while ((task = _SendOrReceive(job)) != nullptr)
             {
+                // do something on task.
             }
         }
     private:
-        bool _SendOrReceive(TaskInfo job, TaskInfo& task)
+        void Run()
+        {
+            while (true)
+            {
+                int taskId = _NextTask();
+                if (taskId == _INVALID_TASKID) break;
+                _tasks[taskId].func();
+                {
+                    boost::mutex::scoped_lock lock(_mutex);
+                    _tasks[taskId].done = true;
+                    if (taskId == _taskOffset)
+                    {
+                        _condFull.notify_one();
+                    }
+                }
+            }
+        }
+        TaskInfo* _SendOrReceive(TaskInfo job)
         {
             boost::mutex::scoped_lock lock(_mutex);
             while (true)
             {
-                if (!_buffer.empty() && _buffer[0].done)
+                if (_numWaitingTasks < _numTasks)
                 {
-                    task = _buffer[0];
-                    _buffer.pop_front();
-                    _aaa--;
-                    return false;
+                    int taskId = _taskOffset;
+                    if (_tasks[taskId].done)
+                    {
+                        // This pointer is only valid until we call _SendOrRecive() again.
+                        TaskInfo* doneTask = &_tasks[taskId];
+                        ++_taskOffset;
+                        if (_taskOffset >= _maxTasks) _taskOffset -= _maxTasks;
+                        --_numTasks;
+                        return doneTask;
+                    }
                 }
-                if (_buffer.full())
+                if (_numTasks >= _maxTasks)
                 {
                     _condFull.wait(lock);
                 }
                 else
                 {
-                    bool doNotify = _aaa == _buffer.size();
-                    _buffer.push_back(job);
+                    bool doNotify = _numWaitingTasks == 0;
+                    int taskId = _taskOffset + _numTasks;
+                    if (taskId >= _maxTasks) taskId -= _maxTasks;
+                    ++_numTasks;
+                    ++_numWaitingTasks;
+                    _tasks[taskId] = job;
                     if (doNotify) _condEmpty.notify_one();
-                    return true;
+                    return nullptr;
                 }
             }
         }
-        bool _NextTask(boost::circular_buffer<TaskInfo>::iterator& it)
+        int _NextTask()
         {
             boost::mutex::scoped_lock lock(_mutex);
             while (true)
             {
                 if (_done) break;
-                if (_aaa == _buffer.size())
+                if (_numWaitingTasks == 0)
                 {
                     _condEmpty.wait(lock);
                 }
                 else
                 {
-                    it = _buffer.begin() + _aaa;
-                    ++_aaa;
-                    return true;
+                    int taskId = _taskOffset + _numTasks - _numWaitingTasks;
+                    if (taskId >= _maxTasks) taskId -= _maxTasks;
+                    --_numWaitingTasks;
+                    return taskId;
                 }
             }
-            return false;
+            return _INVALID_TASKID;
         }
     };
 }
