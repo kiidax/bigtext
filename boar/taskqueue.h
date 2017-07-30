@@ -8,11 +8,14 @@
 
 namespace boar
 {
-    typedef boost::function<void(void)> TaskFunction;
+    typedef std::function<void(void)> ReduceFunction;
+    typedef std::function<ReduceFunction(void)> TaskFunction;
 
     struct TaskInfo
     {
         TaskFunction func;
+        ReduceFunction reduceFunc;
+        int lineCount;
         bool done;
     };
 
@@ -67,7 +70,7 @@ namespace boar
         {
             for (unsigned i = 0; i < _numThreads; i++)
             {
-                _threadGroup.create_thread(std::bind(&TaskQueue::Run, this));
+                _threadGroup.create_thread(std::bind(&TaskQueue::_Run, this));
             }
         }
         void Stop()
@@ -85,16 +88,17 @@ namespace boar
             while ((task = _SendOrReceive(job)) != nullptr)
             {
                 // do something on task.
+                task->reduceFunc();
             }
         }
     private:
-        void Run()
+        void _Run()
         {
             while (true)
             {
                 int taskId = _NextTask();
                 if (taskId == _INVALID_TASKID) break;
-                _tasks[taskId].func();
+                _tasks[taskId].reduceFunc = _tasks[taskId].func();
                 _EndTask(taskId);
             }
         }

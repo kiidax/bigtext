@@ -12,7 +12,7 @@
 
 namespace boar
 {
-    typedef boost::function<void (const void*, size_t)> TestWithFileCallbackType;
+    typedef std::function<void (const void*, size_t)> TestWithFileCallbackType;
 
     void TestWithFile(const boost::filesystem::path& filename, TestWithFileCallbackType f)
     {
@@ -49,12 +49,6 @@ namespace boar
         }
     }
 
-    struct ChunkInfo
-    {
-    public:
-        size_t lineCount;
-    };
-
     class TestClass
     {
     private:
@@ -63,10 +57,7 @@ namespace boar
         size_t lineCount = 0;
         clock_t startTime;
         clock_t endTime;
-        std::mutex _mutex;
-        std::condition_variable test4cond;
         static const size_t CHUNK_SIZE = 64 * 1024;
-        int i;
 
     public:
         TestClass(TaskQueue& queue)
@@ -75,7 +66,6 @@ namespace boar
         {
             TestWithFile(fileName, [this](const void* addr, size_t n) {
                 lineCount = 0;
-                i = 0;
                 _queue.Start();
                 startTime = clock();
                 const char* first = reinterpret_cast<const char*>(addr);
@@ -83,43 +73,21 @@ namespace boar
                 for (auto cur = first; cur < last; cur += CHUNK_SIZE)
                 {
                     const char* cfirst = cur;
-                    const char* clast = min(cur + CHUNK_SIZE, last);
-                    ChunkInfo info;
-                    //_buffer.push_back(info);
+                    const char* clast = last - cur < CHUNK_SIZE ? last : cur + CHUNK_SIZE;
                     auto f = [this, cfirst, clast]() {
                         size_t count = 0;
                         for (auto cur = cfirst; cur < clast; ++cur)
                         {
                             if (*cur == '\n') ++count;
                         }
-                        std::unique_lock<std::mutex> lock(_mutex);
-                        lineCount += count;
-                        --i;
-                        if (i == 0)
-                        {
-                            test4cond.notify_one();
-                        }
+                        return [this, count]() {
+                            lineCount += count;
+                        };
                     };
-                    {
-                        std::unique_lock<std::mutex> lock(_mutex);
-                        ++i;
-                    }
                     TaskInfo task;
                     task.func = f;
                     task.done = false;
                     _queue.PushTask(task);
-                }
-                while (true)
-                {
-                    std::unique_lock<std::mutex> lock(_mutex);
-                    if (i != 0)
-                    {
-                        test4cond.wait(lock);
-                    }
-                    else
-                    {
-                        break;
-                    }
                 }
                 _queue.Stop();
                 endTime = clock();
