@@ -59,13 +59,12 @@ namespace boar
     {
     private:
         TaskQueue& _queue;
-        boost::circular_buffer<ChunkInfo> _tasks;
 
         size_t lineCount = 0;
         clock_t startTime;
         clock_t endTime;
-        boost::mutex _mutex;
-        boost::condition_variable test4cond;
+        std::mutex _mutex;
+        std::condition_variable test4cond;
         static const size_t CHUNK_SIZE = 64 * 1024;
         int i;
 
@@ -93,7 +92,7 @@ namespace boar
                         {
                             if (*cur == '\n') ++count;
                         }
-                        boost::mutex::scoped_lock lock(_mutex);
+                        std::unique_lock<std::mutex> lock(_mutex);
                         lineCount += count;
                         --i;
                         if (i == 0)
@@ -102,7 +101,7 @@ namespace boar
                         }
                     };
                     {
-                        boost::mutex::scoped_lock lock(_mutex);
+                        std::unique_lock<std::mutex> lock(_mutex);
                         ++i;
                     }
                     TaskInfo task;
@@ -112,7 +111,7 @@ namespace boar
                 }
                 while (true)
                 {
-                    boost::mutex::scoped_lock lock(_mutex);
+                    std::unique_lock<std::mutex> lock(_mutex);
                     if (i != 0)
                     {
                         test4cond.wait(lock);

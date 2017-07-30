@@ -7,6 +7,8 @@
 #include <tchar.h>
 #include <cstdint>
 #include <cassert>
+#include <mutex>
+#include <condition_variable>
 
 #include <string>
 #include <iostream>
@@ -16,5 +18,4 @@
 #include <memory>
 
 #include <boost/thread/thread.hpp>
-#include <boost/circular_buffer.hpp>
 #include <boost/function.hpp>

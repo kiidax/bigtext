@@ -1,6 +1,6 @@
 /* Boar - Boar is a toolkit to modify text files.
-* Copyright (C) 2017 Katsuya Iida. All rights reserved.
-*/
+ * Copyright (C) 2017 Katsuya Iida. All rights reserved.
+ */
 
 #pragma once
 
@@ -21,9 +21,9 @@ namespace boar
     private:
         static const int _INVALID_TASKID = -1;
 
-        boost::mutex _mutex;
-        boost::condition_variable _condEmpty;
-        boost::condition_variable _condFull;
+        std::mutex _mutex;
+        std::condition_variable _condEmpty;
+        std::condition_variable _condFull;
 
         // Circular buffer
         TaskInfo* _tasks;
@@ -73,7 +73,7 @@ namespace boar
         void Stop()
         {
             {
-                boost::mutex::scoped_lock lock(_mutex);
+                std::unique_lock<std::mutex> lock(_mutex);
                 _done = true;
                 _condEmpty.notify_all();
             }
@@ -95,19 +95,12 @@ namespace boar
                 int taskId = _NextTask();
                 if (taskId == _INVALID_TASKID) break;
                 _tasks[taskId].func();
-                {
-                    boost::mutex::scoped_lock lock(_mutex);
-                    _tasks[taskId].done = true;
-                    if (taskId == _taskOffset)
-                    {
-                        _condFull.notify_one();
-                    }
-                }
+                _EndTask(taskId);
             }
         }
         TaskInfo* _SendOrReceive(TaskInfo job)
         {
-            boost::mutex::scoped_lock lock(_mutex);
+            std::unique_lock<std::mutex> lock(_mutex);
             while (true)
             {
                 if (_numWaitingTasks < _numTasks)
@@ -142,7 +135,7 @@ namespace boar
         }
         int _NextTask()
         {
-            boost::mutex::scoped_lock lock(_mutex);
+            std::unique_lock<std::mutex> lock(_mutex);
             while (true)
             {
                 if (_done) break;
@@ -159,6 +152,15 @@ namespace boar
                 }
             }
             return _INVALID_TASKID;
+        }
+        void _EndTask(int taskId)
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            _tasks[taskId].done = true;
+            if (taskId == _taskOffset)
+            {
+                _condFull.notify_one();
+            }
         }
     };
 }
