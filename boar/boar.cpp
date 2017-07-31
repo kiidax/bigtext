@@ -52,46 +52,43 @@ namespace boar
     class TestClass
     {
     private:
-        TaskQueue& _queue;
-
         size_t lineCount = 0;
         clock_t startTime;
         clock_t endTime;
         static const size_t CHUNK_SIZE = 64 * 1024;
 
     public:
-        TestClass(TaskQueue& queue)
-            : _queue(queue) {}
+        TestClass() {}
         void LineCount(const boost::filesystem::path& fileName)
         {
-            TestWithFile(fileName, [this](const void* addr, size_t n) {
-                lineCount = 0;
-                _queue.Start();
-                startTime = clock();
-                const char* first = reinterpret_cast<const char*>(addr);
-                const char* last = first + n;
-                for (auto cur = first; cur < last; cur += CHUNK_SIZE)
+            startTime = clock();
+            auto taskFunc = [this](void* addr, size_t n, size_t& count)
+            {
+                size_t c = 0;
+                const char* p = reinterpret_cast<const char*>(addr);
+                for (auto cur = p; cur < p + n; ++cur)
                 {
-                    const char* cfirst = cur;
-                    const char* clast = last - cur < CHUNK_SIZE ? last : cur + CHUNK_SIZE;
-                    auto f = [this, cfirst, clast]() {
-                        size_t count = 0;
-                        for (auto cur = cfirst; cur < clast; ++cur)
-                        {
-                            if (*cur == '\n') ++count;
-                        }
-                        return [this, count]() {
-                            lineCount += count;
-                        };
-                    };
-                    TaskInfo task;
-                    task.func = f;
-                    task.done = false;
-                    _queue.PushTask(task);
+                    if (*cur == '\n') ++c;
                 }
-                _queue.Stop();
-                endTime = clock();
+                count = c;
+            };
+            auto reduceFunc = [this](size_t count, void* addr, size_t n)
+            {
+                lineCount += count;
+            };
+            TaskQueue queue(taskFunc, reduceFunc);
+            TestWithFile(fileName, [this, &queue](const void* addr, size_t n) {
+                lineCount = 0;
+                queue.Start();
+                for (size_t i = 0; i < n; i += CHUNK_SIZE)
+                {
+                    intptr_t chunkAddr = reinterpret_cast<intptr_t>(addr) + i;
+                    size_t chunkSize = n - i < CHUNK_SIZE ? n - i : CHUNK_SIZE;
+                    queue.AddTask(reinterpret_cast<void*>(chunkAddr), chunkSize);
+                }
+                queue.Stop();
             });
+            endTime = clock();
         }
         void DumpProfile()
         {
@@ -104,8 +101,7 @@ namespace boar
     {
         for (int i = 0; i < 30; i++)
         {
-            TaskQueue queue;
-            TestClass test(queue);
+            TestClass test;
             const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
             test.LineCount(fileName);
             test.DumpProfile();

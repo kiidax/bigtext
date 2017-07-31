@@ -8,19 +8,20 @@
 
 namespace boar
 {
-    typedef std::function<void(void)> ReduceFunction;
-    typedef std::function<ReduceFunction(void)> TaskFunction;
-
     struct TaskInfo
     {
-        TaskFunction func;
-        ReduceFunction reduceFunc;
-        int lineCount;
+        void* addr;
+        size_t n;
+        size_t lineCount;
         bool done;
     };
 
     class TaskQueue
     {
+    public:
+        typedef std::function<void(void*, size_t, size_t&)> TaskFunctionType;
+        typedef std::function<void(size_t count, void*, size_t)> ReduceFunctionType;
+
     private:
         static const int _INVALID_TASKID = -1;
 
@@ -39,6 +40,9 @@ namespace boar
         unsigned _numThreads;
         bool _done;
 
+        TaskFunctionType _taskFunc;
+        ReduceFunctionType _reduceFunc;
+
     private:
         static unsigned _GetDefaultNumThreads()
         {
@@ -52,8 +56,10 @@ namespace boar
         }
 
     public:
-        TaskQueue() : TaskQueue(_GetDefaultNumThreads(), _GetDefaultMaxTasks()) {}
-        TaskQueue(unsigned numThreads, unsigned maxTasks) : _numThreads(numThreads), _done(false)
+        TaskQueue(TaskFunctionType taskFunc, ReduceFunctionType reduceFunc)
+            : TaskQueue(taskFunc, reduceFunc, _GetDefaultNumThreads(), _GetDefaultMaxTasks()) {}
+        TaskQueue(TaskFunctionType taskFunc, ReduceFunctionType reduceFunc, unsigned numThreads, unsigned maxTasks)
+            : _taskFunc(taskFunc), _reduceFunc(reduceFunc), _numThreads(numThreads), _done(false)
         {
             _tasks = new TaskInfo[maxTasks];
             _maxTasks = maxTasks;
@@ -75,6 +81,12 @@ namespace boar
         }
         void Stop()
         {
+            TaskInfo* task;
+            while ((task = _Receive()) != nullptr)
+            {
+                // do something on task.
+                _reduceFunc(task->lineCount, task->addr, task->n);
+            }
             {
                 std::unique_lock<std::mutex> lock(_mutex);
                 _done = true;
@@ -82,13 +94,17 @@ namespace boar
             }
             _threadGroup.join_all();
         }
-        void PushTask(TaskInfo job)
+        void AddTask(void* addr, size_t n)
         {
             TaskInfo* task;
-            while ((task = _SendOrReceive(job)) != nullptr)
+            TaskInfo newTask;
+            newTask.addr = addr;
+            newTask.n = n;
+            newTask.done = false;
+            while ((task = _SendOrReceive(newTask)) != nullptr)
             {
                 // do something on task.
-                task->reduceFunc();
+                _reduceFunc(task->lineCount, task->addr, task->n);
             }
         }
     private:
@@ -98,8 +114,37 @@ namespace boar
             {
                 int taskId = _NextTask();
                 if (taskId == _INVALID_TASKID) break;
-                _tasks[taskId].reduceFunc = _tasks[taskId].func();
+                TaskInfo& task = _tasks[taskId];
+                _taskFunc(task.addr, task.n, task.lineCount);
                 _EndTask(taskId);
+            }
+        }
+        TaskInfo* _Receive()
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            while (true)
+            {
+                if (_numWaitingTasks < _numTasks)
+                {
+                    int taskId = _taskOffset;
+                    if (_tasks[taskId].done)
+                    {
+                        // This pointer is only valid until we call _SendOrRecive() again.
+                        TaskInfo* doneTask = &_tasks[taskId];
+                        ++_taskOffset;
+                        if (_taskOffset >= _maxTasks) _taskOffset -= _maxTasks;
+                        --_numTasks;
+                        return doneTask;
+                    }
+                }
+                if (_numTasks > 0)
+                {
+                    _condFull.wait(lock);
+                }
+                else
+                {
+                    return nullptr;
+                }
             }
         }
         TaskInfo* _SendOrReceive(TaskInfo job)
@@ -142,9 +187,9 @@ namespace boar
             std::unique_lock<std::mutex> lock(_mutex);
             while (true)
             {
-                if (_done) break;
                 if (_numWaitingTasks == 0)
                 {
+                    if (_done) break;
                     _condEmpty.wait(lock);
                 }
                 else
