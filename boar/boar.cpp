@@ -77,17 +77,18 @@ namespace boar
                 lineCount += count;
             };
             TaskQueue queue(taskFunc, reduceFunc);
+            queue.Start();
             TestWithFile(fileName, [this, &queue](const void* addr, size_t n) {
                 lineCount = 0;
-                queue.Start();
                 for (size_t i = 0; i < n; i += CHUNK_SIZE)
                 {
                     intptr_t chunkAddr = reinterpret_cast<intptr_t>(addr) + i;
                     size_t chunkSize = n - i < CHUNK_SIZE ? n - i : CHUNK_SIZE;
                     queue.AddTask(reinterpret_cast<void*>(chunkAddr), chunkSize);
                 }
-                queue.Stop();
+                queue.Synchronize();
             });
+            queue.Stop();
             endTime = clock();
         }
         void DumpProfile()

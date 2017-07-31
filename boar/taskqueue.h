@@ -81,18 +81,21 @@ namespace boar
         }
         void Stop()
         {
-            TaskInfo* task;
-            while ((task = _Receive()) != nullptr)
-            {
-                // do something on task.
-                _reduceFunc(task->lineCount, task->addr, task->n);
-            }
             {
                 std::unique_lock<std::mutex> lock(_mutex);
                 _done = true;
                 _condEmpty.notify_all();
             }
             _threadGroup.join_all();
+        }
+        void Synchronize()
+        {
+            TaskInfo* task;
+            while ((task = _Receive()) != nullptr)
+            {
+                // do something on task.
+                _reduceFunc(task->lineCount, task->addr, task->n);
+            }
         }
         void AddTask(void* addr, size_t n)
         {
