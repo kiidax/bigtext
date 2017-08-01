@@ -18,3 +18,4 @@
 #include <memory>
 
 #include <boost/thread/thread.hpp>
+#include <boost/filesystem.hpp>

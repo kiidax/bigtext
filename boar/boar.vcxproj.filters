@@ -24,6 +24,12 @@
     <ClCompile Include="win32main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="filesource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="taskqueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -39,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="taskqueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filesource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
