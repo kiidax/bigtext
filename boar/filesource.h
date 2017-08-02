@@ -12,4 +12,5 @@ namespace boar
     typedef std::function<void(const void*, size_t)> DataSourceCallbackType;
 
     void FileSource(const boost::filesystem::path& filename, DataSourceCallbackType func);
+    void FileSource2(const boost::filesystem::path& filename, DataSourceCallbackType func);
 }

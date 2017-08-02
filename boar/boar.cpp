@@ -59,12 +59,39 @@ namespace boar
         FileSource(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
             size_t c = 0;
+#if 1
 #pragma omp parallel for reduction(+:c)
             for (intptr_t i = 0; i < n; i++)
             {
                 if (p[i] == '\n') c++;
             }
+#else
+#define CS (1024*1024)
+#pragma omp parallel for reduction(+:c)
+            for (intptr_t i = 0; i < n; i += CS)
+            {
+                size_t d = 0;
+                for (intptr_t j = i; j < i + CS && j < n; j++)
+                    if (p[j] == '\n') d++;
+                c += d;
+            }
+#endif
             lineCount = c;
+        });
+        return lineCount;
+    }
+
+    size_t LineCountRef3(const boost::filesystem::path fileName)
+    {
+        size_t lineCount;
+        FileSource2(fileName, [&lineCount](const void *addr, size_t n) {
+            const char* p = reinterpret_cast<const char*>(addr);
+            size_t c = 0;
+            for (intptr_t i = 0; i < n; i++)
+            {
+                if (p[i] == '\n') c++;
+            }
+            lineCount += c;
         });
         return lineCount;
     }
@@ -80,6 +107,24 @@ namespace boar
 
     int Main(const std::vector<std::u16string>& args)
     {
+        const boost::filesystem::path fileName(FromUnicode(args[1].c_str()));
+        if (args[0] == ToUnicode("1"))
+        {
+            DumpProfile([&fileName]() { return LineCount(fileName); });
+        }
+        else if (args[0] == ToUnicode("2"))
+        {
+            DumpProfile([&fileName]() { return LineCountRef(fileName); });
+        }
+        else if (args[0] == ToUnicode("3"))
+        {
+            DumpProfile([&fileName]() { return LineCountRef2(fileName); });
+        }
+        else if (args[0] == ToUnicode("4"))
+        {
+            DumpProfile([&fileName]() { return LineCountRef3(fileName); });
+        }
+#if false
         for (int i = 0; i < 30; i++)
         {
             const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
@@ -87,6 +132,7 @@ namespace boar
             DumpProfile([&fileName]() { return LineCountRef(fileName); });
             DumpProfile([&fileName]() { return LineCountRef2(fileName); });
         }
+#endif
         return 0;
     }
 }
