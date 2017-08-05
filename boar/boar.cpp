@@ -59,37 +59,6 @@ namespace boar
         return lineCount;
     }
 
-    size_t LineCountRef2(const boost::filesystem::path fileName)
-    {
-        // Too slow to finish.
-        // 36,762,348,544 bytes.
-        // AMD E2-7110
-        size_t lineCount;
-        FileSource(fileName, [&lineCount](const void *addr, size_t n) {
-            const char* p = reinterpret_cast<const char*>(addr);
-            size_t c = 0;
-#if 1
-#pragma omp parallel for reduction(+:c)
-            for (intptr_t i = 0; i < static_cast<intptr_t>(n); i++)
-            {
-                if (p[i] == '\n') c++;
-            }
-#else
-#define CS (1024*1024)
-#pragma omp parallel for reduction(+:c)
-            for (intptr_t i = 0; i < n; i += CS)
-            {
-                size_t d = 0;
-                for (intptr_t j = i; j < i + CS && j < n; j++)
-                    if (p[j] == '\n') d++;
-                c += d;
-            }
-#endif
-            lineCount = c;
-        });
-        return lineCount;
-    }
-
     size_t LineCountRef3(const boost::filesystem::path fileName)
     {
         // 1059203070      463179
@@ -148,25 +117,12 @@ namespace boar
         }
         else if (args[0] == L"3")
         {
-            DumpProfile([&fileName]() { return LineCountRef2(fileName); });
+            DumpProfile([&fileName]() { return LineCountRef3(fileName); });
         }
         else if (args[0] == L"4")
         {
-            DumpProfile([&fileName]() { return LineCountRef3(fileName); });
-        }
-        else if (args[0] == L"5")
-        {
             DumpProfile([&fileName]() { return LineCountRef4(fileName); });
         }
-#if false
-        for (int i = 0; i < 30; i++)
-        {
-            const boost::filesystem::path fileName(L"C:\\Users\\katsuya\\Source\\Repos\\CNTK\\Examples\\SequenceToSequence\\CMUDict\\Data\\cmudict-0.7b.train-dev-20-21.ctf");
-            DumpProfile([&fileName]() { return LineCount(fileName); });
-            DumpProfile([&fileName]() { return LineCountRef(fileName); });
-            DumpProfile([&fileName]() { return LineCountRef2(fileName); });
-        }
-#endif
         return 0;
     }
 }
