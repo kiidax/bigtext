@@ -6,20 +6,12 @@
 
 #include "boar.h"
 
-namespace boar
-{
-    void OpenFileMap()
-    {
-
-    }
-}
-
 int _tmain(int argc, TCHAR** argv)
 {
-    std::vector<std::u16string> args;
+    std::vector<std::wstring> args;
     for (int i = 1; i < argc; i++)
     {
-        args.push_back(std::u16string((char16_t*)argv[i]));
+        args.push_back(std::wstring(argv[i]));
     }
     return boar::Main(args);
 }

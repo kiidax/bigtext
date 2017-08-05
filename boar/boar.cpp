@@ -12,6 +12,9 @@ namespace boar
 {
     size_t LineCount(const boost::filesystem::path& fileName)
     {
+        // 1059203072      2068549
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
         size_t lineCount;
         auto taskFunc = [](void* addr, size_t n)
         {
@@ -39,6 +42,9 @@ namespace boar
 
     size_t LineCountRef(const boost::filesystem::path fileName)
     {
+        // 1059203072      1720807
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
         size_t lineCount;
         FileSource(fileName, [&lineCount](const void *_addr, size_t n) {
             const char* first = reinterpret_cast<const char*>(_addr);
@@ -55,6 +61,9 @@ namespace boar
 
     size_t LineCountRef2(const boost::filesystem::path fileName)
     {
+        // Too slow to finish.
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
         size_t lineCount;
         FileSource(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
@@ -83,6 +92,9 @@ namespace boar
 
     size_t LineCountRef3(const boost::filesystem::path fileName)
     {
+        // 1059203070      463179
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
         size_t lineCount;
         FileSource2(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
@@ -105,22 +117,22 @@ namespace boar
         std::cout << lineCount << '\t' << t << std::endl;
     }
 
-    int Main(const std::vector<std::u16string>& args)
+    int Main(const std::vector<std::wstring>& args)
     {
-        const boost::filesystem::path fileName(FromUnicode(args[1].c_str()));
-        if (args[0] == ToUnicode("1"))
+        const boost::filesystem::path fileName(args[1].c_str());
+        if (args[0] == L"1")
         {
             DumpProfile([&fileName]() { return LineCount(fileName); });
         }
-        else if (args[0] == ToUnicode("2"))
+        else if (args[0] == L"2")
         {
             DumpProfile([&fileName]() { return LineCountRef(fileName); });
         }
-        else if (args[0] == ToUnicode("3"))
+        else if (args[0] == L"3")
         {
             DumpProfile([&fileName]() { return LineCountRef2(fileName); });
         }
-        else if (args[0] == ToUnicode("4"))
+        else if (args[0] == L"4")
         {
             DumpProfile([&fileName]() { return LineCountRef3(fileName); });
         }

@@ -7,5 +7,5 @@
 #include <boar/base.h>
 
 namespace boar {
-    int Main(const std::vector<std::u16string>& args);
+    int Main(const std::vector<std::wstring>& args);
 }
