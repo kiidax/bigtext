@@ -70,7 +70,7 @@ namespace boar
             size_t c = 0;
 #if 1
 #pragma omp parallel for reduction(+:c)
-            for (intptr_t i = 0; i < n; i++)
+            for (intptr_t i = 0; i < static_cast<intptr_t>(n); i++)
             {
                 if (p[i] == '\n') c++;
             }
@@ -95,11 +95,29 @@ namespace boar
         // 1059203070      463179
         // 36,762,348,544 bytes.
         // AMD E2-7110
-        size_t lineCount;
+        size_t lineCount = 0;
         FileSource2(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
             size_t c = 0;
-            for (intptr_t i = 0; i < n; i++)
+            for (size_t i = 0; i < n; i++)
+            {
+                if (p[i] == '\n') c++;
+            }
+            lineCount += c;
+        });
+        return lineCount;
+    }
+
+    size_t LineCountRef4(const boost::filesystem::path fileName)
+    {
+        // 1059203072      414019
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
+        size_t lineCount = 0;
+        FileSource3(fileName, [&lineCount](const void *addr, size_t n) {
+            const char* p = reinterpret_cast<const char*>(addr);
+            size_t c = 0;
+            for (size_t i = 0; i < n; i++)
             {
                 if (p[i] == '\n') c++;
             }
@@ -135,6 +153,10 @@ namespace boar
         else if (args[0] == L"4")
         {
             DumpProfile([&fileName]() { return LineCountRef3(fileName); });
+        }
+        else if (args[0] == L"5")
+        {
+            DumpProfile([&fileName]() { return LineCountRef4(fileName); });
         }
 #if false
         for (int i = 0; i < 30; i++)

@@ -13,4 +13,5 @@ namespace boar
 
     void FileSource(const boost::filesystem::path& filename, DataSourceCallbackType func);
     void FileSource2(const boost::filesystem::path& filename, DataSourceCallbackType func);
+    void FileSource3(const boost::filesystem::path& filename, DataSourceCallbackType func);
 }

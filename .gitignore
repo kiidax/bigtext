@@ -261,5 +261,5 @@ __pycache__/
 *.pyc
 
 # Project local files.
-/boar/out.txt
-/boar/test.txt
+/test.txt
+/test.csx
