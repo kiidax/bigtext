@@ -33,7 +33,7 @@ namespace boar
         TaskQueue queue(taskFunc, reduceFunc);
         queue.Start();
         lineCount = 0;
-        FileSource(fileName, [&queue](const void* addr, size_t n) {
+        FileSourceWithMemoryMapping(fileName, [&queue](const void* addr, size_t n) {
             queue.Dispatch(addr, n);
         });
         queue.Stop();
@@ -46,7 +46,7 @@ namespace boar
         // 36,762,348,544 bytes.
         // AMD E2-7110
         size_t lineCount;
-        FileSource(fileName, [&lineCount](const void *_addr, size_t n) {
+        FileSourceWithMemoryMapping(fileName, [&lineCount](const void *_addr, size_t n) {
             const char* first = reinterpret_cast<const char*>(_addr);
             const char* end = reinterpret_cast<const char*>(_addr) + n;
             size_t c = 0;
@@ -65,7 +65,7 @@ namespace boar
         // 36,762,348,544 bytes.
         // AMD E2-7110
         size_t lineCount = 0;
-        FileSource2(fileName, [&lineCount](const void *addr, size_t n) {
+        FileSourceWithFileRead(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
             size_t c = 0;
             for (size_t i = 0; i < n; i++)
@@ -83,7 +83,7 @@ namespace boar
         // 36,762,348,544 bytes.
         // AMD E2-7110
         size_t lineCount = 0;
-        FileSource3(fileName, [&lineCount](const void *addr, size_t n) {
+        FileSourceWithOverlapRead(fileName, [&lineCount](const void *addr, size_t n) {
             const char* p = reinterpret_cast<const char*>(addr);
             size_t c = 0;
             for (size_t i = 0; i < n; i++)
@@ -95,33 +95,43 @@ namespace boar
         return lineCount;
     }
 
-    void DumpProfile(std::function<size_t()> func)
+    int DumpProfile(std::function<size_t()> func)
     {
         clock_t startTime = clock();
         size_t lineCount = func();
         clock_t endTime = clock();
         clock_t t = endTime - startTime;
         std::cout << lineCount << '\t' << t << std::endl;
+        return 0;
     }
 
     int Main(const std::vector<std::wstring>& args)
     {
-        const boost::filesystem::path fileName(args[1].c_str());
-        if (args[0] == L"1")
+        int status;
+        if (args.size() == 2)
         {
-            DumpProfile([&fileName]() { return LineCount(fileName); });
+            const boost::filesystem::path fileName(args[1].c_str());
+            if (args[0] == L"1")
+            {
+                status = DumpProfile([&fileName]() { return LineCount(fileName); });
+            }
+            else if (args[0] == L"2")
+            {
+                status = DumpProfile([&fileName]() { return LineCountRef(fileName); });
+            }
+            else if (args[0] == L"3")
+            {
+                status = DumpProfile([&fileName]() { return LineCountRef3(fileName); });
+            }
         }
-        else if (args[0] == L"2")
+        else if (args.size() == 1)
         {
-            DumpProfile([&fileName]() { return LineCountRef(fileName); });
+            const boost::filesystem::path fileName(args[0].c_str());
+            status = DumpProfile([&fileName]() { return LineCountRef4(fileName); });
         }
-        else if (args[0] == L"3")
+        else
         {
-            DumpProfile([&fileName]() { return LineCountRef3(fileName); });
-        }
-        else if (args[0] == L"4")
-        {
-            DumpProfile([&fileName]() { return LineCountRef4(fileName); });
+            status = 1;
         }
         return 0;
     }

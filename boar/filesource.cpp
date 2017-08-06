@@ -11,11 +11,14 @@ namespace boar
 {
     typedef std::function<void(const void*, size_t)> DataSourceCallbackType;
 
-    void FileSource(const boost::filesystem::path& filename, DataSourceCallbackType f)
+    static const int NUM_OVERLAPS = 3;
+    static const size_t CHUNK_SIZE = 64L * 1024;
+
+    void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallbackType callback)
     {
         bool success = false;
-        LPCWSTR lpFileName = filename.native().c_str();
-        HANDLE hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        LPCWSTR lpfileName = fileName.native().c_str();
+        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
             HANDLE hMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -27,7 +30,7 @@ namespace boar
                     MEMORY_BASIC_INFORMATION mbi;
                     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
                     {
-                        f(lpAddress, mbi.RegionSize);
+                        callback(lpAddress, mbi.RegionSize);
                         success = true;
                     }
                     UnmapViewOfFile(lpAddress);
@@ -46,24 +49,26 @@ namespace boar
         }
     }
 
-#define CS (64 * 1024)
-
-    void FileSource2(const boost::filesystem::path& filename, DataSourceCallbackType f)
+    void FileSourceWithFileRead(const boost::filesystem::path& fileName, DataSourceCallbackType f)
     {
         bool success = false;
-        LPCWSTR lpFileName = filename.native().c_str();
-        HANDLE hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        LPCWSTR lpfileName = fileName.native().c_str();
+        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            BYTE buf[CS];
-            DWORD readBytes;
-            while (true)
+            BYTE *buf = new BYTE[CHUNK_SIZE];
+            if (buf != nullptr)
             {
-                if (!ReadFile(hFile, buf, CS, &readBytes, NULL))
-                    break;
-                if (readBytes == 0)
-                    break;
-                f(buf, readBytes);
+                DWORD readBytes;
+                while (true)
+                {
+                    if (!ReadFile(hFile, buf, CHUNK_SIZE, &readBytes, NULL))
+                        break;
+                    if (readBytes == 0)
+                        break;
+                    f(buf, readBytes);
+                }
+                delete[] buf;
             }
             CloseHandle(hFile);
         }
@@ -77,74 +82,63 @@ namespace boar
         }
     }
 
-    void FileSource3(const boost::filesystem::path& filename, DataSourceCallbackType f)
+    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallbackType callback)
     {
         bool success = false;
-        LPCWSTR lpFileName = filename.native().c_str();
-        HANDLE hFile = CreateFileW(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+        LPCWSTR lpfileName = fileName.native().c_str();
+        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            BYTE buf[4][CS];
-            OVERLAPPED ol[4];
-            DWORD readBytes;
-            int processIndex = 0;
-            int numWaiting = 0;
-            HANDLE hEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("test"));
-            ZeroMemory(&buf, sizeof buf);
-            size_t offset = 0;
-            while (true)
+            BYTE* buf = new BYTE[NUM_OVERLAPS * CHUNK_SIZE];
+            if (buf != nullptr)
             {
-                if (numWaiting < 4)
+                OVERLAPPED ol[NUM_OVERLAPS];
+                int processIndex = 0;
+                int numWaiting = 0;
+                size_t offset = 0;
+                while (true)
                 {
-                    int readIndex = (processIndex + numWaiting) % 4;
-                    ZeroMemory(&ol[readIndex], sizeof ol[readIndex]);
-                    ol[readIndex].hEvent = hEvent;
-                    ol[readIndex].Offset = static_cast<DWORD>(offset);
-                    ol[readIndex].OffsetHigh = static_cast<DWORD>(offset >> 32);
-                    offset += CS;
-                    if (ReadFile(hFile, buf[readIndex], CS, NULL, &ol[readIndex]) || GetLastError() != ERROR_IO_PENDING)
+                    if (numWaiting < NUM_OVERLAPS)
                     {
-                        std::cout << "what is this?" << std::endl;
-                        break;
-                    }
-                    //std::cout << "read" << std::endl;
-                    numWaiting++;
-                }
-                else
-                {
-                    while (true)
-                    {
-                        if (!GetOverlappedResult(hFile, &ol[processIndex], &readBytes, TRUE))
+                        int readIndex = (processIndex + numWaiting) % NUM_OVERLAPS;
+                        ZeroMemory(&ol[readIndex], sizeof ol[readIndex]);
+                        ol[readIndex].Offset = static_cast<DWORD>(offset);
+                        ol[readIndex].OffsetHigh = static_cast<DWORD>(offset >> 32);
+                        offset += CHUNK_SIZE;
+                        if (ReadFile(hFile, buf + readIndex * CHUNK_SIZE, CHUNK_SIZE, NULL, &ol[readIndex]) || GetLastError() != ERROR_IO_PENDING)
                         {
-                            if (GetLastError() == ERROR_HANDLE_EOF)
-                            {
-                                success = true;
-                                std::cout << "success" << std::endl;
-                            }
-                            else
-                            {
-                                std::cout << "????" << std::endl;
-                            }
                             break;
+                        }
+                        numWaiting++;
+                    }
+                    else
+                    {
+                        DWORD readBytes;
+                        while (true)
+                        {
+                            if (!GetOverlappedResult(hFile, &ol[processIndex], &readBytes, TRUE))
+                            {
+                                readBytes = 0;
+                                if (GetLastError() == ERROR_HANDLE_EOF)
+                                {
+                                    success = true;
+                                }
+                                break;
+                            }
+                            if (readBytes > 0)
+                            {
+                                assert(readBytes <= CHUNK_SIZE);
+                                break;
+                            }
                         }
                         if (readBytes == 0)
-                        {
-                            std::cout << ol[processIndex].Offset << std::endl;
-                            std::cout << ol[processIndex].OffsetHigh << std::endl;
-                            std::cout << readBytes << std::endl;
-                        }
-                        else
-                        {
                             break;
-                        }
+                        callback(buf + processIndex * CHUNK_SIZE, readBytes);
+                        processIndex = (processIndex + 1) % NUM_OVERLAPS;
+                        numWaiting--;
                     }
-                    if (success)
-                        break;
-                    //std::cout << "process" << std::endl;
-                    f(buf[processIndex], readBytes);
-                    processIndex = (processIndex + 1) % 4;
-                    numWaiting--;
                 }
+                delete[] buf;
             }
             CloseHandle(hFile);
         }
@@ -153,7 +147,6 @@ namespace boar
             DWORD dwErrorCode = GetLastError();
             TCHAR buf[1024];
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwErrorCode, 0, buf, sizeof buf, NULL);
-            std::cout << "error" << std::endl;
             std::wstring s(reinterpret_cast<wchar_t*>(buf));
             std::wcout << s.substr(0, s.length() - 2) << std::endl;
         }
