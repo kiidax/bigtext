@@ -95,6 +95,31 @@ namespace boar
         return lineCount;
     }
 
+    template <typename charT>
+    size_t DropLines(const boost::filesystem::path fileName)
+    {
+        size_t lineCount = 0;
+        FileSourceWithOverlapRead(fileName, [&lineCount](const void *addr, size_t n) {
+            intptr_t addrValue = reinterpret_cast<intptr_t>(addr);
+            const charT* first = reinterpret_cast<const charT*>(addrValue);
+            const charT* last = reinterpret_cast<const charT*>(addrValue + n);
+            size_t c = 0;
+            const charT* lineStart = first;
+            for (const charT* p = first; p != last; p++)
+            {
+                if (*p == '\n')
+                {
+                    const std::basic_string<charT> s(lineStart, p);
+                    std::cout << s << std::endl;
+                    lineStart = p + 1;
+                    c++;
+                }
+            }
+            lineCount += c;
+        });
+        return lineCount;
+    }
+
     int DumpProfile(std::function<size_t()> func)
     {
         clock_t startTime = clock();
@@ -105,10 +130,28 @@ namespace boar
         return 0;
     }
 
+    int Usage()
+    {
+        std::cout <<
+            "usage: boar <command> [<args>]\n"
+            "\n"
+            "Boar is a toolkit to process text files.\n"
+            "\n"
+            "List of commands:\n"
+            "\n"
+            "   lc      Count the number of lines.\n"
+            << std::endl;
+        return 1;
+    }
+
     int Main(const std::vector<std::wstring>& args)
     {
         int status;
-        if (args.size() == 2)
+        if (args.size() == 1)
+        {
+            return Usage();
+        }
+        else if (args.size() == 2)
         {
             const boost::filesystem::path fileName(args[1].c_str());
             if (args[0] == L"1")
@@ -123,15 +166,18 @@ namespace boar
             {
                 status = DumpProfile([&fileName]() { return LineCountRef3(fileName); });
             }
-        }
-        else if (args.size() == 1)
-        {
-            const boost::filesystem::path fileName(args[0].c_str());
-            status = DumpProfile([&fileName]() { return LineCountRef4(fileName); });
+            else if (args[0] == L"drop")
+            {
+                status = DumpProfile([&fileName]() { return DropLines<char>(fileName); });
+            }
+            else if (args[0] == L"lc")
+            {
+                status = DumpProfile([&fileName]() { return LineCountRef4(fileName); });
+            }
         }
         else
         {
-            status = 1;
+            return Usage();
         }
         return 0;
     }
