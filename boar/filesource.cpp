@@ -148,7 +148,7 @@ namespace boar
             TCHAR buf[1024];
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwErrorCode, 0, buf, sizeof buf, NULL);
             std::wstring s(reinterpret_cast<wchar_t*>(buf));
-            std::wcout << s.substr(0, s.length() - 2) << std::endl;
+            std::wcerr << s.substr(0, s.length() - 2) << std::endl;
         }
     }
 }

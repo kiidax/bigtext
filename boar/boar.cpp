@@ -10,7 +10,7 @@
 
 namespace boar
 {
-    size_t LineCount(const boost::filesystem::path& fileName)
+    size_t LineCountRef1(const boost::filesystem::path& fileName)
     {
         // 1059203072      2068549
         // 36,762,348,544 bytes.
@@ -40,7 +40,7 @@ namespace boar
         return lineCount;
     }
 
-    size_t LineCountRef(const boost::filesystem::path fileName)
+    size_t LineCountRef2(const boost::filesystem::path fileName)
     {
         // 1059203072      1720807
         // 36,762,348,544 bytes.
@@ -77,7 +77,7 @@ namespace boar
         return lineCount;
     }
 
-    size_t LineCountRef4(const boost::filesystem::path fileName)
+    size_t LineCount(const boost::filesystem::path fileName)
     {
         // 1059203072      414019
         // 36,762,348,544 bytes.
@@ -153,26 +153,32 @@ namespace boar
         }
         else if (args.size() == 2)
         {
-            const boost::filesystem::path fileName(args[1].c_str());
-            if (args[0] == L"1")
+            const std::wstring commandName(args[0]);
+
+            for (auto it = args.cbegin() + 1; it != args.cend(); ++it)
             {
-                status = DumpProfile([&fileName]() { return LineCount(fileName); });
-            }
-            else if (args[0] == L"2")
-            {
-                status = DumpProfile([&fileName]() { return LineCountRef(fileName); });
-            }
-            else if (args[0] == L"3")
-            {
-                status = DumpProfile([&fileName]() { return LineCountRef3(fileName); });
-            }
-            else if (args[0] == L"drop")
-            {
-                status = DumpProfile([&fileName]() { return DropLines<char>(fileName); });
-            }
-            else if (args[0] == L"lc")
-            {
-                status = DumpProfile([&fileName]() { return LineCountRef4(fileName); });
+                const boost::filesystem::path fileName(it->c_str());
+
+                if (commandName == L"1")
+                {
+                    status = DumpProfile([&fileName]() { return LineCountRef1(fileName); });
+                }
+                else if (commandName == L"2")
+                {
+                    status = DumpProfile([&fileName]() { return LineCountRef2(fileName); });
+                }
+                else if (commandName == L"3")
+                {
+                    status = DumpProfile([&fileName]() { return LineCountRef3(fileName); });
+                }
+                else if (commandName == L"drop")
+                {
+                    status = DumpProfile([&fileName]() { return DropLines<char>(fileName); });
+                }
+                else if (commandName == L"lc")
+                {
+                    status = DumpProfile([&fileName]() { return LineCount(fileName); });
+                }
             }
         }
         else
