@@ -109,8 +109,8 @@ namespace boar
             {
                 if (*p == '\n')
                 {
-                    const std::basic_string<charT> s(lineStart, p);
-                    std::cout << s << std::endl;
+                    const std::basic_string<wchar_t> s(lineStart, p);
+                    std::wcout << s << std::endl;
                     lineStart = p + 1;
                     c++;
                 }
@@ -126,14 +126,14 @@ namespace boar
         size_t lineCount = func();
         clock_t endTime = clock();
         clock_t t = endTime - startTime;
-        std::cout << lineCount << '\t' << t << std::endl;
+        std::wcout << lineCount << '\t' << t << std::endl;
         return 0;
     }
 
     int Usage()
     {
-        std::cout <<
-            "usage: boar <command> [<args>]\n"
+        std::wcout <<
+            L"usage: boar <command> [<args>]\n"
             "\n"
             "Boar is a toolkit to process text files.\n"
             "\n"

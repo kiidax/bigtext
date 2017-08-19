@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <clocale>
 #include <string>
 #include <iostream>
 #include <fstream>

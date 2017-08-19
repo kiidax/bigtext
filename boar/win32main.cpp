@@ -8,6 +8,7 @@
 
 int _tmain(int argc, TCHAR** argv)
 {
+    std::setlocale(LC_CTYPE, "");
     std::vector<std::wstring> args;
     for (int i = 1; i < argc; i++)
     {
