@@ -66,7 +66,11 @@ namespace boar
                     if (!ReadFile(hFile, buf, CHUNK_SIZE2, &readBytes, NULL))
                         break;
                     if (readBytes == 0)
+                    {
+                        success = true;
                         break;
+                    }
+
                     f(buf, readBytes);
                 }
                 delete[] buf;

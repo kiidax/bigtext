@@ -27,9 +27,6 @@
     <ClCompile Include="filesource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="taskqueue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LineCountProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="boar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="taskqueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filesource.h">

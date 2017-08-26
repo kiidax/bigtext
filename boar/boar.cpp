@@ -5,60 +5,33 @@
 #include "stdafx.h"
 
 #include "boar.h"
-#include "taskqueue.h"
 #include "filesource.h"
 #include "LineCountProcessor.h"
 
 namespace boar
 {
-    bool LineCount3(const std::vector<std::wstring>& args)
+    bool LineCount2(const std::vector<std::wstring>& args)
     {
         // 1059203070      463179
         // 36,762,348,544 bytes.
         // AMD E2-7110
+        std::auto_ptr<TextProcessor> proc(new LineCountProcessor());
         for (auto it = args.begin(); it != args.end(); ++it)
         {
-            boost::filesystem::path fileName(*it);
-            size_t lineCount = 0;
-            FileSourceWithFileRead(fileName, [&lineCount](const void *addr, size_t n) {
-                const char* p = reinterpret_cast<const char*>(addr);
-                size_t c = 0;
-                for (size_t i = 0; i < n; i++)
-                {
-                    if (p[i] == '\n') c++;
-                }
-                lineCount += c;
+            proc->BeginContent(*it);
+            FileSourceWithFileRead(*it, [&proc](const void *data, size_t n) {
+                proc->ProcessBuffer(data, n);
             });
-            std::wcout << fileName << '\t' << lineCount << std::endl;
-        }
-        return true;
-    }
-
-    bool LineCount2(const std::vector<std::wstring>& args)
-    {
-        // 1059203072      414019
-        // 36,762,348,544 bytes.
-        // AMD E2-7110
-        for (auto it = args.begin(); it != args.end(); ++it)
-        {
-            boost::filesystem::path fileName(*it);
-            size_t lineCount = 0;
-            FileSourceWithOverlapRead(fileName, [&lineCount](const void *addr, size_t n) {
-                const char* p = reinterpret_cast<const char*>(addr);
-                size_t c = 0;
-                for (size_t i = 0; i < n; i++)
-                {
-                    if (p[i] == '\n') c++;
-                }
-                lineCount += c;
-            });
-            std::wcout << fileName << '\t' << lineCount << std::endl;
+            proc->EndContent();
         }
         return true;
     }
 
     bool LineCount(const std::vector<std::wstring>& args)
     {
+        // 1059203072      404601
+        // 36,762,348,544 bytes.
+        // AMD E2-7110
         std::auto_ptr<TextProcessor> proc(new LineCountProcessor());
         proc->ProcessFileList(args);
         return true;
@@ -131,10 +104,6 @@ namespace boar
             if (commandName == L"count2")
             {
                 status = DumpProfile([&args2]() { return LineCount2(args2); });
-            }
-            if (commandName == L"count3")
-            {
-                status = DumpProfile([&args2]() { return LineCount3(args2); });
             }
             else if (commandName == L"drop")
             {
