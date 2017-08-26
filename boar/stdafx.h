@@ -7,8 +7,6 @@
 #include <tchar.h>
 #include <cstdint>
 #include <cassert>
-#include <mutex>
-#include <condition_variable>
 
 #include <clocale>
 #include <string>
@@ -18,5 +16,4 @@
 #include <new>
 #include <memory>
 
-#include <boost/thread/thread.hpp>
 #include <boost/filesystem.hpp>
