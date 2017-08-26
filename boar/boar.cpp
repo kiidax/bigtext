@@ -7,10 +7,11 @@
 #include "boar.h"
 #include "taskqueue.h"
 #include "filesource.h"
+#include "LineCountProcessor.h"
 
 namespace boar
 {
-    bool LineCount2(const std::vector<std::wstring>& args)
+    bool LineCount3(const std::vector<std::wstring>& args)
     {
         // 1059203070      463179
         // 36,762,348,544 bytes.
@@ -33,7 +34,7 @@ namespace boar
         return true;
     }
 
-    bool LineCount(const std::vector<std::wstring>& args)
+    bool LineCount2(const std::vector<std::wstring>& args)
     {
         // 1059203072      414019
         // 36,762,348,544 bytes.
@@ -51,8 +52,15 @@ namespace boar
                 }
                 lineCount += c;
             });
-            std::wcout << *it << '\t' << lineCount << std::endl;
+            std::wcout << fileName << '\t' << lineCount << std::endl;
         }
+        return true;
+    }
+
+    bool LineCount(const std::vector<std::wstring>& args)
+    {
+        std::auto_ptr<TextProcessor> proc(new LineCountProcessor());
+        proc->ProcessFileList(args);
         return true;
     }
 
@@ -123,6 +131,10 @@ namespace boar
             if (commandName == L"count2")
             {
                 status = DumpProfile([&args2]() { return LineCount2(args2); });
+            }
+            if (commandName == L"count3")
+            {
+                status = DumpProfile([&args2]() { return LineCount3(args2); });
             }
             else if (commandName == L"drop")
             {

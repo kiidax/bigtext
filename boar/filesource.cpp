@@ -13,6 +13,7 @@ namespace boar
 
     static const int NUM_OVERLAPS = 3;
     static const size_t CHUNK_SIZE = 64L * 1024;
+    static const size_t CHUNK_SIZE2 = 4L * 1024;
 
     void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallbackType callback)
     {
@@ -56,13 +57,13 @@ namespace boar
         HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            BYTE *buf = new BYTE[CHUNK_SIZE];
+            BYTE *buf = new BYTE[CHUNK_SIZE2];
             if (buf != nullptr)
             {
                 DWORD readBytes;
                 while (true)
                 {
-                    if (!ReadFile(hFile, buf, CHUNK_SIZE, &readBytes, NULL))
+                    if (!ReadFile(hFile, buf, CHUNK_SIZE2, &readBytes, NULL))
                         break;
                     if (readBytes == 0)
                         break;
