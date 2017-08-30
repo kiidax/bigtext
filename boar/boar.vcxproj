@@ -149,8 +149,7 @@
   <ItemGroup>
     <ClCompile Include="boar.cpp" />
     <ClCompile Include="filesource.cpp" />
-    <ClCompile Include="TextProcessor.cpp" />
-    <ClCompile Include="LineCountProcessor.cpp" />
+    <ClCompile Include="ProcessorBase.cpp" />
     <ClCompile Include="win32main.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -163,7 +162,9 @@
     <ClInclude Include="base.h" />
     <ClInclude Include="boar.h" />
     <ClInclude Include="filesource.h" />
-    <ClInclude Include="TextProcessor.h" />
+    <ClInclude Include="FindStringProcessor.h" />
+    <ClInclude Include="ProcessorBase.h" />
+    <ClInclude Include="LineProcessorBase.h" />
     <ClInclude Include="LineCountProcessor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

@@ -27,10 +27,7 @@
     <ClCompile Include="filesource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LineCountProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextProcessor.cpp">
+    <ClCompile Include="ProcessorBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +50,13 @@
     <ClInclude Include="LineCountProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextProcessor.h">
+    <ClInclude Include="ProcessorBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FindStringProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LineProcessorBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

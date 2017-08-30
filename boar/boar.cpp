@@ -7,63 +7,12 @@
 #include "boar.h"
 #include "filesource.h"
 #include "LineCountProcessor.h"
+#include "FindStringProcessor.h"
 
 namespace boar
 {
-    bool LineCount2(const std::vector<std::wstring>& args)
-    {
-        // 1059203070      463179
-        // 36,762,348,544 bytes.
-        // AMD E2-7110
-        std::auto_ptr<TextProcessor> proc(new LineCountProcessor());
-        for (auto it = args.begin(); it != args.end(); ++it)
-        {
-            proc->BeginContent(*it);
-            FileSourceWithFileRead(*it, [&proc](const void *data, size_t n) {
-                proc->ProcessBuffer(data, n);
-            });
-            proc->EndContent();
-        }
-        return true;
-    }
-
     bool LineCount(const std::vector<std::wstring>& args)
     {
-        // 1059203072      404601
-        // 36,762,348,544 bytes.
-        // AMD E2-7110
-        std::auto_ptr<TextProcessor> proc(new LineCountProcessor());
-        proc->ProcessFileList(args);
-        return true;
-    }
-
-    template <typename charT>
-    bool DropLines(const std::vector<std::wstring>& args)
-    {
-        for (auto it = args.begin(); it != args.end(); ++it)
-        {
-            boost::filesystem::path fileName(*it);
-            size_t lineCount = 0;
-            FileSourceWithOverlapRead(fileName, [&lineCount](const void *addr, size_t n) {
-                intptr_t addrValue = reinterpret_cast<intptr_t>(addr);
-                const charT* first = reinterpret_cast<const charT*>(addrValue);
-                const charT* last = reinterpret_cast<const charT*>(addrValue + n);
-                size_t c = 0;
-                const charT* lineStart = first;
-                for (const charT* p = first; p != last; p++)
-                {
-                    if (*p == '\n')
-                    {
-                        const std::basic_string<wchar_t> s(lineStart, p);
-                        std::wcout << s << std::endl;
-                        lineStart = p + 1;
-                        c++;
-                    }
-                }
-                lineCount += c;
-            });
-        }
-        return true;
     }
 
     int DumpProfile(std::function<size_t()> func)
@@ -85,7 +34,8 @@ namespace boar
             "\n"
             "List of commands:\n"
             "\n"
-            "   lc      Count the number of lines.\n"
+            "   find       Find a string in lines.\n"
+            "   count      Count the number of lines.\n"
             << std::endl;
         return 1;
     }
@@ -101,17 +51,29 @@ namespace boar
         {
             const std::wstring commandName(args[0]);
             const std::vector<std::wstring> args2(args.begin() + 1, args.end());
-            if (commandName == L"count2")
+            if (commandName == L"find")
             {
-                status = DumpProfile([&args2]() { return LineCount2(args2); });
-            }
-            else if (commandName == L"drop")
-            {
-                status = DumpProfile([&args2]() { return DropLines<char>(args2); });
+                status = DumpProfile([&args2]()
+                {
+                    // 1059203072      404601
+                    // 36,762,348,544 bytes.
+                    // AMD E2-7110
+                    std::auto_ptr<ProcessorBase> proc(new FindStringProcessor<char>());
+                    proc->ProcessFileList(args2);
+                    return true;
+                });
             }
             else if (commandName == L"count")
             {
-                status = DumpProfile([&args2]() { return LineCount(args2); });
+                status = DumpProfile([&args2]()
+                {
+                    // 1059203072      404601
+                    // 36,762,348,544 bytes.
+                    // AMD E2-7110
+                    std::auto_ptr<ProcessorBase> proc(new LineCountProcessor<char>());
+                    proc->ProcessFileList(args2);
+                    return true;
+                });
             }
         }
         else

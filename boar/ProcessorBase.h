@@ -1,19 +1,23 @@
+/* Boar - Boar is a toolkit to modify text files.
+* Copyright (C) 2017 Katsuya Iida. All rights reserved.
+*/
+
 #pragma once
 
 namespace boar
 {
-    class TextProcessor
+    class ProcessorBase
     {
     protected:
         std::wstring _currentFilePath;
 
     public:
-        TextProcessor();
-        virtual ~TextProcessor();
+        ProcessorBase();
+        virtual ~ProcessorBase();
 
         void ProcessFileList(const std::vector<std::wstring>& filePathList);
         void ProcessFile(const std::wstring& filePath);
-        virtual void BeginContent(const std::wstring& filePath);
+        virtual void BeginContent();
         virtual void ProcessBuffer(const void *data, size_t n) = 0;
         virtual void EndContent();
     };
