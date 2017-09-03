@@ -11,18 +11,15 @@
 
 namespace boar
 {
-    bool LineCount(const std::vector<std::wstring>& args)
-    {
-    }
-
-    int DumpProfile(std::function<size_t()> func)
+    int DumpProfile(std::function<bool()> func)
     {
         clock_t startTime = clock();
-        size_t lineCount = func();
+        int code = func();
         clock_t endTime = clock();
         clock_t t = endTime - startTime;
-        std::wcout << lineCount << '\t' << t << std::endl;
-        return 0;
+        std::wcout << "Success" << '\t' << code << std::endl;
+        std::wcout << "TimeMs" << '\t' << t << std::endl;
+        return code;
     }
 
     int Usage()
@@ -47,7 +44,7 @@ namespace boar
         {
             return Usage();
         }
-        else if (args.size() == 2)
+        else if (args.size() >= 2)
         {
             const std::wstring commandName(args[0]);
             const std::vector<std::wstring> args2(args.begin() + 1, args.end());
