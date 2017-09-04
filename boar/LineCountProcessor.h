@@ -19,6 +19,11 @@ namespace boar
         LineCountProcessor() {}
         ~LineCountProcessor() {}
 
+        virtual void BeginContent()
+        {
+            _lineCount = 0;
+        }
+
         virtual void ProcessBuffer(const void *data_, size_t n_)
         {
             const char* data = reinterpret_cast<const charT*>(data_);

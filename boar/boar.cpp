@@ -72,6 +72,11 @@ namespace boar
                     return true;
                 });
             }
+            else
+            {
+                std::wcerr << "Unknown command." << std::endl;
+                exit(1);
+            }
         }
         else
         {
