@@ -24,14 +24,14 @@ namespace boar
             _lineCount = 0;
         }
 
-        virtual void ProcessBuffer(const void *data_, size_t n_)
+        virtual void ProcessBuffer(const void* first_, const void* last_)
         {
-            const char* data = reinterpret_cast<const charT*>(data_);
-            const size_t n = n_ / sizeof(charT);
+            const charT* first = reinterpret_cast<const charT*>(first_);
+            const charT* last = reinterpret_cast<const charT*>(last_);
             size_t c = 0;
-            for (size_t i = 0; i < n; i++)
+            for (const charT *it = first; it != last; ++it)
             {
-                if (data[i] == '\n') c++;
+                if (*it == '\n') c++;
             }
             _lineCount += c;
         }

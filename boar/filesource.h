@@ -9,7 +9,7 @@
 
 namespace boar
 {
-    typedef std::function<void(const void*, size_t)> DataSourceCallbackType;
+    typedef std::function<void(const void*, const void*)> DataSourceCallbackType;
 
     void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallbackType callback);
     void FileSourceWithFileRead(const boost::filesystem::path& fileName, DataSourceCallbackType callback);

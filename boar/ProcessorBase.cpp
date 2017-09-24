@@ -28,8 +28,8 @@ namespace boar
     {
         _currentFilePath = filePath;
         BeginContent();
-        FileSourceWithOverlapRead(filePath, [this](const void *addr, size_t n) {
-            ProcessBuffer(addr, n);
+        FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
+            ProcessBuffer(first, last);
         });
         EndContent();
     }

@@ -166,7 +166,7 @@
     <ClInclude Include="base.h" />
     <ClInclude Include="boar.h" />
     <ClInclude Include="filesource.h" />
-    <ClInclude Include="FindStringProcessor.h" />
+    <ClInclude Include="LineDropProcessor.h" />
     <ClInclude Include="ProcessorBase.h" />
     <ClInclude Include="LineProcessorBase.h" />
     <ClInclude Include="LineCountProcessor.h" />

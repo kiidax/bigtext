@@ -18,7 +18,7 @@ namespace boar
         void ProcessFileList(const std::vector<std::wstring>& filePathList);
         void ProcessFile(const std::wstring& filePath);
         virtual void BeginContent();
-        virtual void ProcessBuffer(const void *data, size_t n) = 0;
+        virtual void ProcessBuffer(const void* first, const void* last) = 0;
         virtual void EndContent();
     };
 }

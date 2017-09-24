@@ -11,20 +11,30 @@ namespace boar
     {
     protected:
         std::vector<charT> _previousPartialLine;
+        size_t _lineCount;
 
     public:
         LineProcessorBase() {}
         virtual ~LineProcessorBase() {}
 
-        virtual void ProcessBuffer(const void* data_, size_t n_)
+        virtual void ProcessBuffer(const void* first_, const void* last_)
         {
-            const charT* data = reinterpret_cast<const charT*>(data_);
-            const size_t n = n_ / sizeof(charT);
-            ProcessLines(data, n);
+            const charT* first = reinterpret_cast<const charT*>(first_);
+            const charT* last = reinterpret_cast<const charT*>(last_);
+            size_t c = 0;
+            const charT* lineStart = first;
+            for (const charT* p = first; p != last; p++)
+            {
+                if (*p == '\n')
+                {
+                    ProcessLine(lineStart, p);
+                    lineStart = p + 1;
+                    c++;
+                }
+            }
+            _lineCount += c;
         }
 
-        virtual void ProcessLines(const charT *data, size_t n)
-        {
-        }
+        virtual bool ProcessLine(const charT* first, const charT* last) = 0;
     };
 }

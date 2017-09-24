@@ -9,8 +9,6 @@
 
 namespace boar
 {
-    typedef std::function<void(const void*, size_t)> DataSourceCallbackType;
-
     static const int NUM_OVERLAPS = 3;
     static const size_t CHUNK_SIZE = 64L * 1024;
     static const size_t CHUNK_SIZE2 = 4L * 1024;
@@ -31,7 +29,9 @@ namespace boar
                     MEMORY_BASIC_INFORMATION mbi;
                     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
                     {
-                        callback(lpAddress, mbi.RegionSize);
+                        const void* first = lpAddress;
+                        const void* last = reinterpret_cast<const void*>(reinterpret_cast<intptr_t>(lpAddress) + mbi.RegionSize);
+                        callback(first, last);
                         success = true;
                     }
                     UnmapViewOfFile(lpAddress);
@@ -71,7 +71,7 @@ namespace boar
                         break;
                     }
 
-                    f(buf, readBytes);
+                    f(buf, buf + readBytes);
                 }
                 delete[] buf;
             }
@@ -138,7 +138,7 @@ namespace boar
                         }
                         if (readBytes == 0)
                             break;
-                        callback(buf + processIndex * CHUNK_SIZE, readBytes);
+                        callback(buf + processIndex * CHUNK_SIZE, buf + processIndex * CHUNK_SIZE + readBytes);
                         processIndex = (processIndex + 1) % NUM_OVERLAPS;
                         numWaiting--;
                     }

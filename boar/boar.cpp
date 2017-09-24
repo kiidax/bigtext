@@ -7,7 +7,7 @@
 #include "boar.h"
 #include "filesource.h"
 #include "LineCountProcessor.h"
-#include "FindStringProcessor.h"
+#include "LineDropProcessor.h"
 
 namespace boar
 {
@@ -48,14 +48,14 @@ namespace boar
         {
             const std::wstring commandName(args[0]);
             const std::vector<std::wstring> args2(args.begin() + 1, args.end());
-            if (commandName == L"find")
+            if (commandName == L"drop")
             {
                 status = DumpProfile([&args2]()
                 {
                     // 1059203072      404601
                     // 36,762,348,544 bytes.
                     // AMD E2-7110
-                    std::auto_ptr<ProcessorBase> proc(new FindStringProcessor<char>());
+                    std::auto_ptr<ProcessorBase> proc(new LineDropProcessor<char>(0.5));
                     proc->ProcessFileList(args2);
                     return true;
                 });

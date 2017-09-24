@@ -53,10 +53,10 @@
     <ClInclude Include="ProcessorBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FindStringProcessor.h">
+    <ClInclude Include="LineProcessorBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LineProcessorBase.h">
+    <ClInclude Include="LineDropProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
