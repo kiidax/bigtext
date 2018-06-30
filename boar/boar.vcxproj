@@ -152,8 +152,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="boar.cpp" />
-    <ClCompile Include="filesource.cpp" />
-    <ClCompile Include="ProcessorBase.cpp" />
     <ClCompile Include="win32main.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -163,13 +161,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="base.h" />
     <ClInclude Include="boar.h" />
-    <ClInclude Include="filesource.h" />
-    <ClInclude Include="LineDropProcessor.h" />
-    <ClInclude Include="ProcessorBase.h" />
-    <ClInclude Include="LineProcessorBase.h" />
-    <ClInclude Include="LineCountProcessor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
