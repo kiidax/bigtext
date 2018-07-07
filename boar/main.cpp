@@ -6,6 +6,7 @@
 
 #include "boar.h"
 
+#if WIN32
 int wmain(int argc, wchar_t** argv)
 {
     std::setlocale(LC_CTYPE, "");
@@ -16,3 +17,15 @@ int wmain(int argc, wchar_t** argv)
     }
     return boar::Main(args);
 }
+#else
+int main(int argc, char *argv[])
+{
+    std::setlocale(LC_CTYPE, "");
+    std::vector<std::wstring> args;
+    for (int i = 1; i < argc; i++)
+    {
+        args.push_back(std::wstring(argv[i], argv[i] + strlen(argv[i])));
+    }
+    return boar::Main(args);
+}
+#endif

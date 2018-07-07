@@ -23,7 +23,7 @@ namespace boar
         return 1;
     }
 
-    bool Parser::IsOperator(CharType ch)
+    bool Lexer::IsOperator(CharType ch)
     {
         return
             ch == '!' ||
@@ -50,15 +50,15 @@ namespace boar
             ch == '~';
     }
 
-    int Parser::CompareOperator(std::string op1, std::string op2)
+    int Parser::CompareOperator(StringType op1, StringType op2)
     {
         if (op1 == op2) return 0;
-        if (op1 == "+" && op2 == "*") return -1;
-        if (op1 == "*" && op2 == "-") return 1;
+        if (op1 == L"+" && op2 == L"*") return -1;
+        if (op1 == L"*" && op2 == L"-") return 1;
         return 0;
     }
 
-    Parser::TokenType Parser::Lex()
+    Lexer::TokenType Lexer::Lex()
     {
         const CharType *p = _current;
         while (p != _end && IsSpace(*p)) p++;
@@ -128,7 +128,7 @@ namespace boar
         return TokenType::INVALID;
     }
 
-    Parser::Parser(const CharType * start, const CharType * end)
+    Lexer::Lexer(const CharType * start, const CharType * end)
     {
         _start = start;
         _end = end;
@@ -137,12 +137,12 @@ namespace boar
 
     void Parser::Parse()
     {
-        std::vector<int> valueStack;
-        std::vector<std::string> operatorStack;
+        std::vector<double> valueStack;
+        std::vector<std::wstring> operatorStack;
 
         while (true)
         {
-            auto type = Lex();
+            auto type = _lexer.Lex();
             if (type == TokenType::END)
             {
                 while (true)
@@ -159,9 +159,9 @@ namespace boar
                         valueStack.pop_back();
                         auto value1 = valueStack.back();
                         int result;
-                        if (op == "*") result = value1 * value2;
-                        if (op == "+") result = value1 + value2;
-                        std::cout << op << "(" << value1 << "," << value2 << ")" << std::endl;
+                        if (op == L"*") result = value1 * value2;
+                        if (op == L"+") result = value1 + value2;
+                        std::wcout << op << "(" << value1 << "," << value2 << ")" << std::endl;
                         valueStack.back() = result;
                         valueStack.push_back(value1);
                     }
@@ -173,37 +173,39 @@ namespace boar
             }
             else if (type == TokenType::NUMBER)
             {
-                valueStack.push_back(static_cast<int>(_value.number));
-                std::wcout << _value.number << std::endl;
+                auto x = _lexer.Number();
+                valueStack.push_back(x);
+                std::wcout << x << std::endl;
             }
             else if (type == TokenType::INTEGER)
             {
-                valueStack.push_back(_value.integer);
-                std::wcout << _value.integer << std::endl;
+                auto n = _lexer.Integer();
+                valueStack.push_back(n);
+                std::wcout << n << std::endl;
             }
             else if (type == TokenType::OPERATOR)
             {
-                std::wcout << std::wstring(_value.string, _current) << std::endl;
-                std::string operatorName(_value.string, _current);
+                auto op = _lexer.String();
+                std::wcout << op << std::endl;
                 while (true)
                 {
-                    if (operatorStack.empty() || CompareOperator(operatorStack.back(), operatorName) < 0)
+                    if (operatorStack.empty() || CompareOperator(operatorStack.back(), op) < 0)
                     {
                         std::wcout << "push" << std::endl;
-                        operatorStack.push_back(operatorName);
+                        operatorStack.push_back(op);
                         break;
                     }
                     else
                     {
-                        auto op = operatorStack.back();
+                        auto op2 = operatorStack.back();
                         operatorStack.pop_back();
                         auto value2 = valueStack.back();
                         valueStack.pop_back();
                         auto value1 = valueStack.back();
                         int result;
-                        if (op == "*") result = value1 * value2;
-                        if (op == "+") result = value1 + value2;
-                        std::cout << op << "(" << value1 << "," << value2 << ")" << std::endl;
+                        if (op2 == L"*") result = value1 * value2;
+                        if (op2 == L"+") result = value1 + value2;
+                        std::wcout << op2 << "(" << value1 << "," << value2 << ")" << std::endl;
                         valueStack.back() = result;
                         valueStack.push_back(value1);
                     }

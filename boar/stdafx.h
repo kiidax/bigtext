@@ -1,10 +1,12 @@
 #pragma once
 
+#if WIN32
 #include "targetver.h"
 
 #include <Windows.h>
 
 #include <tchar.h>
+#endif
 #include <cstdint>
 #include <cassert>
 

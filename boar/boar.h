@@ -7,8 +7,9 @@
 #include <string>
 
 namespace boar {
-    class Parser
+    class Lexer
     {
+    public:
         typedef wchar_t CharType;
         typedef std::basic_string<CharType> StringType;
         enum TokenType
@@ -27,7 +28,14 @@ namespace boar {
             double number;
             const CharType *string;
         };
+    public:
+        Lexer(const CharType *start, const CharType *end);
+        TokenType Lex();
+        StringType String() { return StringType(_value.string, _current); }
+        double Number() { return _value.number; }
+        double Integer() { return _value.integer; }
     private:
+        // Lexer
         const CharType *_start;
         const CharType *_end;
         const CharType *_current;
@@ -38,12 +46,22 @@ namespace boar {
         bool IsOperator(CharType ch);
         bool IsPrefix(CharType ch) { return ch == '+' || ch == '-' || ch == '!' || ch == '~'; }
         bool IsPostfix(CharType ch) { return ch == '\''; }
-        int CompareOperator(std::string op1, std::string op2);
-        TokenType Lex();
-    public:
-        Parser(const CharType *start, const CharType *end);
-        void Parse();
     };
+    
+    class Parser
+    {
+    public:
+        typedef Lexer::CharType CharType;
+        typedef Lexer::StringType StringType;
+        typedef Lexer::TokenType TokenType;
+    private:
+        Lexer _lexer;
+    public:
+        Parser(const CharType *start, const CharType *end) : _lexer(start, end) {}
+        void Parse();
+    private:
+         int CompareOperator(StringType op1, StringType op2);
+   };
 
     int Main(const std::vector<std::wstring>& args);
 }
