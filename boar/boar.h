@@ -35,6 +35,10 @@ namespace boar {
         bool IsSpace(CharType ch) { return ch <= 32; }
         bool IsNumber(CharType ch) { return ch >= '0' && ch <= '9'; }
         bool IsNonZeroNumber(CharType ch) { return ch >= '1' && ch <= '9'; }
+        bool IsOperator(CharType ch);
+        bool IsPrefix(CharType ch) { return ch == '+' || ch == '-' || ch == '!' || ch == '~'; }
+        bool IsPostfix(CharType ch) { return ch == '\''; }
+        int CompareOperator(std::string op1, std::string op2);
         TokenType Lex();
     public:
         Parser(const CharType *start, const CharType *end);
