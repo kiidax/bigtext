@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include "ast.h"
+
 #include <string>
 
 namespace boar {
+
     class Lexer
     {
     public:
