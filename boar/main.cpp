@@ -6,7 +6,7 @@
 
 #include "boar.h"
 
-#if WIN32
+#if _WIN32
 int wmain(int argc, wchar_t** argv)
 {
     std::setlocale(LC_CTYPE, "");
