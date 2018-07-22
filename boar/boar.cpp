@@ -7,7 +7,7 @@
 #include "boar.h"
 #include "filesource.h"
 #include "LineCountProcessor.h"
-#include "LineDropProcessor.h"
+#include "LineSampleProcessor.h"
 
 namespace boar
 {
@@ -33,6 +33,7 @@ namespace boar
             "\n"
             "   find       Find a string in lines.\n"
             "   count      Count the number of lines.\n"
+            "   sample     Sample lines from file.\n"
             << std::endl;
         return 1;
     }
@@ -48,14 +49,11 @@ namespace boar
         {
             const std::wstring commandName(args[0]);
             const std::vector<std::wstring> args2(args.begin() + 1, args.end());
-            if (commandName == L"drop")
+            if (commandName == L"sample")
             {
                 status = DumpProfile([&args2]()
                 {
-                    // 1059203072      404601
-                    // 36,762,348,544 bytes.
-                    // AMD E2-7110
-                    std::auto_ptr<Processor> proc(new LineDropProcessor<char>(0.5));
+                    std::auto_ptr<Processor> proc(new LineSampleProcessor<char>(0.01));
                     proc->ProcessFileList(args2);
                     return true;
                 });

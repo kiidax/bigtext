@@ -22,5 +22,6 @@ namespace boar
         virtual void BeginFile() {}
         virtual void ProcessBlock(_In_ const void* first, _In_ const void* last) = 0;
         virtual void EndFile() {}
+        virtual void OutputBuffer(_In_ const void* first, _In_ const void* last);
     };
 }

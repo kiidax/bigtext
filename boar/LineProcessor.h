@@ -17,6 +17,7 @@ namespace boar
         LineProcessor() {}
         virtual ~LineProcessor() {}
 
+    protected:
         virtual void ProcessBlock(const void* first_, const void* last_)
         {
             const charT* first = reinterpret_cast<const charT*>(first_);
@@ -51,6 +52,22 @@ namespace boar
             _lineCount += c;
         }
 
+        void OutputText(const charT* first, const charT* last);
+
         virtual bool ProcessLine(const charT* first, const charT* last) = 0;
     };
+
+    template<>
+    void LineProcessor<char>::OutputText(const char* first, const char* last)
+    {
+        std::basic_string<char> s(first, last);
+        std::cout << s;
+    }
+
+    template<>
+    void LineProcessor<wchar_t>::OutputText(const wchar_t* first, const wchar_t* last)
+    {
+        std::basic_string<wchar_t> s(first, last);
+        std::wcout << s;
+    }
 }

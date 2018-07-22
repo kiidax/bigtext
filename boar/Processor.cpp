@@ -25,4 +25,8 @@ namespace boar
         });
         EndFile();
     }
+
+    void Processor::OutputBuffer(_In_ const void* first_, _In_ const void* last_)
+    {
+    }
 }

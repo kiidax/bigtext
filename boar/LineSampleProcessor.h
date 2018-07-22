@@ -11,13 +11,13 @@
 namespace boar
 {
     template <typename charT>
-    class LineDropProcessor : public LineProcessor<charT>
+    class LineSampleProcessor : public LineProcessor<charT>
     {
     private:
         int _threshold;
 
     public:
-        LineDropProcessor(double rate)
+        LineSampleProcessor(double rate)
         {
             _threshold = static_cast<int>(rate * RAND_MAX + 0.5);
         }
@@ -26,8 +26,7 @@ namespace boar
         {
             if (std::rand() < _threshold)
             {
-                const std::basic_string<wchar_t> s(first, last);
-                std::wcout << s << std::endl;
+                OutputText(first, last);
             }
             return true;
         }

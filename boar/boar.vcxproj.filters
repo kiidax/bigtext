@@ -56,7 +56,7 @@
     <ClInclude Include="Processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LineDropProcessor.h">
+    <ClInclude Include="LineSampleProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
