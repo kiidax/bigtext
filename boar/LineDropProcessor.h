@@ -4,13 +4,14 @@
 
 #pragma once
 
-#include "LineProcessorBase.h"
+#include "stdafx.h"
+#include "LineProcessor.h"
 #include <random>
 
 namespace boar
 {
     template <typename charT>
-    class LineDropProcessor : public LineProcessorBase<charT>
+    class LineDropProcessor : public LineProcessor<charT>
     {
     private:
         int _threshold;

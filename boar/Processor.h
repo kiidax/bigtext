@@ -6,19 +6,21 @@
 
 namespace boar
 {
-    class ProcessorBase
+    class Processor
     {
     protected:
         std::wstring _currentFilePath;
 
     public:
-        ProcessorBase();
-        virtual ~ProcessorBase();
+        Processor() {}
+        virtual ~Processor() {}
 
         void ProcessFileList(const std::vector<std::wstring>& filePathList);
         void ProcessFile(const std::wstring& filePath);
-        virtual void BeginContent();
-        virtual void ProcessBuffer(const void* first, const void* last) = 0;
-        virtual void EndContent();
+
+    protected:
+        virtual void BeginFile() {}
+        virtual void ProcessBlock(_In_ const void* first, _In_ const void* last) = 0;
+        virtual void EndFile() {}
     };
 }

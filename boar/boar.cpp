@@ -55,7 +55,7 @@ namespace boar
                     // 1059203072      404601
                     // 36,762,348,544 bytes.
                     // AMD E2-7110
-                    std::auto_ptr<ProcessorBase> proc(new LineDropProcessor<char>(0.5));
+                    std::auto_ptr<Processor> proc(new LineDropProcessor<char>(0.5));
                     proc->ProcessFileList(args2);
                     return true;
                 });
@@ -67,7 +67,7 @@ namespace boar
                     // 1059203072      404601
                     // 36,762,348,544 bytes.
                     // AMD E2-7110
-                    std::auto_ptr<ProcessorBase> proc(new LineCountProcessor<char>());
+                    std::auto_ptr<Processor> proc(new LineCountProcessor<char>());
                     proc->ProcessFileList(args2);
                     return true;
                 });

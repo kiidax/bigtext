@@ -27,7 +27,7 @@
     <ClCompile Include="filesource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ProcessorBase.cpp">
+    <ClCompile Include="Processor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +50,10 @@
     <ClInclude Include="LineCountProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessorBase.h">
+    <ClInclude Include="LineProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LineProcessorBase.h">
+    <ClInclude Include="Processor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LineDropProcessor.h">

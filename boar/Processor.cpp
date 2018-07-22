@@ -4,19 +4,11 @@
 
 #include "stdafx.h"
 #include "filesource.h"
-#include "ProcessorBase.h"
+#include "Processor.h"
 
 namespace boar
 {
-    ProcessorBase::ProcessorBase()
-    {
-    }
-
-    ProcessorBase::~ProcessorBase()
-    {
-    }
-
-    void ProcessorBase::ProcessFileList(const std::vector<std::wstring>& filePathList)
+    void Processor::ProcessFileList(const std::vector<std::wstring>& filePathList)
     {
         for (auto it = filePathList.cbegin(); it != filePathList.cend(); ++it)
         {
@@ -24,21 +16,13 @@ namespace boar
         }
     }
 
-    void ProcessorBase::ProcessFile(const std::wstring& filePath)
+    void Processor::ProcessFile(const std::wstring& filePath)
     {
         _currentFilePath = filePath;
-        BeginContent();
+        BeginFile();
         FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
-            ProcessBuffer(first, last);
+            ProcessBlock(first, last);
         });
-        EndContent();
-    }
-
-    void ProcessorBase::BeginContent()
-    {
-    }
-
-    void ProcessorBase::EndContent()
-    {
+        EndFile();
     }
 }
