@@ -10,9 +10,18 @@ namespace boar
 {
     void Processor::ProcessFileList(const std::vector<std::wstring>& filePathList)
     {
+        if (!_delayOpenFile)
+        {
+            std::wcout << _outputFilePath << std::endl;
+            _outf.open(_outputFilePath, std::ios::out | std::ios::binary);
+        }
         for (auto it = filePathList.cbegin(); it != filePathList.cend(); ++it)
         {
             ProcessFile(*it);
+        }
+        if (_outf.is_open())
+        {
+            _outf.close();
         }
     }
 
@@ -23,6 +32,10 @@ namespace boar
         FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
             ProcessBlock(first, last);
         });
+        if (_delayOpenFile)
+        {
+            //_outf.open(_outputFilePath);
+        }
         EndFile();
     }
 

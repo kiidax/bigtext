@@ -10,11 +10,15 @@ namespace boar
     {
     protected:
         std::wstring _currentFilePath;
+        std::wstring _outputFilePath;
+        bool _delayOpenFile;
+        std::ofstream _outf;
 
     public:
-        Processor() {}
+        Processor() : _delayOpenFile(false) {}
         virtual ~Processor() {}
 
+        void SetOutputFilePath(const std::wstring& outputFilePath) { _outputFilePath = outputFilePath; }
         void ProcessFileList(const std::vector<std::wstring>& filePathList);
         void ProcessFile(const std::wstring& filePath);
 
@@ -22,6 +26,6 @@ namespace boar
         virtual void BeginFile() {}
         virtual void ProcessBlock(_In_ const void* first, _In_ const void* last) = 0;
         virtual void EndFile() {}
-        virtual void OutputBuffer(_In_ const void* first, _In_ const void* last);
+        void OutputBuffer(_In_ const void* first, _In_ const void* last);
     };
 }

@@ -53,8 +53,12 @@ namespace boar
             {
                 status = DumpProfile([&args2]()
                 {
-                    std::auto_ptr<Processor> proc(new LineSampleProcessor<char>(0.01));
-                    proc->ProcessFileList(args2);
+                    std::srand(static_cast<int>(std::time(nullptr)));
+                    double rate = std::atof(std::string(args2[0].begin(), args2[0].end()).c_str());
+                    const std::vector<std::wstring> args3(args2.begin() + 1, args2.end());
+                    std::auto_ptr<Processor> proc(new LineSampleProcessor<char>(rate));
+                    proc->SetOutputFilePath(L"result.txt");
+                    proc->ProcessFileList(args3);
                     return true;
                 });
             }

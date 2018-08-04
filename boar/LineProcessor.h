@@ -12,6 +12,7 @@ namespace boar
     protected:
         std::basic_string<charT> _previousPartialLine;
         size_t _lineCount;
+        std::basic_ofstream<charT> out;
 
     public:
         LineProcessor() {}
@@ -52,22 +53,13 @@ namespace boar
             _lineCount += c;
         }
 
-        void OutputText(const charT* first, const charT* last);
+        void OutputText(const charT* first_, const charT* last_)
+        {
+            const char *first = reinterpret_cast<const char *>(first_);
+            const char *last = reinterpret_cast<const char *>(last_);
+            _outf.write(first, last - first);
+        }
 
         virtual bool ProcessLine(const charT* first, const charT* last) = 0;
     };
-
-    template<>
-    void LineProcessor<char>::OutputText(const char* first, const char* last)
-    {
-        std::basic_string<char> s(first, last);
-        std::cout << s;
-    }
-
-    template<>
-    void LineProcessor<wchar_t>::OutputText(const wchar_t* first, const wchar_t* last)
-    {
-        std::basic_string<wchar_t> s(first, last);
-        std::wcout << s;
-    }
 }
