@@ -266,3 +266,5 @@ __pycache__/
 /boar/test.csx
 /boar/test2.txt
 /boar/test2_sample.txt
+/tests/test.txt
+/tests/result.txt
