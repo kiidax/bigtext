@@ -12,10 +12,11 @@ namespace boar
         std::wstring _currentFilePath;
         std::wstring _outputFilePath;
         bool _delayOpenFile;
+        bool _forceOverWrite;
         std::ofstream _outf;
 
     public:
-        Processor() : _delayOpenFile(false) {}
+        Processor() : _delayOpenFile(false), _forceOverWrite(false) {}
         virtual ~Processor() {}
 
         void SetOutputFilePath(const std::wstring& outputFilePath) { _outputFilePath = outputFilePath; }

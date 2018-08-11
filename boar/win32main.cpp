@@ -9,10 +9,5 @@
 int wmain(int argc, wchar_t** argv)
 {
     std::setlocale(LC_CTYPE, "");
-    std::vector<std::wstring> args;
-    for (int i = 1; i < argc; i++)
-    {
-        args.push_back(std::wstring(argv[i]));
-    }
-    return boar::Main(args);
+    return boar::Main(argc, argv);
 }

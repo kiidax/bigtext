@@ -12,6 +12,11 @@ namespace boar
     {
         if (!_delayOpenFile)
         {
+            if (!_forceOverWrite && boost::filesystem::exists(_outputFilePath))
+            {
+                std::wcerr << "File `" << _outputFilePath << "' exists." << std::endl;
+                return;
+            }
             std::wcout << _outputFilePath << std::endl;
             _outf.open(_outputFilePath, std::ios::out | std::ios::binary);
         }

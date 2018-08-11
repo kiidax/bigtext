@@ -11,6 +11,8 @@
 
 namespace boar
 {
+    namespace po = boost::program_options;
+
     int DumpProfile(std::function<bool()> func)
     {
         clock_t startTime = clock();
@@ -38,32 +40,23 @@ namespace boar
         return 1;
     }
 
-    int Main(const std::vector<std::wstring>& args)
+    int Main(int argc, wchar_t *argv[])
     {
         int status;
-        if (args.size() == 1)
+        if (argc == 1)
         {
             return Usage();
         }
-        else if (args.size() >= 2)
+        else if (argc >= 2)
         {
-            const std::wstring commandName(args[0]);
-            const std::vector<std::wstring> args2(args.begin() + 1, args.end());
+            const std::wstring commandName(argv[1]);
             if (commandName == L"sample")
             {
-                status = DumpProfile([&args2]()
-                {
-                    std::srand(static_cast<int>(std::time(nullptr)));
-                    double rate = std::atof(std::string(args2[0].begin(), args2[0].end()).c_str());
-                    const std::vector<std::wstring> args3(args2.begin() + 1, args2.end());
-                    std::auto_ptr<Processor> proc(new LineSampleProcessor<char>(rate));
-                    proc->SetOutputFilePath(L"result.txt");
-                    proc->ProcessFileList(args3);
-                    return true;
-                });
+                return sample_command(argc - 1, argv + 1);
             }
             else if (commandName == L"count")
             {
+                const std::vector<std::wstring> args2(argv + 2, argv + argc);
                 status = DumpProfile([&args2]()
                 {
                     // 1059203072      404601
@@ -76,7 +69,7 @@ namespace boar
             }
             else
             {
-                std::wcerr << "Unknown command." << std::endl;
+                std::wcerr << L"Unknown command `" << commandName << L"'." << std::endl;
                 exit(1);
             }
         }

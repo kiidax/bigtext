@@ -7,5 +7,6 @@
 #include <boar/base.h>
 
 namespace boar {
-    int Main(const std::vector<std::wstring>& args);
+    int Main(int argc, wchar_t *argv[]);
+    int sample_command(int argc, wchar_t *argv[]);
 }
