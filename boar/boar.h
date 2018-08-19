@@ -5,8 +5,50 @@
 #pragma once
 
 #include <boar/base.h>
+#include <filesystem>
 
 namespace boar {
+
+    namespace fs = boost::filesystem;
+
     int Main(int argc, wchar_t *argv[]);
     int sample_command(int argc, wchar_t *argv[]);
+    int SampleCommand(int argc, wchar_t *argv[]);
+
+    class FileWriter
+    {
+    protected:
+        fs::ofstream _out;
+
+    public:
+        void Open(const fs::path& path)
+        {
+            _out.open(path, std::ios::out | std::ios::binary);
+        }
+
+        void Write(const char *s, size_t len)
+        {
+            _out.write(s, len);
+        }
+
+        void Close()
+        {
+            _out.close();
+        }
+    };
+
+    template <typename charT, typename WriterT>
+    class LineWriter : public WriterT
+    {
+    public:
+        void WriteLine(const charT *s, size_t len)
+        {
+            Write(static_cast<const char *>(s), sizeof(charT) * len);
+        }
+    };
+
+    template <typename charT>
+    class LineFileWriter : public LineWriter<charT, FileWriter>
+    {
+    };
 }

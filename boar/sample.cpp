@@ -21,6 +21,12 @@ namespace boar
         return 1;
     }
 
+    int SampleCommand(int argc, wchar_t *argv[])
+    {
+        LineSampleProcessor2<char> proc;
+        proc.Run();
+    }
+
     int sample_command(int argc, wchar_t *argv[])
     {
         po::options_description options("options:");
