@@ -12,6 +12,7 @@
 namespace boar
 {
     namespace po = boost::program_options;
+    namespace fs = boost::filesystem;
 
     static int usage(po::options_description &options)
     {
@@ -23,8 +24,10 @@ namespace boar
 
     int SampleCommand(int argc, wchar_t *argv[])
     {
-        LineSampleProcessor2<char> proc;
-        proc.Run();
+        BufferReader<LineSampleProcessor2<char>> proc;
+        std::vector<fs::path> inputPathList;
+        std::vector<LineSampleProcessor2<char>::SampleSpec> outputSpecList;
+        proc.Run(inputPathList, outputSpecList, false);
     }
 
     int sample_command(int argc, wchar_t *argv[])

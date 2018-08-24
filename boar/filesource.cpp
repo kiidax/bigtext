@@ -29,9 +29,8 @@ namespace boar
                     MEMORY_BASIC_INFORMATION mbi;
                     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
                     {
-                        const void* first = lpAddress;
-                        const void* last = reinterpret_cast<const void*>(reinterpret_cast<intptr_t>(lpAddress) + mbi.RegionSize);
-                        callback(first, last);
+                        const char *first = reinterpret_cast<const char *>(lpAddress);
+                        callback(first, mbi.RegionSize);
                         success = true;
                     }
                     UnmapViewOfFile(lpAddress);
@@ -71,7 +70,7 @@ namespace boar
                         break;
                     }
 
-                    f(buf, buf + readBytes);
+                    f(reinterpret_cast<const char *>(buf), readBytes);
                 }
                 ::VirtualFree(reinterpret_cast<LPVOID>(buf), 0, MEM_RELEASE);
             }
@@ -138,7 +137,7 @@ namespace boar
                         }
                         if (readBytes == 0)
                             break;
-                        callback(buf + processIndex * CHUNK_SIZE, buf + processIndex * CHUNK_SIZE + readBytes);
+                        callback(reinterpret_cast<const char *>(buf + processIndex * CHUNK_SIZE), readBytes);
                         processIndex = (processIndex + 1) % NUM_OVERLAPS;
                         numWaiting--;
                     }

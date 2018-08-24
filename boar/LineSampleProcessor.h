@@ -79,7 +79,7 @@ namespace boar
                 if (spec.numberOfLines > 0)
                 {
                     // TODO: overflow
-                    _progressList[i].rateOrNumberOfLines = -spec.numberOfLines;
+                    _progressList[i].rateOrNumberOfLines = -static_cast<double>(spec.numberOfLines);
                 }
                 else if (spec.rate >= 0)
                 {
@@ -92,9 +92,9 @@ namespace boar
                 _progressList[i].writer.Open(spec.path);
             }
 
-            for_each(inputPathList.cbegin(), inputPathList.cend(), [](auto &path)
+            std::for_each(inputPathList.cbegin(), inputPathList.cend(), [](auto &path)
             {
-                FileSourceWithOverlapRead(path, [](const void *first, const void *last))
+                FileSourceWithOverlapRead(path, [](const void *first, const void *last)
                 {
 
                 });
@@ -112,9 +112,9 @@ namespace boar
 
         bool CheckOutputFile(const std::vector<SampleSpec>& sampleSpecList) const
         {
-            return std::all_of(sampleSpecList.cbegin(), sampleSpecList.cend(), [](auto &path)
+            return std::all_of(sampleSpecList.cbegin(), sampleSpecList.cend(), [](auto &spec)
             {
-                return !fs::exists(path);
+                return !fs::exists(spec.path);
             });
         }
     };

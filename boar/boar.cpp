@@ -57,15 +57,19 @@ namespace boar
             else if (commandName == L"count")
             {
                 const std::vector<std::wstring> args2(argv + 2, argv + argc);
-                status = DumpProfile([&args2]()
+                for (int i = 0; i < 2; i++)
                 {
-                    // 1059203072      404601
-                    // 36,762,348,544 bytes.
-                    // AMD E2-7110
-                    std::auto_ptr<Processor> proc(new LineCountProcessor<char>());
-                    proc->ProcessFileList(args2);
-                    return true;
-                });
+                    status = DumpProfile([&args2, i]()
+                    {
+                        // 1059203072      404601
+                        // 36,762,348,544 bytes.
+                        // AMD E2-7110
+                        std::auto_ptr<Processor> proc(new LineCountProcessor<char>());
+                        proc->hoge = i;
+                        proc->ProcessFileList(args2);
+                        return true;
+                    });
+                }
             }
             else
             {

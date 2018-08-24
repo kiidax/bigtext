@@ -41,6 +41,9 @@ namespace boar {
     class LineWriter : public WriterT
     {
     public:
+        typedef charT charT;
+
+    public:
         void WriteLine(const charT *s, size_t len)
         {
             Write(static_cast<const char *>(s), sizeof(charT) * len);
@@ -50,5 +53,14 @@ namespace boar {
     template <typename charT>
     class LineFileWriter : public LineWriter<charT, FileWriter>
     {
+    };
+
+    template <typename LineReaderT>
+    class BufferReader : public LineReaderT
+    {
+        void ProcessLine(const char *s, size_t len)
+        {
+            LineReaderT::ReadLine(static_cast<const charT *>(s), len / sizeof(charT));
+        }
     };
 }

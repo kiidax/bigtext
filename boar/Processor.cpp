@@ -34,9 +34,20 @@ namespace boar
     {
         _currentFilePath = filePath;
         BeginFile();
-        FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
-            ProcessBlock(first, last);
-        });
+        std::cout << hoge << std::endl;
+        switch (hoge)
+        {
+        case 0:
+            FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
+                ProcessBlock(first, last);
+            });
+            break;
+        case 1:
+            FileSourceWithFileRead(filePath, [this](const void* first, const void* last) {
+                ProcessBlock(first, last);
+            });
+            break;
+        }
         if (_delayOpenFile)
         {
             //_outf.open(_outputFilePath);
