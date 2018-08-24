@@ -14,4 +14,5 @@ namespace boar
     void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallbackType callback);
     void FileSourceWithFileRead(const boost::filesystem::path& fileName, DataSourceCallbackType callback);
     void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallbackType callback);
+    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallbackType callback);
 }

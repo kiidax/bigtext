@@ -155,4 +155,9 @@ namespace boar
             std::wcerr << s.substr(0, s.length() - 2) << std::endl;
         }
     }
+
+    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallbackType callback)
+    {
+        FileSourceWithOverlapRead(fileName, callback);
+    }
 }

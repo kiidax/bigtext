@@ -21,7 +21,7 @@ namespace boar
         virtual ~LineProcessor() {}
 
     protected:
-        virtual void ProcessBlock(const char* s, size_t len)
+        virtual void ProcessBlock(const char *s, size_t len)
         {
             const charT* first = reinterpret_cast<const charT*>(s);
             const charT* last = reinterpret_cast<const charT*>(s + len);

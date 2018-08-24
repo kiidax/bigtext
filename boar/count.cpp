@@ -32,7 +32,7 @@ namespace boar
     uintmax_t FileCountLines(fs::path &fname)
     {
         uintmax_t lineCount = 0;
-        FileSourceWithOverlapRead(fname, [&lineCount](const char *s, size_t len) {
+        FileSourceDefault(fname, [&lineCount](const char *s, size_t len) {
             const CharT *p = reinterpret_cast<const CharT*>(s);
             uintmax_t c = 0;
             for (size_t i = 0; i < len; i++)
@@ -55,7 +55,7 @@ namespace boar
             {
                 fs::path fname(argv[i]);
                 uintmax_t lineCount = FileCountLines<char>(fname);
-                std::wcout << fname << '\t' << lineCount << std::endl;
+                std::wcout << fname.native() << '\t' << lineCount << std::endl;
             }
             return true;
         });
