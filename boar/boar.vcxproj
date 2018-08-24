@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="boar.cpp" />
+    <ClCompile Include="count.cpp" />
     <ClCompile Include="filesource.cpp" />
     <ClCompile Include="Processor.cpp" />
     <ClCompile Include="sample.cpp" />

@@ -13,7 +13,7 @@ namespace boar
 {
     namespace po = boost::program_options;
 
-    static int usage(po::options_description &options)
+    static int Usage(po::options_description &options)
     {
         std::wcout << "usage: boar sample [--rate rate] inputfiles outputfile" << std::endl;
         std::wcout << std::endl;
@@ -21,7 +21,7 @@ namespace boar
         return 1;
     }
 
-    int sample_command(int argc, wchar_t *argv[])
+    int SampleCommand(int argc, wchar_t *argv[])
     {
         po::options_description options("options:");
         options.add_options()
@@ -44,7 +44,7 @@ namespace boar
             po::notify(vm);
             if (vm.count("help") > 0)
             {
-                return usage(options);
+                return Usage(options);
             }
             rate = vm["rate"].as<double>();
             inputPathList = vm["file"].as<std::vector<std::wstring>>();

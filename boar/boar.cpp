@@ -11,20 +11,7 @@
 
 namespace boar
 {
-    namespace po = boost::program_options;
-
-    int DumpProfile(std::function<bool()> func)
-    {
-        clock_t startTime = clock();
-        int code = func();
-        clock_t endTime = clock();
-        clock_t t = endTime - startTime;
-        std::wcout << "Success" << '\t' << code << std::endl;
-        std::wcout << "TimeMs" << '\t' << t << std::endl;
-        return code;
-    }
-
-    int Usage()
+    static int MainUsage()
     {
         std::wcout <<
             L"usage: boar <command> [<args>]\n"
@@ -42,30 +29,20 @@ namespace boar
 
     int Main(int argc, wchar_t *argv[])
     {
-        int status;
         if (argc == 1)
         {
-            return Usage();
+            return MainUsage();
         }
         else if (argc >= 2)
         {
             const std::wstring commandName(argv[1]);
-            if (commandName == L"sample")
+            if (commandName == L"count")
             {
-                return sample_command(argc - 1, argv + 1);
+                return CountCommand(argc - 1, argv + 1);
             }
-            else if (commandName == L"count")
+            else if (commandName == L"sample")
             {
-                const std::vector<std::wstring> args2(argv + 2, argv + argc);
-                status = DumpProfile([&args2]()
-                {
-                    // 1059203072      404601
-                    // 36,762,348,544 bytes.
-                    // AMD E2-7110
-                    std::auto_ptr<Processor> proc(new LineCountProcessor<char>());
-                    proc->ProcessFileList(args2);
-                    return true;
-                });
+                return SampleCommand(argc - 1, argv + 1);
             }
             else
             {
@@ -75,7 +52,7 @@ namespace boar
         }
         else
         {
-            return Usage();
+            return MainUsage();
         }
         return 0;
     }
