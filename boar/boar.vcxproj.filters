@@ -53,9 +53,6 @@
     <ClInclude Include="filesource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LineCountProcessor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LineProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>

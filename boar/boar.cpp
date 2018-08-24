@@ -6,7 +6,6 @@
 
 #include "boar.h"
 #include "filesource.h"
-#include "LineCountProcessor.h"
 #include "LineSampleProcessor.h"
 
 namespace boar

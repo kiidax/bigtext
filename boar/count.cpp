@@ -6,11 +6,11 @@
 
 #include "boar.h"
 #include "filesource.h"
-#include "LineCountProcessor.h"
-#include "LineSampleProcessor.h"
 
 namespace boar
 {
+    namespace fs = boost::filesystem;
+
     int DumpProfile(std::function<bool()> func)
     {
         clock_t startTime = clock();
@@ -28,16 +28,35 @@ namespace boar
         return 1;
     }
 
+    template<typename CharT>
+    uintmax_t FileCountLines(fs::path &fname)
+    {
+        uintmax_t lineCount = 0;
+        FileSourceWithOverlapRead(fname, [&lineCount](const char *s, size_t len) {
+            const CharT *p = reinterpret_cast<const CharT*>(s);
+            uintmax_t c = 0;
+            for (size_t i = 0; i < len; i++)
+            {
+                if (p[i] == '\n') c++;
+            }
+            lineCount += c;
+        });
+        return lineCount;
+    }
+
     int CountCommand(int argc, wchar_t *argv[])
     {
-        const std::vector<std::wstring> args2(argv + 2, argv + argc);
-        int status = DumpProfile([&args2]()
+        int status = DumpProfile([argc, &argv]()
         {
             // 1059203072      404601
             // 36,762,348,544 bytes.
             // AMD E2-7110
-            std::auto_ptr<Processor> proc(new LineCountProcessor<char>());
-            proc->ProcessFileList(args2);
+            for (int i = 1; i < argc; i++)
+            {
+                fs::path fname(argv[i]);
+                uintmax_t lineCount = FileCountLines<char>(fname);
+                std::wcout << fname << '\t' << lineCount << std::endl;
+            }
             return true;
         });
         return status;

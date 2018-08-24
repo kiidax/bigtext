@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Processor.h"
+
 namespace boar
 {
     template <typename charT>
