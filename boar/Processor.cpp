@@ -10,52 +10,27 @@ namespace boar
 {
     void Processor::ProcessFileList(const std::vector<std::wstring>& filePathList)
     {
-        if (!_delayOpenFile)
+        if (!_forceOverWrite && boost::filesystem::exists(_outputFilePath))
         {
-            if (!_forceOverWrite && boost::filesystem::exists(_outputFilePath))
-            {
-                std::wcerr << "File `" << _outputFilePath << "' exists." << std::endl;
-                return;
-            }
-            std::wcout << _outputFilePath << std::endl;
-            _outf.open(_outputFilePath, std::ios::out | std::ios::binary);
+            std::wcerr << "File `" << _outputFilePath << "' exists." << std::endl;
+            return;
         }
+        std::wcout << _outputFilePath << std::endl;
+        _outf.open(_outputFilePath, std::ios::out | std::ios::binary);
         for (auto it = filePathList.cbegin(); it != filePathList.cend(); ++it)
         {
             ProcessFile(*it);
         }
-        if (_outf.is_open())
-        {
-            _outf.close();
-        }
+        _outf.close();
     }
 
     void Processor::ProcessFile(const std::wstring& filePath)
     {
         _currentFilePath = filePath;
         BeginFile();
-        std::cout << hoge << std::endl;
-        switch (hoge)
-        {
-        case 0:
-            FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
-                ProcessBlock(first, last);
-            });
-            break;
-        case 1:
-            FileSourceWithFileRead(filePath, [this](const void* first, const void* last) {
-                ProcessBlock(first, last);
-            });
-            break;
-        }
-        if (_delayOpenFile)
-        {
-            //_outf.open(_outputFilePath);
-        }
+        FileSourceDefault(filePath, [this](const char *s, size_t len) {
+            ProcessBlock(s, len);
+        });
         EndFile();
-    }
-
-    void Processor::OutputBuffer(_In_ const void* first_, _In_ const void* last_)
-    {
     }
 }

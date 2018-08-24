@@ -6,7 +6,6 @@
 
 #include "boar.h"
 #include "filesource.h"
-#include "LineCountProcessor.h"
 #include "LineSampleProcessor.h"
 
 namespace boar
@@ -14,7 +13,7 @@ namespace boar
     namespace po = boost::program_options;
     namespace fs = boost::filesystem;
 
-    static int usage(po::options_description &options)
+    static int Usage(po::options_description &options)
     {
         std::wcout << "usage: boar sample [--rate rate] inputfiles outputfile" << std::endl;
         std::wcout << std::endl;
@@ -53,7 +52,7 @@ namespace boar
             po::notify(vm);
             if (vm.count("help") > 0)
             {
-                return usage(options);
+                return Usage(options);
             }
             rate = vm["rate"].as<double>();
             inputPathList = vm["file"].as<std::vector<std::wstring>>();

@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="boar.cpp" />
+    <ClCompile Include="count.cpp" />
     <ClCompile Include="filesource.cpp" />
     <ClCompile Include="Processor.cpp" />
     <ClCompile Include="sample.cpp" />
@@ -165,7 +166,6 @@
     <ClInclude Include="filesource.h" />
     <ClInclude Include="LineSampleProcessor.h" />
     <ClInclude Include="LineProcessor.h" />
-    <ClInclude Include="LineCountProcessor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

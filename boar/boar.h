@@ -12,7 +12,7 @@ namespace boar {
     namespace fs = boost::filesystem;
 
     int Main(int argc, wchar_t *argv[]);
-    int sample_command(int argc, wchar_t *argv[]);
+    int CountCommand(int argc, wchar_t *argv[]);
     int SampleCommand(int argc, wchar_t *argv[]);
 
     class FileWriter
