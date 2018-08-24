@@ -11,7 +11,7 @@ namespace boar
 {
     static const int NUM_OVERLAPS = 3;
     static const size_t CHUNK_SIZE = 64L * 1024;
-    static const size_t CHUNK_SIZE2 = 4L * 1024;
+    static const size_t CHUNK_SIZE2 = 64L * 1024;
 
     void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallbackType callback)
     {
@@ -29,9 +29,8 @@ namespace boar
                     MEMORY_BASIC_INFORMATION mbi;
                     if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
                     {
-                        const void* first = lpAddress;
-                        const void* last = reinterpret_cast<const void*>(reinterpret_cast<intptr_t>(lpAddress) + mbi.RegionSize);
-                        callback(first, last);
+                        const char *first = reinterpret_cast<const char *>(lpAddress);
+                        callback(first, mbi.RegionSize);
                         success = true;
                     }
                     UnmapViewOfFile(lpAddress);
@@ -54,10 +53,10 @@ namespace boar
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
-        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            BYTE *buf = new BYTE[CHUNK_SIZE2];
+            BYTE *buf = reinterpret_cast<BYTE *>(::VirtualAlloc(NULL, CHUNK_SIZE2, MEM_COMMIT, PAGE_READWRITE));
             if (buf != nullptr)
             {
                 DWORD readBytes;
@@ -71,9 +70,9 @@ namespace boar
                         break;
                     }
 
-                    f(buf, buf + readBytes);
+                    f(reinterpret_cast<const char *>(buf), readBytes);
                 }
-                delete[] buf;
+                ::VirtualFree(reinterpret_cast<LPVOID>(buf), 0, MEM_RELEASE);
             }
             CloseHandle(hFile);
         }
@@ -91,10 +90,10 @@ namespace boar
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
-        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
+        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            BYTE* buf = new BYTE[NUM_OVERLAPS * CHUNK_SIZE];
+            BYTE* buf = reinterpret_cast<BYTE *>(::VirtualAlloc(NULL, NUM_OVERLAPS * CHUNK_SIZE, MEM_COMMIT, PAGE_READWRITE));
             if (buf != nullptr)
             {
                 OVERLAPPED ol[NUM_OVERLAPS];
@@ -138,12 +137,12 @@ namespace boar
                         }
                         if (readBytes == 0)
                             break;
-                        callback(buf + processIndex * CHUNK_SIZE, buf + processIndex * CHUNK_SIZE + readBytes);
+                        callback(reinterpret_cast<const char *>(buf + processIndex * CHUNK_SIZE), readBytes);
                         processIndex = (processIndex + 1) % NUM_OVERLAPS;
                         numWaiting--;
                     }
                 }
-                delete[] buf;
+                ::VirtualFree(reinterpret_cast<LPVOID>(buf), 0, MEM_RELEASE);
             }
             CloseHandle(hFile);
         }

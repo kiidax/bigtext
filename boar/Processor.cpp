@@ -34,8 +34,8 @@ namespace boar
     {
         _currentFilePath = filePath;
         BeginFile();
-        FileSourceWithOverlapRead(filePath, [this](const void* first, const void* last) {
-            ProcessBlock(first, last);
+        FileSourceWithOverlapRead(filePath, [this](const char *s, size_t len) {
+            ProcessBlock(s, len);
         });
         if (_delayOpenFile)
         {

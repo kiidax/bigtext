@@ -25,10 +25,10 @@ namespace boar
             _lineCount = 0;
         }
 
-        virtual void ProcessBlock(_In_ const void* first_, _In_ const void* last_)
+        virtual void ProcessBlock(_In_ const char* s, _In_ size_t len)
         {
-            const charT* first = reinterpret_cast<const charT*>(first_);
-            const charT* last = reinterpret_cast<const charT*>(last_);
+            const charT* first = reinterpret_cast<const charT*>(s);
+            const charT* last = reinterpret_cast<const charT*>(s + len);
             size_t c = 0;
             for (const charT *p = first; p != last; ++p)
             {

@@ -19,10 +19,10 @@ namespace boar
         virtual ~LineProcessor() {}
 
     protected:
-        virtual void ProcessBlock(const void* first_, const void* last_)
+        virtual void ProcessBlock(const char* s, size_t len)
         {
-            const charT* first = reinterpret_cast<const charT*>(first_);
-            const charT* last = reinterpret_cast<const charT*>(last_);
+            const charT* first = reinterpret_cast<const charT*>(s);
+            const charT* last = reinterpret_cast<const charT*>(s + len);
             size_t c = 0;
             const charT* p = first;
             if (_previousPartialLine.size() > 0)
