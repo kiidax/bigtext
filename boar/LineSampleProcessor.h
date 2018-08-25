@@ -9,54 +9,71 @@
 
 namespace boar
 {
-    template <typename charT>
-    class LineSampleProcessor : public LineProcessor<charT>
+    namespace fs = boost::filesystem;
+
+    struct OutputSpec
+    {
+        boost::uintmax_t numberOfLines;
+        double rate;
+        fs::path fileName;
+
+    public:
+        OutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
+        OutputSpec(const fs::path &fileName, boost::uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
+    };
+
+    template <typename CharT>
+    class LineSampleProcessor
     {
     public:
         typedef CharT CharType;
 
     private:
+        std::vector<fs::path> _inputFileNameList;
+        fs::path _outputFileName;
+        LineFileWriter<CharT> _out;
         int _threshold;
 
     public:
-        LineSampleProcessor(double rate)
+        LineSampleProcessor(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
         {
             _threshold = static_cast<int>(rate * RAND_MAX + 0.5);
+            _inputFileNameList = inputFileNameList;
+            _outputFileName = outputFileName;
         }
 
-        virtual bool ProcessLine(const CharT *s, size_t len)
+        void Run()
+        {
+            _out.Open(_outputFileName);
+            for (auto& fileName : _inputFileNameList)
+            {
+                FileLineSourceDefault(fileName, *this);
+            }
+            _out.Close();
+        }
+
+        bool ProcessLine(const CharT *s, size_t len)
         {
             if (std::rand() < _threshold)
             {
-                OutputText(s, len);
+                _out.WriteLine(s, len);
             }
             return true;
         }
-
-        void OutputText(const CharT* s, size_t len)
-        {
-            const char *p = reinterpret_cast<const char *>(s);
-            _outf.write(p, len / sizeof (CharT));
-        }
     };
 
-    template <typename charT>
+    template <typename CharT>
     class LineSampleProcessor2
     {
     public:
-        struct OutputSpec
-        {
-            boost::uintmax_t numberOfLines;
-            double rate;
-            fs::path path;
-        };
+        typedef CharT CharType;
 
     protected:
         struct OutputProgress
         {
             int randomTreshold;
             boost::uintmax_t lineCount;
-            LineFileWriter<charT> writer;
+            LineFileWriter<CharT> writer;
         };
 
     protected:
@@ -64,47 +81,37 @@ namespace boar
         OutputProgress *_outputProgressList;
 
     public:
-        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& OutputSpecList, bool overwrite)
+        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList, bool overwrite)
         {
-            if (CheckInputFile(inputPathList))
-            {
-                std::cerr << "can't read." << std::endl;
-            }
+            _numOutputs = outputSpecList.size();
+            _outputProgressList = new OutputProgress[_numOutputs];
 
-            if (!overwrite && CheckOutputFile(OutputSpecList))
+            for (size_t i = 0; i < _numOutputs; i++)
             {
-                std::cerr << "can't write." << std::endl;
-            }
-
-            _numOutputs = OutputSpecList.size();
-            _outputProgressList = new OutputProgress[_numProgress];
-
-            for (size_t i = 0; i < _numProgress; i++)
-            {
-                auto& spec = OutputSpecList[i];
+                auto& spec = outputSpecList[i];
                 if (spec.numberOfLines > 0)
                 {
                     // TODO: overflow
-                    _outputProgressList[i].rateOrNumberOfLines = -static_cast<double>(spec.numberOfLines);
+                    _outputProgressList[i].randomTreshold = 0;
                 }
                 else if (spec.rate >= 0)
                 {
-                    _outputProgressList[i].rateOrNumberOfLines = spec.rate;
+                    _outputProgressList[i].randomTreshold = static_cast<int>(spec.rate * RAND_MAX + 0.5);
                 }
                 else
                 {
                     return;
                 }
-                _outputProgressList[i].writer.Open(spec.path);
+                _outputProgressList[i].writer.Open(spec.fileName);
             }
 
             for (auto &fileName : inputPathList)
             {
-                FileLineSourceDefault(fileName, this);
-            });
+                boar::FileLineSourceDefault<LineSampleProcessor2<CharT>, CharT>(fileName, *this);
+            }
         }
 
-        void ProcessList(const CharT *s, size_t len)
+        void ProcessLine(const CharT *s, size_t len)
         {
             int t = std::rand();
             for (int i = 0; i < _numOutputs; i++)
@@ -115,25 +122,8 @@ namespace boar
                     prog.writer.WriteLine(s, len);
                     ++prog.lineCount;
                 }
-                t -= prog.randomThresold;
+                t -= prog.randomTreshold;
             }
-        }
-
-    private:
-        bool CheckInputFile(const std::vector<fs::path>& inputPathList) const
-        {
-            return std::all_of(inputPathList.cbegin(), inputPathList.cend(), [](auto &path)
-            {
-                return fs::is_regular_file(path);
-            });
-        }
-
-        bool CheckOutputFile(const std::vector<OutputSpec>& OutputSpecList) const
-        {
-            return std::all_of(OutputSpecList.cbegin(), OutputSpecList.cend(), [](auto &spec)
-            {
-                return !fs::exists(spec.path);
-            });
         }
     };
 }

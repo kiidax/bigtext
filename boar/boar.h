@@ -12,8 +12,11 @@ namespace boar {
     namespace fs = boost::filesystem;
 
     int Main(int argc, wchar_t *argv[]);
+    int DumpProfile(std::function<bool()> func);
     int CountCommand(int argc, wchar_t *argv[]);
     int SampleCommand(int argc, wchar_t *argv[]);
+    bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
+    bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
 
     class FileWriter
     {
@@ -24,6 +27,10 @@ namespace boar {
         void Open(const fs::path& path)
         {
             _out.open(path, std::ios::out | std::ios::binary);
+            if (!_out.is_open())
+            {
+                std::wcerr << "Cannot open the file." << std::endl;
+            }
         }
 
         void Write(const char *s, size_t len)
