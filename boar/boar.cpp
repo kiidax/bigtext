@@ -5,8 +5,6 @@
 #include "stdafx.h"
 
 #include "boar.h"
-#include "filesource.h"
-#include "LineSampleProcessor.h"
 
 namespace boar
 {

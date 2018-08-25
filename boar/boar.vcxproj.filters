@@ -50,8 +50,7 @@
     <ClInclude Include="filesource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-
-    <ClInclude Include="LineSampleProcessor.h">
+    <ClInclude Include="sample.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

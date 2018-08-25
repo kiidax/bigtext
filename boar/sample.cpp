@@ -6,7 +6,7 @@
 
 #include "boar.h"
 #include "filesource.h"
-#include "LineSampleProcessor.h"
+#include "sample.h"
 
 namespace boar
 {
