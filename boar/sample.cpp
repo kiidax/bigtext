@@ -25,7 +25,7 @@ namespace boar
     {
         BufferReader<LineSampleProcessor2<char>> proc;
         std::vector<fs::path> inputPathList;
-        std::vector<LineSampleProcessor2<char>::SampleSpec> outputSpecList;
+        std::vector<LineSampleProcessor2<char>::OutputSpec> outputSpecList;
         proc.Run(inputPathList, outputSpecList, false);
     }
 

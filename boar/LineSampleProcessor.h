@@ -38,7 +38,7 @@ namespace boar
     class LineSampleProcessor2
     {
     public:
-        struct SampleSpec
+        struct OutputSpec
         {
             boost::uintmax_t numberOfLines;
             double rate;
@@ -46,59 +46,71 @@ namespace boar
         };
 
     protected:
-        struct SampleProgress
+        struct OutputProgress
         {
-            double rateOrNumberOfLines;
+            int randomTreshold;
             boost::uintmax_t lineCount;
             LineFileWriter<charT> writer;
         };
 
     protected:
-        size_t _numProgress;
-        SampleProgress *_progressList;
+        size_t _numOutputs;
+        OutputProgress *_outputProgressList;
 
     public:
-        void Run(const std::vector<fs::path>& inputPathList, const std::vector<SampleSpec>& sampleSpecList, bool overwrite)
+        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& OutputSpecList, bool overwrite)
         {
             if (CheckInputFile(inputPathList))
             {
                 std::cerr << "can't read." << std::endl;
             }
 
-            if (!overwrite && CheckOutputFile(sampleSpecList))
+            if (!overwrite && CheckOutputFile(OutputSpecList))
             {
                 std::cerr << "can't write." << std::endl;
             }
 
-            _numProgress = sampleSpecList.size();
-            _progressList = new SampleProgress[_numProgress];
+            _numOutputs = OutputSpecList.size();
+            _outputProgressList = new OutputProgress[_numProgress];
 
             for (size_t i = 0; i < _numProgress; i++)
             {
-                auto& spec = sampleSpecList[i];
+                auto& spec = OutputSpecList[i];
                 if (spec.numberOfLines > 0)
                 {
                     // TODO: overflow
-                    _progressList[i].rateOrNumberOfLines = -static_cast<double>(spec.numberOfLines);
+                    _outputProgressList[i].rateOrNumberOfLines = -static_cast<double>(spec.numberOfLines);
                 }
                 else if (spec.rate >= 0)
                 {
-                    _progressList[i].rateOrNumberOfLines = spec.rate;
+                    _outputProgressList[i].rateOrNumberOfLines = spec.rate;
                 }
                 else
                 {
                     return;
                 }
-                _progressList[i].writer.Open(spec.path);
+                _outputProgressList[i].writer.Open(spec.path);
             }
 
-            std::for_each(inputPathList.cbegin(), inputPathList.cend(), [](auto &path)
+            for (auto &fileName : inputPathList)
             {
-                FileSourceWithOverlapRead(path, [](const void *first, const void *last)
-                {
-
-                });
+                FileLineSourceDefault(fileName, this);
             });
+        }
+
+        void ProcessList(const CharT *s, size_t len)
+        {
+            int t = std::rand();
+            for (int i = 0; i < _numOutputs; i++)
+            {
+                auto &prog = _outputProgressList[i];
+                if (t < prog.randomTreshold)
+                {
+                    prog.writer.WriteLine(s, len);
+                    ++prog.lineCount;
+                }
+                t -= prog.randomThresold;
+            }
         }
 
     private:
@@ -110,9 +122,9 @@ namespace boar
             });
         }
 
-        bool CheckOutputFile(const std::vector<SampleSpec>& sampleSpecList) const
+        bool CheckOutputFile(const std::vector<OutputSpec>& OutputSpecList) const
         {
-            return std::all_of(sampleSpecList.cbegin(), sampleSpecList.cend(), [](auto &spec)
+            return std::all_of(OutputSpecList.cbegin(), OutputSpecList.cend(), [](auto &spec)
             {
                 return !fs::exists(spec.path);
             });
