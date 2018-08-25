@@ -6,75 +6,285 @@
 
 #include "boar.h"
 #include "filesource.h"
-#include "Processor.h"
 #include "LineSampleProcessor.h"
 
 namespace boar
 {
-    namespace po = boost::program_options;
+    namespace fs = boost::filesystem;
 
-    static int Usage(po::options_description &options)
+    static int Usage()
     {
-        std::wcout << "usage: boar sample [--rate rate] inputfiles outputfile" << std::endl;
+        std::wcout << "usage: boar sample [-f] [-s] inputfile [inputfile...] - rate outputfile [rate outputfile...]" << std::endl;
         std::wcout << std::endl;
-        std::cout << options << std::endl;
+        std::wcout << " -c         No simple mode" << std::endl;
+        std::wcout << " -f         Force overwrite output files" << std::endl;
+        std::wcout << " -q         Quick mode (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " -s         Shuffle output files (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " inputfile  Input file" << std::endl;
+        std::wcout << " -          Seperator between input and output files" << std::endl;
+        std::wcout << " rate       Sampling rate. Probability, percent or target number of lines" << std::endl;
+        std::wcout << " outputfile Output file" << std::endl;
+        std::wcout << std::endl;
         return 1;
+    }
+
+    bool ParseSampleRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines)
+    {
+        try
+        {
+            if (s.empty())
+            {
+                return false;
+            }
+            else if (s.find('.') == std::wstring::npos)
+            {
+                // This must be percent or number
+                size_t idx = 0;
+                unsigned long long v = std::stoull(s, &idx);
+                if (idx == 0)
+                {
+                    return false;
+                }
+                if (idx == s.size() - 1 && s[idx] == '%')
+                {
+                    if (v <= 0 || v > 100)
+                    {
+                        return false;
+                    }
+                    rate = v / 100.0;
+                    numberOfLines = 0;
+                    return true;
+                }
+                else if (idx == s.size())
+                {
+                    if (v <= 0)
+                    {
+                        return false;
+                    }
+                    rate = 0.0;
+                    numberOfLines = v;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                size_t idx;
+                double v = std::stod(s, &idx);
+                if (idx != s.size())
+                {
+                    return false;
+                }
+                if (v <= 0 || v > 1.0)
+                {
+                    return false;
+                }
+                rate = v;
+                numberOfLines = 0;
+                return true;
+            }
+        }
+        catch (std::invalid_argument)
+        {
+            return false;
+        }
+        catch (std::out_of_range)
+        {
+            return false;
+        }
     }
 
     int SampleCommand(int argc, wchar_t *argv[])
     {
-        po::options_description options("options:");
-        options.add_options()
-            ("help,h", "Show help message")
-            ("force,f", "Force overwrite")
-            ("rate,r", po::wvalue<double>()->default_value(0.25), "Rate at which the lines are sampled");
-        po::options_description hidden("hidden options");
-        hidden.add_options()
-            ("file", po::wvalue<std::vector<std::wstring>>()->required(), "files");
-        po::options_description desc;
-        desc.add(options).add(hidden);
-        po::positional_options_description p;
-        p.add("file", -1);
-        double rate;
-        std::vector<std::wstring> inputPathList;
-        try
+        int optind = 1;
+        bool noSimpleMode = false;
+        bool forceOverwrite = false;
+        bool shuffleOutput = false;
+        bool quickMode = false;
+        std::vector<fs::path> inputFileNameList;
+        std::vector<OutputSpec> outputSpecList;
+
+        while (optind < argc)
         {
-            po::variables_map vm;
-            po::store(po::wcommand_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-            po::notify(vm);
-            if (vm.count("help") > 0)
+            const wchar_t *p = argv[optind++];
+            if (*p == '-')
             {
-                return Usage(options);
+                ++p;
+                if (*p == '\0')
+                {
+                    std::cerr << "Separator `-' is not allowed before input files." << std::endl;
+                    return 1;
+                }
+                else
+                {
+                    while (*p != '\0')
+                    {
+                        switch (*p)
+                        {
+                        case 'c':
+                            noSimpleMode = true;
+                            break;
+                        case 'f':
+                            forceOverwrite = true;
+                            break;
+                        case 'q':
+                            quickMode = true;
+                            break;
+                        case 's':
+                            shuffleOutput = true;
+                            break;
+                        default:
+                            std::wcerr << "Unknown option `" << *p << "'." << std::endl;
+                            return 1;
+                        }
+                        ++p;
+                    }
+                }
             }
-            rate = vm["rate"].as<double>();
-            inputPathList = vm["file"].as<std::vector<std::wstring>>();
+            else
+            {
+                // Input files start.
+                optind--;
+                break;
+            }
         }
-        catch (const po::error_with_option_name& e)
+
+        while (optind < argc)
         {
-            std::wcerr << e.what() << std::endl;
+            const wchar_t *p = argv[optind++];
+            if (*p == '-')
+            {
+                ++p;
+                if (*p == '\0')
+                {
+                    // Separator
+                    break;
+                }
+                else
+                {
+                    std::cerr << "Options are not allowed between input files." << std::endl;
+                    return 1;
+                }
+            }
+            else
+            {
+                inputFileNameList.push_back(p);
+            }
+        }
+
+        if (inputFileNameList.size() == 0)
+        {
+            std::cerr << "No input files." << std::endl;
             return 1;
         }
-        if (inputPathList.size() < 2)
+
+        while (optind < argc)
         {
-            std::wcerr << "The input files are missing" << std::endl;
+            const wchar_t *p = argv[optind++];
+            double rate;
+            uintmax_t targetNumLines;
+            if (!boar::ParseSampleRate(p, rate, targetNumLines))
+            {
+                std::wcerr << "Invalid rate `" << p << "'." << std::endl;
+                return 1;
+            }
+            if (optind >= argc)
+            {
+                std::wcerr << "Output file name is expected";
+                return 1;
+            }
+            if (targetNumLines > 0)
+            {
+                outputSpecList.emplace_back(argv[optind++], targetNumLines);
+            }
+            else
+            {
+                outputSpecList.emplace_back(argv[optind++], rate);
+            }
+        }
+
+        if (outputSpecList.size() == 0)
+        {
+            std::wcerr << "No output files." << std::endl;
             return 1;
         }
 
-        std::wstring outputPath(inputPathList.back());
-        inputPathList.pop_back();
-
-        std::wcout << "Output file: " << outputPath << std::endl;
-        for (auto it = inputPathList.begin(); it != inputPathList.end(); ++it)
+        if (quickMode)
         {
-            std::wcout << "Input files: " << *it << std::endl;
+            std::wcerr << "Quick mode is not supported yet." << std::endl;
+            return 1;
         }
 
+        if (shuffleOutput)
+        {
+            std::wcerr << "Output shuffling is not supported yet." << std::endl;
+            return 1;
+        }
+
+        for (auto& spec : outputSpecList)
+        {
+            if (spec.numberOfLines > 0)
+            {
+                std::wcerr << "Target number of lines is not supported yet." << std::endl;
+                return 1;
+            }
+        }
+
+        for (auto &fileName : inputFileNameList)
+        {
+            std::wcout << "Input file: " << fileName << std::endl;
+        }
+        for (auto &spec : outputSpecList)
+        {
+            if (spec.numberOfLines == 0)
+            {
+                std::wcout << "Output file: " << spec.fileName << " at " << 100.0 * spec.rate << "%" << std::endl;
+            }
+            else
+            {
+                std::wcout << "Output file: " << spec.fileName << " for " << spec.numberOfLines << " lines" << std::endl;
+            }
+        }
+
+        if (!CheckInputFiles(inputFileNameList))
+        {
+            return 1;
+        }
+
+        if (!forceOverwrite)
+        {
+            std::vector<fs::path> outputFileNameList;
+            for (auto& spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
+            if (!CheckOutputFiles(outputFileNameList))
+            {
+                return 1;
+            }
+        }
+            
         std::srand(static_cast<int>(std::time(nullptr)));
-        LineSampleProcessor<char> proc(rate);
-        for (auto& fileName : inputPathList)
+
+        if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
         {
-            FileLineSourceDefault(fileName, proc);
+            std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
+            LineSampleProcessor<char> proc(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+            boar::DumpProfile([&proc]() {
+                proc.Run();
+                return false;
+            });
         }
+        else
+        {
+            BufferReader<LineSampleProcessor2<char>> proc;
+            boar::DumpProfile([&inputFileNameList, &outputSpecList, &proc]() {
+                proc.Run(inputFileNameList, outputSpecList, false);
+                return false;
+            });
+            return 0;
+        }
+
         return 0;
     }
 }

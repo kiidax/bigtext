@@ -10,6 +10,17 @@
 
 namespace boar
 {
+    int DumpProfile(std::function<bool()> func)
+    {
+        clock_t startTime = clock();
+        int code = func();
+        clock_t endTime = clock();
+        clock_t t = endTime - startTime;
+        std::wcout << "Success" << '\t' << code << std::endl;
+        std::wcout << "TimeMs" << '\t' << t << std::endl;
+        return code;
+    }
+
     static int MainUsage()
     {
         std::wcout <<
@@ -54,5 +65,31 @@ namespace boar
             return MainUsage();
         }
         return 0;
+    }
+
+    bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList)
+    {
+        for (auto& fileName : inputFileNameList)
+        {
+            if (!fs::is_regular_file(fileName))
+            {
+                std::wcerr << "`" << fileName.wstring() << "' doesn't exist." << std::endl;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool CheckOutputFiles(const std::vector<fs::path>& outputFileNameList)
+    {
+        for (auto& fileName : outputFileNameList)
+        {
+            if (fs::exists(fileName))
+            {
+                std::wcerr << "`" << fileName.wstring() << "' already exists." << std::endl;
+                return false;
+            }
+        }
+        return true;
     }
 }
