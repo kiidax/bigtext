@@ -6,6 +6,7 @@
 
 #include "boar.h"
 #include "filesource.h"
+#include "Processor.h"
 #include "LineSampleProcessor.h"
 
 namespace boar
@@ -69,10 +70,11 @@ namespace boar
         }
 
         std::srand(static_cast<int>(std::time(nullptr)));
-        std::auto_ptr<Processor> proc(new LineSampleProcessor<char>(rate));
-        proc->SetOutputFilePath(outputPath);
-        proc->ProcessFileList(inputPathList);
-
+        LineSampleProcessor<char> proc(rate);
+        for (auto& fileName : inputPathList)
+        {
+            FileLineSourceDefault(fileName, proc);
+        }
         return 0;
     }
 }
