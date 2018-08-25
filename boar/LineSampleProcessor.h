@@ -5,16 +5,16 @@
 #pragma once
 
 #include "stdafx.h"
-#include "LineProcessor.h"
 #include <random>
 
 namespace boar
 {
-    namespace fs = boost::filesystem;
-
     template <typename charT>
     class LineSampleProcessor : public LineProcessor<charT>
     {
+    public:
+        typedef CharT CharType;
+
     private:
         int _threshold;
 
@@ -24,13 +24,19 @@ namespace boar
             _threshold = static_cast<int>(rate * RAND_MAX + 0.5);
         }
 
-        virtual bool ProcessLine(const charT* first, const charT* last)
+        virtual bool ProcessLine(const CharT *s, size_t len)
         {
             if (std::rand() < _threshold)
             {
-                OutputText(first, last);
+                OutputText(s, len);
             }
             return true;
+        }
+
+        void OutputText(const CharT* s, size_t len)
+        {
+            const char *p = reinterpret_cast<const char *>(s);
+            _outf.write(p, len / sizeof (CharT));
         }
     };
 
