@@ -86,7 +86,7 @@ namespace boar
         }
     }
 
-    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallback callback)
+    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallback callback, boost::uintmax_t maxSize)
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
@@ -99,10 +99,10 @@ namespace boar
                 OVERLAPPED ol[NUM_OVERLAPS];
                 int processIndex = 0;
                 int numWaiting = 0;
-                size_t offset = 0;
+                boost::uintmax_t offset = 0;
                 while (true)
                 {
-                    if (numWaiting < NUM_OVERLAPS)
+                    if (numWaiting < NUM_OVERLAPS && (maxSize == 0 || offset < maxSize))
                     {
                         int readIndex = (processIndex + numWaiting) % NUM_OVERLAPS;
                         ZeroMemory(&ol[readIndex], sizeof ol[readIndex]);
@@ -115,6 +115,13 @@ namespace boar
                         }
                         numWaiting++;
                     }
+                    if (numWaiting == 0)
+                    {
+                        assert(maxSize > 0);
+                        assert(offset >= maxSize);
+                        success = true;
+                        break;
+                    }
                     else
                     {
                         DWORD readBytes;
@@ -125,6 +132,7 @@ namespace boar
                                 readBytes = 0;
                                 if (GetLastError() == ERROR_HANDLE_EOF)
                                 {
+                                    callback(nullptr, 0);
                                     success = true;
                                 }
                                 break;
@@ -156,8 +164,8 @@ namespace boar
         }
     }
 
-    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallback callback)
+    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallback callback, boost::uintmax_t maxSize)
     {
-        FileSourceWithOverlapRead(fileName, callback);
+        FileSourceWithOverlapRead(fileName, callback, maxSize);
     }
 }

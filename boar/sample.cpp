@@ -12,19 +12,21 @@ namespace boar
 {
     namespace fs = boost::filesystem;
 
-    static int Usage()
+    static int SampleUsage()
     {
-        std::wcout << "usage: boar sample [-f] [-s] inputfile [inputfile...] - rate outputfile [rate outputfile...]" << std::endl;
+        std::wcout << "Usage: boar sample [-f] [-s] INPUTFILE... - RATE OUTPUTFILE [RATE OUTPUTFILE]..." << std::endl;
         std::wcout << std::endl;
-        std::wcout << " -c         No simple mode" << std::endl;
-        std::wcout << " -f         Force overwrite output files" << std::endl;
-        std::wcout << " -q         Quick mode (NOT IMPLEMENTED)" << std::endl;
-        std::wcout << " -s         Shuffle output files (NOT IMPLEMENTED)" << std::endl;
-        std::wcout << " inputfile  Input file" << std::endl;
-        std::wcout << " -          Seperator between input and output files" << std::endl;
-        std::wcout << " rate       Sampling rate. Probability, percent or target number of lines" << std::endl;
-        std::wcout << " outputfile Output file" << std::endl;
+        std::wcout << " -c         no simple mode" << std::endl;
+        std::wcout << " -f         force overwrite output files" << std::endl;
+        std::wcout << " -h         show this help message" << std::endl;
+        std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " -s         fhuffle output files (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " INPUTFILE  input file" << std::endl;
+        std::wcout << " -          seperator between input and output files" << std::endl;
+        std::wcout << " RATE       sampling rate. Probability, percent or target number of lines" << std::endl;
+        std::wcout << " OURPUTFILE output file" << std::endl;
         std::wcout << std::endl;
+
         return 1;
     }
 
@@ -107,6 +109,11 @@ namespace boar
         std::vector<fs::path> inputFileNameList;
         std::vector<OutputSpec> outputSpecList;
 
+        if (argc <= 1)
+        {
+            return SampleUsage();
+        }
+
         while (optind < argc)
         {
             const wchar_t *p = argv[optind++];
@@ -130,6 +137,8 @@ namespace boar
                         case 'f':
                             forceOverwrite = true;
                             break;
+                        case 'h':
+                            return SampleUsage();
                         case 'q':
                             quickMode = true;
                             break;

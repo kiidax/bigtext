@@ -5,7 +5,7 @@
 #include "stdafx.h"
 
 #include "boar.h"
-#include "filesource.h"
+#include "count.h"
 
 namespace boar
 {
@@ -13,41 +13,109 @@ namespace boar
 
     static int CountUsage()
     {
-        std::wcout << "usage: boar couunt inputfiles" << std::endl;
+        std::wcout << "Usage: boar couunt [-c] INPUTFILE..." << std::endl;
+        std::wcout << "Estimate number of lines in the file by reading only the first 100MB." << std::endl;
+        std::wcout << std::endl;
+        std::wcout << " -c         full count mode" << std::endl;
+        std::wcout << " INPUTFILE  input file" << std::endl;
+        std::wcout << std::endl;
         return 1;
-    }
-
-    template<typename CharT>
-    uintmax_t FileCountLines(fs::path &fname)
-    {
-        uintmax_t lineCount = 0;
-        FileSourceDefault(fname, [&lineCount](const char *s, size_t len) {
-            const CharT *p = reinterpret_cast<const CharT*>(s);
-            uintmax_t c = 0;
-            for (size_t i = 0; i < len; i++)
-            {
-                if (p[i] == '\n') c++;
-            }
-            lineCount += c;
-        });
-        return lineCount;
     }
 
     int CountCommand(int argc, wchar_t *argv[])
     {
-        int status = DumpProfile([argc, &argv]()
+        int optind = 1;
+        bool fullCountMode = false;
+        std::vector<fs::path> inputFileNameList;
+
+        if (argc <= 1)
+        {
+            return CountUsage();
+        }
+
+        while (optind < argc)
+        {
+            const wchar_t *p = argv[optind++];
+            if (*p == '-')
+            {
+                ++p;
+                while (*p != '\0')
+                {
+                    switch (*p)
+                    {
+                    case 'c':
+                        fullCountMode = true;
+                        break;
+                    case 'h':
+                        return CountUsage();
+                    default:
+                        std::wcerr << "Unknown option `" << *p << "'." << std::endl;
+                        return 1;
+                    }
+                    ++p;
+                }
+            }
+            else
+            {
+                // Input files start.
+                optind--;
+                break;
+            }
+        }
+
+        while (optind < argc)
+        {
+            const wchar_t *p = argv[optind++];
+            inputFileNameList.push_back(p);
+        }
+
+        if (inputFileNameList.size() == 0)
+        {
+            std::cerr << "No input files." << std::endl;
+            return 1;
+        }
+
+        if (!CheckInputFiles(inputFileNameList))
+        {
+            return 1;
+        }
+
+        int status = DumpProfile([&fullCountMode, &inputFileNameList]()
         {
             // 1059203072      404601
             // 36,762,348,544 bytes.
             // AMD E2-7110
-            for (int i = 1; i < argc; i++)
+            for (auto &fileName : inputFileNameList)
             {
-                fs::path fname(argv[i]);
-                uintmax_t lineCount = FileCountLines<char>(fname);
-                std::wcout << fname.native() << '\t' << lineCount << std::endl;
+                if (fullCountMode)
+                {
+                    uintmax_t lineCount = FileCountLines<char>(fileName);
+                    std::wcout << fileName.native() << "\tLineCount\t" << lineCount << std::endl;
+                }
+                else
+                {
+                    GuessLineInfo info = FileStatLines<char>(fileName);
+                    std::wcout << fileName.native() << "\tMinLineSize\t" << info.minLineSize << std::endl;
+                    std::wcout << fileName.native() << "\tMaxLineSize\t" << info.maxLineSize << std::endl;
+                    std::wcout << fileName.native() << "\tAvgLineSize\t" << std::fixed << std::setprecision(2) << info.avgLineSize << std::endl;
+                    std::wcout << fileName.native() << "\tStdLineSize\t" << info.stdLineSize << std::endl;
+                    std::wcout << fileName.native() << "\tUsedLineCount\t" << info.lineCount << std::endl;
+                    uintmax_t size = fs::file_size(fileName);
+                    std::wcout << fileName.native() << "\tFileSize\t" << size << std::endl;
+                    if (info.isAccurate)
+                    {
+                        std::wcout << fileName.native() << "\tEstLineCount\t" << info.lineCount << std::endl;
+                    }
+                    else
+                    {
+                        double estLineCount = info.stdLineSize == 0 ? 1.0 : size / info.avgLineSize;
+                        std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
+                    }
+                }
             }
             return true;
         });
+
         return status;
     }
 }
