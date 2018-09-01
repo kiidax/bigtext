@@ -16,6 +16,7 @@
 #include <new>
 #include <memory>
 #include <iomanip>
+#include <random>
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>

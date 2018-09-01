@@ -5,7 +5,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include <random>
 
 namespace boar
 {
@@ -32,14 +31,17 @@ namespace boar
         std::vector<fs::path> _inputFileNameList;
         fs::path _outputFileName;
         LineFileWriter<CharT> _out;
-        int _threshold;
+        std::default_random_engine _gen;
+        std::bernoulli_distribution _dist;
 
     public:
         LineSampleProcessor(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
         {
-            _threshold = static_cast<int>(rate * RAND_MAX + 0.5);
             _inputFileNameList = inputFileNameList;
             _outputFileName = outputFileName;
+            std::random_device rd;
+            _gen = std::default_random_engine(rd());
+            _dist = std::bernoulli_distribution(rate);
         }
 
         void Run()
@@ -54,7 +56,7 @@ namespace boar
 
         bool ProcessLine(const CharT *s, size_t len)
         {
-            if (std::rand() < _threshold)
+            if (_dist(_gen))
             {
                 _out.WriteLine(s, len);
             }
@@ -71,14 +73,22 @@ namespace boar
     protected:
         struct OutputProgress
         {
-            int randomTreshold;
+            double randomThreshold;
             boost::uintmax_t lineCount;
             LineFileWriter<CharT> writer;
         };
 
+    public:
+        LineSampleProcessor2()
+        {
+            std::random_device rd;
+            _gen = std::default_random_engine(rd());
+        }
+
     protected:
         size_t _numOutputs;
         OutputProgress *_outputProgressList;
+        std::default_random_engine _gen;
 
     public:
         void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList, bool overwrite)
@@ -92,11 +102,11 @@ namespace boar
                 if (spec.numberOfLines > 0)
                 {
                     // TODO: overflow
-                    _outputProgressList[i].randomTreshold = 0;
+                    _outputProgressList[i].randomThreshold = 0.0;
                 }
                 else if (spec.rate >= 0)
                 {
-                    _outputProgressList[i].randomTreshold = static_cast<int>(spec.rate * RAND_MAX + 0.5);
+                    _outputProgressList[i].randomThreshold = spec.rate;
                 }
                 else
                 {
@@ -113,16 +123,17 @@ namespace boar
 
         void ProcessLine(const CharT *s, size_t len)
         {
-            int t = std::rand();
+            constexpr std::size_t bits = std::numeric_limits<float>::digits;
+            double t = std::generate_canonical<double, bits>(_gen);
             for (int i = 0; i < _numOutputs; i++)
             {
                 auto &prog = _outputProgressList[i];
-                if (t < prog.randomTreshold)
+                if (t < prog.randomThreshold)
                 {
                     prog.writer.WriteLine(s, len);
                     ++prog.lineCount;
                 }
-                t -= prog.randomTreshold;
+                t -= prog.randomThreshold;
             }
         }
     };
