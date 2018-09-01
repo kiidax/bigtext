@@ -14,8 +14,8 @@ namespace boar
 
     void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithFileRead(const fs::path &fileName, DataSourceCallback callback);
-    void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, boost::uintmax_t maxSize = 0);
-    void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, boost::uintmax_t maxSize = 0);
+    void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
+    void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
 
     template <class LineProcessorT, typename CharT = LineProcessorT::CharType>
     void FileLineSourceDefault(const fs::path &fileName, LineProcessorT& proc)

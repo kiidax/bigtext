@@ -86,7 +86,7 @@ namespace boar
         }
     }
 
-    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallback callback, boost::uintmax_t maxSize)
+    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
@@ -99,7 +99,7 @@ namespace boar
                 OVERLAPPED ol[NUM_OVERLAPS];
                 int processIndex = 0;
                 int numWaiting = 0;
-                boost::uintmax_t offset = 0;
+                uintmax_t offset = 0;
                 while (true)
                 {
                     if (numWaiting < NUM_OVERLAPS && (maxSize == 0 || offset < maxSize))
@@ -164,7 +164,7 @@ namespace boar
         }
     }
 
-    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallback callback, boost::uintmax_t maxSize)
+    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         FileSourceWithOverlapRead(fileName, callback, maxSize);
     }

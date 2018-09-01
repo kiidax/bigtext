@@ -13,7 +13,7 @@ namespace boar
 
     static int CountUsage()
     {
-        std::wcout << "Usage: boar couunt [-c] INPUTFILE..." << std::endl;
+        std::wcout << "Usage: boar count [OPTION]... INPUTFILE..." << std::endl;
         std::wcout << "Estimate number of lines in the file by reading only the first 100MB." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         full count mode" << std::endl;

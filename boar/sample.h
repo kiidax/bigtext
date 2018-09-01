@@ -12,13 +12,13 @@ namespace boar
 
     struct OutputSpec
     {
-        boost::uintmax_t numberOfLines;
+        uintmax_t numberOfLines;
         double rate;
         fs::path fileName;
 
     public:
         OutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
-        OutputSpec(const fs::path &fileName, boost::uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
+        OutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
     };
 
     template <typename CharT>
@@ -74,7 +74,7 @@ namespace boar
         struct OutputProgress
         {
             double randomThreshold;
-            boost::uintmax_t lineCount;
+            uintmax_t lineCount;
             LineFileWriter<CharT> writer;
         };
 

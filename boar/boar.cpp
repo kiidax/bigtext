@@ -24,11 +24,10 @@ namespace boar
         std::wcout <<
             L"usage: boar <command> [<args>]\n"
             "\n"
-            "Boar is a toolkit to process text files.\n"
+            "Boar is a set tools to process text files.\n"
             "\n"
             "List of commands:\n"
             "\n"
-            "   find       Find a string in lines.\n"
             "   count      Count the number of lines.\n"
             "   sample     Sample lines from file.\n"
             << std::endl;

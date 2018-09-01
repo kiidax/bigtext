@@ -14,7 +14,7 @@ namespace boar
 
     static int SampleUsage()
     {
-        std::wcout << "Usage: boar sample [-f] [-s] INPUTFILE... - RATE OUTPUTFILE [RATE OUTPUTFILE]..." << std::endl;
+        std::wcout << "Usage: boar sample [OPTION]... INPUTFILE... - RATE OUTPUTFILE [RATE OUTPUTFILE]..." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         no simple mode" << std::endl;
         std::wcout << " -f         force overwrite output files" << std::endl;
