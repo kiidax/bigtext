@@ -6,10 +6,11 @@
 
 #include "boar.h"
 #include "filesource.h"
+#include <boost/iostreams/device/mapped_file.hpp>
 
 namespace boar
 {
-    namespace fs = std::filesystem;
+    namespace fs = boost::filesystem;
 
     static const int NUM_OVERLAPS = 3;
     static const size_t CHUNK_SIZE = 64L * 1024;
@@ -176,5 +177,19 @@ namespace boar
     void FileSourceDefault(const fs::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         FileSourceWithOverlapRead(fileName, callback, maxSize);
+    }
+
+    void FileSourceWithBoostMemoryMapping(const fs::path &fileName, DataSourceCallback callback)
+    {
+        boost::iostreams::mapped_file_source file;
+        file.open(fileName);
+        if (file.is_open()) {
+            const char *s = file.data();
+            size_t size = file.size();
+            callback(s, size);
+        }
+        else {
+            std::cout << "error" << std::endl;
+        }
     }
 }

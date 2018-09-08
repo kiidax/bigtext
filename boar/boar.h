@@ -6,7 +6,7 @@
 
 namespace boar {
 
-    namespace fs = std::filesystem;
+    namespace fs = boost::filesystem;
 
     int Main(int argc, wchar_t *argv[]);
     int DumpProfile(std::function<bool()> func);
@@ -31,7 +31,7 @@ namespace boar {
     class FileWriter
     {
     protected:
-        std::ofstream _out;
+        fs::ofstream _out;
 
     public:
         void Open(const fs::path& path)

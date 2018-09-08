@@ -8,7 +8,7 @@
 
 namespace boar
 {
-    namespace fs = std::filesystem;
+    namespace fs = boost::filesystem;
 
     struct OutputSpec
     {

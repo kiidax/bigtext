@@ -4,16 +4,46 @@
 
 #pragma once
 
+#include <boost/iostreams/device/mapped_file.hpp>
+
 namespace boar
 {
-    namespace fs = std::filesystem;
+    namespace fs = boost::filesystem;
 
     using DataSourceCallback = std::function<void(const char *, size_t)>;
 
     void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
+    void FileSourceWithBoostMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithFileRead(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
     void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
+
+    template <typename CharT>
+    class MemoryMapFileLineReader
+    {
+    protected:
+        std::vector<boost::iostreams::mapped_file_source> _fileList;
+
+    public:
+        void Open(std::vector<fs::path>& fileNameList)
+        {
+            for (auto fileName : fileNameList)
+            {
+                _fileList.emplace_back();
+                auto &file = _fileList.back();
+                file.open(fileName);
+                if (!file.is_open())
+                {
+                    return;
+                }
+            }
+        }
+
+        const char *Data(int n) const
+        {
+            return _fileList[n].data();
+        }
+    };
 
     template <class LineProcessorT, typename CharT = LineProcessorT::CharType>
     void FileLineSourceDefault(const fs::path &fileName, LineProcessorT& proc)
