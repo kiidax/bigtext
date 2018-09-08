@@ -54,7 +54,7 @@ namespace boar
             }
             else if (commandName == L"shuffle")
             {
-                return SampleCommand(argc - 1, argv + 1);
+                return ShuffleCommand(argc - 1, argv + 1);
             }
             else
             {
