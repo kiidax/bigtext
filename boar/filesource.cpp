@@ -19,27 +19,34 @@ namespace boar
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
-        HANDLE hFile = CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = ::CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            HANDLE hMapping = CreateFileMapping(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+            DWORD highSize;
+            DWORD lowSize = ::GetFileSize(hFile, &highSize);
+            uint64_t size = (static_cast<uint64_t>(highSize) << 32) | lowSize;
+
+            HANDLE hMapping = ::CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
             if (hMapping != NULL)
             {
-                VOID* lpAddress = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+                VOID* lpAddress = ::MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
                 if (lpAddress != NULL)
                 {
                     MEMORY_BASIC_INFORMATION mbi;
-                    if (VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
+                    if (::VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
                     {
-                        const char *first = reinterpret_cast<const char *>(lpAddress);
-                        callback(first, mbi.RegionSize);
-                        success = true;
+                        const char *s = reinterpret_cast<const char *>(lpAddress);
+                        if (size <= mbi.RegionSize)
+                        {
+                            callback(s, static_cast<size_t>(size));
+                            success = true;
+                        }
                     }
-                    UnmapViewOfFile(lpAddress);
+                    ::UnmapViewOfFile(lpAddress);
                 }
-                CloseHandle(hMapping);
+                ::CloseHandle(hMapping);
             }
-            CloseHandle(hFile);
+            ::CloseHandle(hFile);
         }
         if (!success)
         {
