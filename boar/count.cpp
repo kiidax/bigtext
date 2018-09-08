@@ -9,7 +9,7 @@
 
 namespace boar
 {
-    namespace fs = boost::filesystem;
+    namespace fs = std::filesystem;
 
     static int CountUsage()
     {

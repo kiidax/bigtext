@@ -9,11 +9,13 @@
 
 namespace boar
 {
+    namespace fs = std::filesystem;
+
     static const int NUM_OVERLAPS = 3;
     static const size_t CHUNK_SIZE = 64L * 1024;
     static const size_t CHUNK_SIZE2 = 64L * 1024;
 
-    void FileSourceWithMemoryMapping(const boost::filesystem::path& fileName, DataSourceCallback callback)
+    void FileSourceWithMemoryMapping(const fs::path& fileName, DataSourceCallback callback)
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
@@ -49,7 +51,7 @@ namespace boar
         }
     }
 
-    void FileSourceWithFileRead(const boost::filesystem::path& fileName, DataSourceCallback f)
+    void FileSourceWithFileRead(const fs::path& fileName, DataSourceCallback f)
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
@@ -86,7 +88,7 @@ namespace boar
         }
     }
 
-    void FileSourceWithOverlapRead(const boost::filesystem::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
+    void FileSourceWithOverlapRead(const fs::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         bool success = false;
         LPCWSTR lpfileName = fileName.native().c_str();
@@ -164,7 +166,7 @@ namespace boar
         }
     }
 
-    void FileSourceDefault(const boost::filesystem::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
+    void FileSourceDefault(const fs::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         FileSourceWithOverlapRead(fileName, callback, maxSize);
     }

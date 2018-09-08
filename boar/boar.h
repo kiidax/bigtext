@@ -4,11 +4,9 @@
 
 #pragma once
 
-#include <filesystem>
-
 namespace boar {
 
-    namespace fs = boost::filesystem;
+    namespace fs = std::filesystem;
 
     int Main(int argc, wchar_t *argv[]);
     int DumpProfile(std::function<bool()> func);
@@ -32,7 +30,7 @@ namespace boar {
     class FileWriter
     {
     protected:
-        fs::ofstream _out;
+        std::ofstream _out;
 
     public:
         void Open(const fs::path& path)

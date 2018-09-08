@@ -6,7 +6,8 @@
 
 namespace boar
 {
-    namespace fs = boost::filesystem;
+    namespace fs = std::filesystem;
+
     using DataSourceCallback = std::function<void(const char *, size_t)>;
 
     void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
