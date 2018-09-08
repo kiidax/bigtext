@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include "base.h"
-#include <boost/filesystem.hpp>
-
 namespace boar
 {
     namespace fs = boost::filesystem;

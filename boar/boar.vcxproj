@@ -160,7 +160,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="base.h" />
     <ClInclude Include="boar.h" />
     <ClInclude Include="count.h" />
     <ClInclude Include="filesource.h" />
