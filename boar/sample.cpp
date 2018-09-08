@@ -7,6 +7,7 @@
 #include "boar.h"
 #include "filesource.h"
 #include "sample.h"
+#include "shuffle.h"
 
 namespace boar
 {
@@ -20,7 +21,7 @@ namespace boar
         std::wcout << " -f         force overwrite output files" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
-        std::wcout << " -s         fhuffle output files (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " -s         shuffle output files (NOT IMPLEMENTED)" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
         std::wcout << " -          seperator between input and output files" << std::endl;
         std::wcout << " RATE       sampling rate. Probability, percent or target number of lines" << std::endl;
@@ -158,12 +159,6 @@ namespace boar
             return 1;
         }
 
-        if (shuffleOutput)
-        {
-            std::wcerr << "Output shuffling is not supported yet." << std::endl;
-            return 1;
-        }
-
         for (auto& spec : outputSpecList)
         {
             if (spec.numberOfLines > 0)
@@ -206,23 +201,45 @@ namespace boar
             
         std::srand(static_cast<int>(std::time(nullptr)));
 
-        if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+        if (shuffleOutput)
         {
-            std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
-            LineSampleProcessor<char> proc(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
-            boar::DumpProfile([&proc]() {
-                proc.Run();
-                return false;
-            });
+            if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+            {
+                for (auto &fileName : inputFileNameList)
+                {
+                    DumpProfile([&fileName, &outputSpecList]()
+                    {
+                        FileShuffleLines<char>(fileName, outputSpecList[0].fileName);
+                        return true;
+                    });
+                }
+            }
+            else
+            {
+                std::wcerr << "Not supported yet." << std::endl;
+                return 1;
+            }
         }
         else
         {
-            BufferReader<LineSampleProcessor2<char>> proc;
-            boar::DumpProfile([&inputFileNameList, &outputSpecList, &proc]() {
-                proc.Run(inputFileNameList, outputSpecList, false);
-                return false;
-            });
-            return 0;
+            if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+            {
+                std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
+                LineSampleProcessor<char> proc(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+                boar::DumpProfile([&proc]() {
+                    proc.Run();
+                    return false;
+                });
+            }
+            else
+            {
+                BufferReader<LineSampleProcessor2<char>> proc;
+                boar::DumpProfile([&inputFileNameList, &outputSpecList, &proc]() {
+                    proc.Run(inputFileNameList, outputSpecList, false);
+                    return false;
+                });
+                return 0;
+            }
         }
 
         return 0;

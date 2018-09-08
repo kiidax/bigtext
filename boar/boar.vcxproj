@@ -151,7 +151,6 @@
     <ClCompile Include="count.cpp" />
     <ClCompile Include="filesource.cpp" />
     <ClCompile Include="sample.cpp" />
-    <ClCompile Include="shuffle.cpp" />
     <ClCompile Include="win32main.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

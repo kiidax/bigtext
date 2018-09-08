@@ -30,7 +30,6 @@ namespace boar
             "\n"
             "   count      Count the number of lines in the files.\n"
             "   sample     Sample lines from the files.\n"
-            "   shuffle    Shuffle lines of the files.\n"
             << std::endl;
         return 1;
     }
@@ -51,10 +50,6 @@ namespace boar
             else if (commandName == L"sample")
             {
                 return SampleCommand(argc - 1, argv + 1);
-            }
-            else if (commandName == L"shuffle")
-            {
-                return ShuffleCommand(argc - 1, argv + 1);
             }
             else
             {
@@ -124,7 +119,7 @@ namespace boar
                 }
                 else if (idx == s.size())
                 {
-                    if (v <= 0)
+                    if (v < 0)
                     {
                         return false;
                     }
