@@ -13,7 +13,7 @@ namespace boar
 
     static int ShuffleUsage()
     {
-        std::wcout << "Usage: boar shuffle [OPTION]... INPUTFILE... OUTPUT" << std::endl;
+        std::wcout << "Usage: boar shuffle [OPTION]... INPUTFILE... - OUTPUT" << std::endl;
         std::wcout << "Shuffle files." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -b         shuffle big files" << std::endl;
@@ -63,17 +63,23 @@ namespace boar
             }
         }
 
-        while (optind < argc - 1)
+        while (optind < argc - 2)
         {
             const wchar_t *p = argv[optind++];
             inputFileNameList.push_back(p);
+        }
+
+        if (std::wstring(argv[optind++]) != L"-")
+        {
+            std::wcerr << "- expected" << std::endl;
+            return 1;
         }
 
         fs::path outputFileName(argv[optind]);
 
         if (inputFileNameList.size() == 0)
         {
-            std::cerr << "No input files." << std::endl;
+            std::wcerr << "No input files." << std::endl;
             return 1;
         }
 
