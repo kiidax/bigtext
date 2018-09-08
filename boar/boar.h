@@ -1,4 +1,4 @@
-/* Boar - Boar is a toolkit to modify text files.
+/* Boar - Boar is a collection of tools to process text files.
  * Copyright (C) 2017 Katsuya Iida. All rights reserved.
  */
 
@@ -17,6 +17,7 @@ namespace boar {
     int SampleCommand(int argc, wchar_t *argv[]);
     bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
+    bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines);
 
     class FileWriter
     {

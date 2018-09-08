@@ -1,3 +1,3 @@
 # Boar
 
-Boar is a set of tools to process text files.
+Boar is a collection of tools to process text files.

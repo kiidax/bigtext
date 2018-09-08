@@ -1,4 +1,4 @@
-/* Boar - Boar is a toolkit to modify text files.
+/* Boar - Boar is a collection of tools to process text files.
  * Copyright (C) 2017 Katsuya Iida. All rights reserved.
  */
 
@@ -22,14 +22,15 @@ namespace boar
     static int MainUsage()
     {
         std::wcout <<
-            L"usage: boar <command> [<args>]\n"
+            L"usage: boar COMMAND [ARGS]\n"
             "\n"
             "Boar is a set tools to process text files.\n"
             "\n"
             "List of commands:\n"
             "\n"
-            "   count      Count the number of lines.\n"
-            "   sample     Sample lines from file.\n"
+            "   count      Count the number of lines in the files.\n"
+            "   sample     Sample lines from the files.\n"
+            "   shuffle    Shuffle lines of the files.\n"
             << std::endl;
         return 1;
     }
@@ -48,6 +49,10 @@ namespace boar
                 return CountCommand(argc - 1, argv + 1);
             }
             else if (commandName == L"sample")
+            {
+                return SampleCommand(argc - 1, argv + 1);
+            }
+            else if (commandName == L"shuffle")
             {
                 return SampleCommand(argc - 1, argv + 1);
             }
@@ -88,5 +93,74 @@ namespace boar
             }
         }
         return true;
+    }
+
+    bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines)
+    {
+        try
+        {
+            if (s.empty())
+            {
+                return false;
+            }
+            else if (s.find('.') == std::wstring::npos)
+            {
+                // This must be percent or number
+                size_t idx = 0;
+                unsigned long long v = std::stoull(s, &idx);
+                if (idx == 0)
+                {
+                    return false;
+                }
+                if (idx == s.size() - 1 && s[idx] == '%')
+                {
+                    if (v <= 0 || v > 100)
+                    {
+                        return false;
+                    }
+                    rate = v / 100.0;
+                    numberOfLines = 0;
+                    return true;
+                }
+                else if (idx == s.size())
+                {
+                    if (v <= 0)
+                    {
+                        return false;
+                    }
+                    rate = 0.0;
+                    numberOfLines = v;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                size_t idx;
+                double v = std::stod(s, &idx);
+                if (idx != s.size())
+                {
+                    return false;
+                }
+                if (v <= 0 || v > 1.0)
+                {
+                    return false;
+                }
+                rate = v;
+                numberOfLines = 0;
+                return true;
+            }
+        }
+        catch (std::invalid_argument)
+        {
+            return false;
+        }
+        catch (std::out_of_range)
+        {
+            return false;
+        }
     }
 }
