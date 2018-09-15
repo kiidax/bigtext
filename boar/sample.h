@@ -48,11 +48,8 @@ namespace boar
     }
 
     template <typename CharT>
-    class LineSampleProcessor2
+    class LineSampleProcessor
     {
-    public:
-        typedef CharT CharType;
-
     protected:
         struct OutputProgress
         {
@@ -62,8 +59,13 @@ namespace boar
         };
 
     public:
-        LineSampleProcessor2() : _gen(std::time(nullptr)), _dist(0.0, 1.0)
+        LineSampleProcessor() : _gen(std::time(nullptr)), _dist(0.0, 1.0), _outputProgressList(nullptr)
         {
+        }
+
+        ~LineSampleProcessor()
+        {
+            delete[] _outputProgressList;
         }
 
     protected:
@@ -105,25 +107,34 @@ namespace boar
 
             for (auto &fileName : inputPathList)
             {
-                boar::FileLineSourceDefault<LineSampleProcessor2<CharT>, CharT>(fileName, *this);
-            }
-        }
-
-        void ProcessLine(const CharT *s, size_t len)
-        {
-            double t = _dist(_gen);
-            for (int i = 0; i < _numOutputs; i++)
-            {
-                auto &prog = _outputProgressList[i];
-                if (t < prog.randomThreshold)
+                FileLineSourceDefault<CharT>(fileName, [this](const CharT *s, size_t len)
                 {
-                    prog.out.write(reinterpret_cast<const char *>(s), sizeof (CharT) * len);
-                    ++prog.lineCount;
-                }
-                t -= prog.randomThreshold;
+                    double t = _dist(_gen);
+                    for (int i = 0; i < _numOutputs; i++)
+                    {
+                        auto &prog = _outputProgressList[i];
+                        if (t < prog.randomThreshold)
+                        {
+                            prog.out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
+                            ++prog.lineCount;
+                            break;
+                        }
+                        t -= prog.randomThreshold;
+                    }
+                });
             }
+
+            delete[] _outputProgressList;
+            _outputProgressList = nullptr;
         }
     };
+
+    template <typename CharT>
+    void FileLineSample(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList)
+    {
+        LineSampleProcessor<CharT> proc;
+        proc.Run(inputPathList, outputSpecList);
+    }
 
     template<typename CharT>
     void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec> &outputSpecList)

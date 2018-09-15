@@ -223,8 +223,7 @@ namespace boar
             {
                 boar::DumpProfile([&inputFileNameList, &outputSpecList]()
                 {
-                    LineSampleProcessor2<char> proc;
-                    proc.Run(inputFileNameList, outputSpecList);
+                    FileLineSample<char>(inputFileNameList, outputSpecList);
                     return false;
                 });
             }
