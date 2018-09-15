@@ -43,7 +43,7 @@ namespace boar
                 {
                     while (p != last)
                     {
-                        if (*p++ == '\n')
+                        if (IsNewLine(*p++))
                         {
                             _previousPartialLine.append(first, p);
                             proc.ProcessLine(_previousPartialLine.data(), _previousPartialLine.size());
@@ -56,7 +56,7 @@ namespace boar
                 const CharT* lineStart = p;
                 while (p != last)
                 {
-                    if (*p++ == '\n')
+                    if (IsNewLine(*p++))
                     {
                         proc.ProcessLine(lineStart, p - lineStart);
                         c++;
@@ -67,12 +67,6 @@ namespace boar
                 lineCount += c;
             }
         });
-    }
-
-    template <typename CharT>
-    bool IsWhiteSpace(CharT ch)
-    {
-        return ch <= ' ';
     }
 
     template <typename CharT>
@@ -91,6 +85,7 @@ namespace boar
                 if (_previousPartialLine.size() > 0)
                 {
                     callback(_previousPartialLine.data(), _previousPartialLine.size());
+                    lineCount++;
                 }
             }
             else
@@ -105,7 +100,7 @@ namespace boar
                     {
                         if (IsWhiteSpace(*p++))
                         {
-                            _previousPartialLine.append(first, p);
+                            _previousPartialLine.append(first, p - 1);
                             callback(_previousPartialLine.data(), _previousPartialLine.size());
                             c++;
                             _previousPartialLine.clear();
@@ -118,62 +113,11 @@ namespace boar
                 {
                     if (IsWhiteSpace(*p++))
                     {
-                        callback(lineStart, p - lineStart);
-                        c++;
-                        lineStart = p;
-                    }
-                }
-                _previousPartialLine.append(lineStart, last);
-                lineCount += c;
-            }
-        });
-    }
-
-    template <class LineProcessorT, typename CharT = LineProcessorT::CharType>
-    void FileWordSourceDefault(const fs::path &fileName, LineProcessorT &proc)
-    {
-        uintmax_t lineCount = 0;
-        std::basic_string<CharT> _previousPartialLine;
-
-        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, &proc](const char *_s, size_t _len)
-        {
-            const CharT *s = reinterpret_cast<const CharT *>(_s);
-            size_t len = _len / sizeof(CharT);
-
-            if (s == nullptr)
-            {
-                if (_previousPartialLine.size() > 0)
-                {
-                    proc.ProcessLine(_previousPartialLine.data(), _previousPartialLine.size());
-                }
-            }
-            else
-            {
-                size_t c = 0;
-                const CharT *first = reinterpret_cast<const CharT *>(s);
-                const CharT *last = s + len;
-                const CharT *p = first;
-                if (_previousPartialLine.size() > 0)
-                {
-                    while (p != last)
-                    {
-                        if (IsWhiteSpace(*p++))
+                        if (p - lineStart - 1 > 0)
                         {
-                            _previousPartialLine.append(first, p);
-                            proc.ProcessLine(_previousPartialLine.data(), _previousPartialLine.size());
+                            callback(lineStart, p - lineStart - 1);
                             c++;
-                            _previousPartialLine.clear();
-                            break;
                         }
-                    }
-                }
-                const CharT* lineStart = p;
-                while (p != last)
-                {
-                    if (IsWhiteSpace(*p++))
-                    {
-                        proc.ProcessLine(lineStart, p - lineStart);
-                        c++;
                         lineStart = p;
                     }
                 }

@@ -16,4 +16,16 @@ namespace boar {
     bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
     bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines);
+
+    template <typename CharT>
+    bool IsNewLine(CharT ch)
+    {
+        return ch == '\n';
+    }
+
+    template <typename CharT>
+    bool IsWhiteSpace(CharT ch)
+    {
+        return ch <= ' ';
+    }
 }

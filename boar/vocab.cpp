@@ -86,12 +86,8 @@ namespace boar
         {
             status = DumpProfile([&inputFileNameList]()
             {
-                // 1059203072      404601
-                // 36,762,348,544 bytes.
-                // AMD E2-7110
-                std::cout << "class" << std::endl;
-                FileCountVocabProcessor<char> proc;
-                proc.Run(inputFileNameList, fs::path(L"vocab.txt"));
+                std::cout << "multi" << std::endl;
+                FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
                 return true;
             });
         }
@@ -99,12 +95,7 @@ namespace boar
         {
             status = DumpProfile([&inputFileNameList]()
             {
-                // 1059203072      404601
-                // 36,762,348,544 bytes.
-                // AMD E2-7110
-                std::cout << "func" << std::endl;
-                FileCountVocabProcessor2<char> proc;
-                proc.Run(inputFileNameList, fs::path(L"vocab.txt"));
+                FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
                 return true;
             });
             status = 0;
