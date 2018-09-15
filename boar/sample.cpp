@@ -224,10 +224,21 @@ namespace boar
             {
                 boar::DumpProfile([&inputFileNameList, &outputSpecList]()
                 {
+                    FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+#if 0
+                    LineSampleProcessor3<char> proc;
+                    proc.Run(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+#endif
+                    return false;
+                });
+#if 0
+                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
+                {
                     LineSampleProcessor2<char> proc;
                     proc.Run(inputFileNameList, outputSpecList);
                     return false;
                 });
+#endif
             }
         }
 

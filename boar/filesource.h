@@ -70,12 +70,66 @@ namespace boar
     }
 
     template <typename CharT>
+    void FileLineSourceDefault(const fs::path &fileName, std::function<void(const CharT *, size_t)> callback)
+    {
+        uintmax_t lineCount = 0;
+        std::basic_string<CharT> _previousPartialLine;
+
+        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
+        {
+            const CharT *s = reinterpret_cast<const CharT *>(_s);
+            size_t len = _len / sizeof(CharT);
+
+            if (s == nullptr)
+            {
+                if (_previousPartialLine.size() > 0)
+                {
+                    callback(_previousPartialLine.data(), _previousPartialLine.size());
+                }
+            }
+            else
+            {
+                size_t c = 0;
+                const CharT *first = reinterpret_cast<const CharT *>(s);
+                const CharT *last = s + len;
+                const CharT *p = first;
+                if (_previousPartialLine.size() > 0)
+                {
+                    while (p != last)
+                    {
+                        if (IsNewLine(*p++))
+                        {
+                            _previousPartialLine.append(first, p);
+                            callback(_previousPartialLine.data(), _previousPartialLine.size());
+                            c++;
+                            _previousPartialLine.clear();
+                            break;
+                        }
+                    }
+                }
+                const CharT* lineStart = p;
+                while (p != last)
+                {
+                    if (IsNewLine(*p++))
+                    {
+                        callback(lineStart, p - lineStart);
+                        c++;
+                        lineStart = p;
+                    }
+                }
+                _previousPartialLine.append(lineStart, last);
+                lineCount += c;
+            }
+        });
+    }
+
+    template <typename CharT>
     void FileWordSourceDefault(const fs::path &fileName, std::function<void(const CharT *, size_t)> callback)
     {
         uintmax_t lineCount = 0;
         std::basic_string<CharT> _previousPartialLine;
 
-        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, &callback](const char *_s, size_t _len)
+        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
         {
             const CharT *s = reinterpret_cast<const CharT *>(_s);
             size_t len = _len / sizeof(CharT);
