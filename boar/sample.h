@@ -29,30 +29,29 @@ namespace boar
         typedef CharT CharType;
 
     private:
-        std::vector<fs::path> _inputFileNameList;
-        fs::path _outputFileName;
-        LineFileWriter<CharT> _out;
         std::default_random_engine _gen;
         std::bernoulli_distribution _dist;
 
     public:
-        LineSampleProcessor(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
+        LineSampleProcessor()
         {
-            _inputFileNameList = inputFileNameList;
-            _outputFileName = outputFileName;
             std::random_device rd;
             _gen = std::default_random_engine(rd());
             _dist = std::bernoulli_distribution(rate);
         }
 
-        void Run()
+        void Run(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
         {
-            _out.Open(_outputFileName);
+            fs::ofstream out;
+            out.open(_outputFileName, std::ios::out | std::ios::binary);
+            if (!out.is_open())
+            {
+                std::cwerr << "cannot open" << std::endl;
+            }
             for (auto& fileName : _inputFileNameList)
             {
                 FileLineSourceDefault(fileName, *this);
             }
-            _out.Close();
         }
 
         bool ProcessLine(const CharT *s, size_t len)
@@ -92,7 +91,7 @@ namespace boar
         std::default_random_engine _gen;
 
     public:
-        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList, bool overwrite)
+        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList)
         {
             _numOutputs = outputSpecList.size();
             _outputProgressList = new OutputProgress[_numOutputs];
@@ -140,7 +139,7 @@ namespace boar
     };
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec>& outputSpecList, bool overwrite)
+    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec> &outputSpecList)
     {
         std::vector<size_t> lineIndexList;
         std::vector<const CharT *> linePositionList;

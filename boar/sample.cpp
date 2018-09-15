@@ -202,9 +202,9 @@ namespace boar
 
         if (shuffleOutput)
         {
-            DumpProfile([&inputFileNameList, &outputSpecList, &forceOverwrite]()
+            DumpProfile([&inputFileNameList, &outputSpecList]()
             {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList, forceOverwrite);
+                FileShuffleLines<char>(inputFileNameList, outputSpecList);
                 return true;
             });
         }
@@ -213,20 +213,21 @@ namespace boar
             if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
             {
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
-                LineSampleProcessor<char> proc(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
-                boar::DumpProfile([&proc]() {
-                    proc.Run();
+                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
+                {
+                    LineSampleProcessor<char> proc;
+                    proc.Run(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
                     return false;
                 });
             }
             else
             {
-                BufferReader<LineSampleProcessor2<char>> proc;
-                boar::DumpProfile([&inputFileNameList, &outputSpecList, &proc]() {
-                    proc.Run(inputFileNameList, outputSpecList, false);
+                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
+                {
+                    BufferReader<LineSampleProcessor2<char>> proc;
+                    proc.Run(inputFileNameList, outputSpecList);
                     return false;
                 });
-                return 0;
             }
         }
 
