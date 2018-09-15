@@ -16,46 +16,18 @@ namespace boar
     static const size_t CHUNK_SIZE = 64L * 1024;
     static const size_t CHUNK_SIZE2 = 64L * 1024;
 
-    void FileSourceWithMemoryMapping(const fs::path& fileName, DataSourceCallback callback)
+    void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback)
     {
-        bool success = false;
-        LPCWSTR lpfileName = fileName.native().c_str();
-        HANDLE hFile = ::CreateFileW(lpfileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE)
-        {
-            DWORD highSize;
-            DWORD lowSize = ::GetFileSize(hFile, &highSize);
-            uint64_t size = (static_cast<uint64_t>(highSize) << 32) | lowSize;
-
-            HANDLE hMapping = ::CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-            if (hMapping != NULL)
-            {
-                VOID* lpAddress = ::MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-                if (lpAddress != NULL)
-                {
-                    MEMORY_BASIC_INFORMATION mbi;
-                    if (::VirtualQuery(lpAddress, &mbi, sizeof mbi) != 0)
-                    {
-                        const char *s = reinterpret_cast<const char *>(lpAddress);
-                        if (size <= mbi.RegionSize)
-                        {
-                            callback(s, static_cast<size_t>(size));
-                            success = true;
-                        }
-                    }
-                    ::UnmapViewOfFile(lpAddress);
-                }
-                ::CloseHandle(hMapping);
-            }
-            ::CloseHandle(hFile);
+        boost::iostreams::mapped_file_source file;
+        file.open(fileName);
+        if (file.is_open()) {
+            const char *s = file.data();
+            size_t size = file.size();
+            callback(s, size);
         }
-        if (!success)
+        else
         {
-            DWORD dwErrorCode = GetLastError();
-            TCHAR buf[1024];
-            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwErrorCode, 0, buf, sizeof buf, NULL);
-            std::wstring s(reinterpret_cast<wchar_t*>(buf));
-            std::wcout << s.substr(0, s.length() - 2) << std::endl;
+            std::cout << "error" << std::endl;
         }
     }
 
@@ -177,19 +149,5 @@ namespace boar
     void FileSourceDefault(const fs::path& fileName, DataSourceCallback callback, uintmax_t maxSize)
     {
         FileSourceWithOverlapRead(fileName, callback, maxSize);
-    }
-
-    void FileSourceWithBoostMemoryMapping(const fs::path &fileName, DataSourceCallback callback)
-    {
-        boost::iostreams::mapped_file_source file;
-        file.open(fileName);
-        if (file.is_open()) {
-            const char *s = file.data();
-            size_t size = file.size();
-            callback(s, size);
-        }
-        else {
-            std::cout << "error" << std::endl;
-        }
     }
 }

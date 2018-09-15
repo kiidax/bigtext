@@ -13,7 +13,6 @@ namespace boar
     using DataSourceCallback = std::function<void(const char *, size_t)>;
 
     void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
-    void FileSourceWithBoostMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithFileRead(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
     void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);

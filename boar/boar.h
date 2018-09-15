@@ -15,15 +15,4 @@ namespace boar {
     bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
     bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines);
-
-    inline std::u16string ToUnicode(const char *s)
-    {
-        return std::u16string(s, s + strlen(s));
-    }
-
-    inline std::string FromUnicode(const char16_t* s)
-    {
-        std::u16string t(s);
-        return std::string(t.begin(), t.end());
-    }
 }
