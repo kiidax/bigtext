@@ -29,6 +29,9 @@
     <ClCompile Include="count.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vocab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="targetver.h">
@@ -47,6 +50,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="count.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vocab.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

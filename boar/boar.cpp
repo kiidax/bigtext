@@ -30,6 +30,7 @@ namespace boar
             "\n"
             "   count      Count the number of lines in the files.\n"
             "   sample     Sample lines from the files.\n"
+            "   vocab      Count the words in the files.\n"
             << std::endl;
         return 1;
     }
@@ -50,6 +51,10 @@ namespace boar
             else if (commandName == L"sample")
             {
                 return SampleCommand(argc - 1, argv + 1);
+            }
+            else if (commandName == L"vocab")
+            {
+                return VocabCommand(argc - 1, argv + 1);
             }
             else
             {
