@@ -29,6 +29,7 @@ namespace boar
         typedef CharT CharType;
 
     private:
+        fs::ofstream _out;
         std::default_random_engine _gen;
         std::bernoulli_distribution _dist;
 
@@ -37,18 +38,18 @@ namespace boar
         {
             std::random_device rd;
             _gen = std::default_random_engine(rd());
-            _dist = std::bernoulli_distribution(rate);
         }
 
         void Run(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
         {
-            fs::ofstream out;
-            out.open(_outputFileName, std::ios::out | std::ios::binary);
-            if (!out.is_open())
+            _dist = std::bernoulli_distribution(rate);
+            _out.open(outputFileName, std::ios::out | std::ios::binary);
+            if (!_out.is_open())
             {
-                std::cwerr << "cannot open" << std::endl;
+                std::wcerr << "cannot open" << std::endl;
+                return;
             }
-            for (auto& fileName : _inputFileNameList)
+            for (auto& fileName : inputFileNameList)
             {
                 FileLineSourceDefault(fileName, *this);
             }
@@ -58,7 +59,7 @@ namespace boar
         {
             if (_dist(_gen))
             {
-                _out.WriteLine(s, len);
+                _out.write(reinterpret_cast<const char *>(s), sizeof (CharT) * len);
             }
             return true;
         }
@@ -75,7 +76,7 @@ namespace boar
         {
             double randomThreshold;
             uintmax_t lineCount;
-            LineFileWriter<CharT> writer;
+            fs::ofstream out;
         };
 
     public:
@@ -112,7 +113,13 @@ namespace boar
                 {
                     return;
                 }
-                _outputProgressList[i].writer.Open(spec.fileName);
+                auto &out = _outputProgressList[i].out;
+                out.open(spec.fileName);
+                if (!out.is_open())
+                {
+                    std::wcerr << "cannot open" << std::endl;
+                    return;
+                }
             }
 
             for (auto &fileName : inputPathList)
@@ -130,7 +137,7 @@ namespace boar
                 auto &prog = _outputProgressList[i];
                 if (t < prog.randomThreshold)
                 {
-                    prog.writer.WriteLine(s, len);
+                    prog.out.write(reinterpret_cast<const char *>(s), sizeof (CharT) * len);
                     ++prog.lineCount;
                 }
                 t -= prog.randomThreshold;
