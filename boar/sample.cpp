@@ -20,7 +20,7 @@ namespace boar
         std::wcout << " -f         force overwrite output files" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
-        std::wcout << " -s         shuffle output files (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " -s         shuffle output files" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
         std::wcout << " -          seperator between input and output files" << std::endl;
         std::wcout << " RATE       sampling rate. Probability, percent or target number of lines" << std::endl;

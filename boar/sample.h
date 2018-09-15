@@ -10,6 +10,7 @@ namespace boar
 {
     namespace fs = boost::filesystem;
     namespace ios = boost::iostreams;
+    namespace rnd = boost::random;
 
     struct OutputSpec
     {
@@ -30,19 +31,17 @@ namespace boar
 
     private:
         fs::ofstream _out;
-        std::default_random_engine _gen;
-        std::bernoulli_distribution _dist;
+        rnd::mt19937_64 _gen;
+        rnd::bernoulli_distribution<> _dist;
 
     public:
-        LineSampleProcessor()
+        LineSampleProcessor() : _gen(std::time(nullptr))
         {
-            std::random_device rd;
-            _gen = std::default_random_engine(rd());
         }
 
         void Run(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
         {
-            _dist = std::bernoulli_distribution(rate);
+            _dist = rnd::bernoulli_distribution<>(rate);
             _out.open(outputFileName, std::ios::out | std::ios::binary);
             if (!_out.is_open())
             {
@@ -80,16 +79,15 @@ namespace boar
         };
 
     public:
-        LineSampleProcessor2()
+        LineSampleProcessor2() : _gen(std::time(nullptr)), _dist(0.0, 1.0)
         {
-            std::random_device rd;
-            _gen = std::default_random_engine(rd());
         }
 
     protected:
         size_t _numOutputs;
         OutputProgress *_outputProgressList;
-        std::default_random_engine _gen;
+        rnd::mt19937_64 _gen;
+        rnd::uniform_real_distribution<> _dist;
 
     public:
         void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList)
@@ -130,8 +128,7 @@ namespace boar
 
         void ProcessLine(const CharT *s, size_t len)
         {
-            constexpr std::size_t bits = std::numeric_limits<float>::digits;
-            double t = std::generate_canonical<double, bits>(_gen);
+            double t = _dist(_gen);
             for (int i = 0; i < _numOutputs; i++)
             {
                 auto &prog = _outputProgressList[i];
@@ -148,6 +145,8 @@ namespace boar
     template<typename CharT>
     void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec> &outputSpecList)
     {
+        rnd::mt19937_64 gen(std::time(nullptr));
+
         std::vector<size_t> lineIndexList;
         std::vector<const CharT *> linePositionList;
 
@@ -196,9 +195,10 @@ namespace boar
             std::wcerr << "something wrong" << std::endl;
         }
         std::cout << "\tLineCount\t" << numLines << std::endl;
+        rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
         for (size_t i = 0; i < numLines - 1; i++)
         {
-            size_t j = std::rand() % (numLines - i);
+            size_t j = dist(numLines - i);
             std::swap(lineIndexList[i], lineIndexList[j]);
         }
 

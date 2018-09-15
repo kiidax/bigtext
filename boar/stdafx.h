@@ -11,12 +11,14 @@
 #include <clocale>
 #include <string>
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <new>
 #include <memory>
 #include <iomanip>
-#include <random>
 #include <functional>
 
 #include <boost/filesystem.hpp>
+#include <boost/random.hpp>
+#include <boost/random/bernoulli_distribution.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/random_number_generator.hpp>
