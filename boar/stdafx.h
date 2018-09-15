@@ -19,6 +19,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/random.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/random_number_generator.hpp>

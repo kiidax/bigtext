@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "stdafx.h"
-
 namespace boar
 {
     namespace fs = boost::filesystem;

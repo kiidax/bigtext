@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "stdafx.h"
 #include "filesource.h"
 
 namespace boar
