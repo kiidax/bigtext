@@ -215,8 +215,7 @@ namespace boar
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
                 boar::DumpProfile([&inputFileNameList, &outputSpecList]()
                 {
-                    LineSampleProcessor<char> proc;
-                    proc.Run(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+                    FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
                     return false;
                 });
             }
@@ -224,21 +223,10 @@ namespace boar
             {
                 boar::DumpProfile([&inputFileNameList, &outputSpecList]()
                 {
-                    FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
-#if 0
-                    LineSampleProcessor3<char> proc;
-                    proc.Run(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
-#endif
-                    return false;
-                });
-#if 0
-                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
-                {
                     LineSampleProcessor2<char> proc;
                     proc.Run(inputFileNameList, outputSpecList);
                     return false;
                 });
-#endif
             }
         }
 
