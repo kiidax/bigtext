@@ -11,9 +11,10 @@ namespace boar
 {
     namespace fs = boost::filesystem;
 
-    template<typename CharT>
-    void FileShuffleLines(const fs::path &inputFileName, const fs::path &outputFileName)
+    template<typename CharT, typename RangeT>
+    void FileShuffleLines(const RangeT &inputFileNameList, const fs::path &outputFileName)
     {
+        const fs::path &inputFileName = inputFileNameList[0];
         FileSourceWithBoostMemoryMapping(inputFileName, [&outputFileName](const char *_s, size_t _len) {
             LineFileWriter<CharT> out;
             out.Open(outputFileName);

@@ -9,6 +9,7 @@
 namespace boar
 {
     namespace fs = boost::filesystem;
+    namespace ios = boost::iostreams;
 
     using DataSourceCallback = std::function<void(const char *, size_t)>;
 
@@ -19,15 +20,21 @@ namespace boar
     void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
 
     template <typename CharT>
-    class MemoryMapFileLineReader
+    class MultipleMemoryMapFile
     {
     protected:
-        std::vector<boost::iostreams::mapped_file_source> _fileList;
+        std::vector<ios::mapped_file_source> _fileList;
 
     public:
-        void Open(std::vector<fs::path>& fileNameList)
+        ~MultipleMemoryMapFile()
         {
-            for (auto fileName : fileNameList)
+            Close();
+        }
+
+        template <typename RangeT>
+        void Open(const RangeT &fileNameList)
+        {
+            for (fs::path &fileName : fileNameList)
             {
                 _fileList.emplace_back();
                 auto &file = _fileList.back();
@@ -39,9 +46,17 @@ namespace boar
             }
         }
 
-        const char *Data(int n) const
+        std::vector<ios::mapped_file_source> &Data() const
         {
-            return _fileList[n].data();
+            return _fileList;
+        }
+
+        void Close()
+        {
+            for (auto& file : _fileList)
+            {
+                file.close();
+            }
         }
     };
 

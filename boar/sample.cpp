@@ -205,14 +205,11 @@ namespace boar
         {
             if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
             {
-                for (auto &fileName : inputFileNameList)
+                DumpProfile([&inputFileNameList, &outputSpecList]()
                 {
-                    DumpProfile([&fileName, &outputSpecList]()
-                    {
-                        FileShuffleLines<char>(fileName, outputSpecList[0].fileName);
-                        return true;
-                    });
-                }
+                    FileShuffleLines<char>(inputFileNameList, outputSpecList[0].fileName);
+                    return true;
+                });
             }
             else
             {
