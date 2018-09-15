@@ -98,6 +98,12 @@ namespace boar
             {
                 return false;
             }
+            else if (s == L"_")
+            {
+                rate = 1.0;
+                numberOfLines = 0;
+                return true;
+            }
             else if (s.find('.') == std::wstring::npos)
             {
                 // This must be percent or number
@@ -119,7 +125,7 @@ namespace boar
                 }
                 else if (idx == s.size())
                 {
-                    if (v < 0)
+                    if (v <= 0)
                     {
                         return false;
                     }

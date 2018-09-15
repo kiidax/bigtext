@@ -9,7 +9,6 @@
 namespace boar
 {
     namespace fs = boost::filesystem;
-    namespace ios = boost::iostreams;
 
     using DataSourceCallback = std::function<void(const char *, size_t)>;
 
@@ -18,47 +17,6 @@ namespace boar
     void FileSourceWithFileRead(const fs::path &fileName, DataSourceCallback callback);
     void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
     void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
-
-    template <typename CharT>
-    class MultipleMemoryMapFile
-    {
-    protected:
-        std::vector<ios::mapped_file_source> _fileList;
-
-    public:
-        ~MultipleMemoryMapFile()
-        {
-            Close();
-        }
-
-        template <typename RangeT>
-        void Open(const RangeT &fileNameList)
-        {
-            for (fs::path &fileName : fileNameList)
-            {
-                _fileList.emplace_back();
-                auto &file = _fileList.back();
-                file.open(fileName);
-                if (!file.is_open())
-                {
-                    return;
-                }
-            }
-        }
-
-        std::vector<ios::mapped_file_source> &Data() const
-        {
-            return _fileList;
-        }
-
-        void Close()
-        {
-            for (auto& file : _fileList)
-            {
-                file.close();
-            }
-        }
-    };
 
     template <class LineProcessorT, typename CharT = LineProcessorT::CharType>
     void FileLineSourceDefault(const fs::path &fileName, LineProcessorT& proc)

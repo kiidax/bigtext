@@ -7,7 +7,6 @@
 #include "boar.h"
 #include "filesource.h"
 #include "sample.h"
-#include "shuffle.h"
 
 namespace boar
 {
@@ -203,19 +202,11 @@ namespace boar
 
         if (shuffleOutput)
         {
-            if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+            DumpProfile([&inputFileNameList, &outputSpecList, &forceOverwrite]()
             {
-                DumpProfile([&inputFileNameList, &outputSpecList]()
-                {
-                    FileShuffleLines<char>(inputFileNameList, outputSpecList[0].fileName);
-                    return true;
-                });
-            }
-            else
-            {
-                std::wcerr << "Not supported yet." << std::endl;
-                return 1;
-            }
+                FileShuffleLines<char>(inputFileNameList, outputSpecList, forceOverwrite);
+                return true;
+            });
         }
         else
         {
