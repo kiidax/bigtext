@@ -24,11 +24,10 @@ namespace boar
     template <typename CharT>
     void FileLineSample(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
     {
-        fs::ofstream _out;
-        rnd::mt19937_64 _gen;
-        rnd::bernoulli_distribution<> _dist;
+        rnd::mt19937_64 _gen(std::time(nullptr));
+        rnd::bernoulli_distribution<> _dist(rate);
 
-        _dist = rnd::bernoulli_distribution<>(rate);
+        fs::ofstream _out;
         _out.open(outputFileName, std::ios::out | std::ios::binary);
         if (!_out.is_open())
         {
@@ -48,9 +47,8 @@ namespace boar
     }
 
     template <typename CharT>
-    class LineSampleProcessor
+    void FileLineSample(const std::vector<fs::path> &inputPathList, const std::vector<OutputSpec> &outputSpecList)
     {
-    protected:
         struct OutputProgress
         {
             double randomThreshold;
@@ -58,82 +56,59 @@ namespace boar
             fs::ofstream out;
         };
 
-    public:
-        LineSampleProcessor() : _gen(std::time(nullptr)), _dist(0.0, 1.0), _outputProgressList(nullptr)
-        {
-        }
-
-        ~LineSampleProcessor()
-        {
-            delete[] _outputProgressList;
-        }
-
-    protected:
         size_t _numOutputs;
         OutputProgress *_outputProgressList;
-        rnd::mt19937_64 _gen;
-        rnd::uniform_real_distribution<> _dist;
+        rnd::mt19937_64 _gen(std::time(nullptr));
+        rnd::uniform_real_distribution<> _dist(0, 1);
 
-    public:
-        void Run(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList)
+        _numOutputs = outputSpecList.size();
+        _outputProgressList = new OutputProgress[_numOutputs];
+
+        for (size_t i = 0; i < _numOutputs; i++)
         {
-            _numOutputs = outputSpecList.size();
-            _outputProgressList = new OutputProgress[_numOutputs];
-
-            for (size_t i = 0; i < _numOutputs; i++)
+            auto& spec = outputSpecList[i];
+            if (spec.numberOfLines > 0)
             {
-                auto& spec = outputSpecList[i];
-                if (spec.numberOfLines > 0)
-                {
-                    // TODO: overflow
-                    _outputProgressList[i].randomThreshold = 0.0;
-                }
-                else if (spec.rate >= 0)
-                {
-                    _outputProgressList[i].randomThreshold = spec.rate;
-                }
-                else
-                {
-                    return;
-                }
-                auto &out = _outputProgressList[i].out;
-                out.open(spec.fileName);
-                if (!out.is_open())
-                {
-                    std::wcerr << "cannot open" << std::endl;
-                    return;
-                }
+                // TODO: overflow
+                _outputProgressList[i].randomThreshold = 0.0;
             }
-
-            for (auto &fileName : inputPathList)
+            else if (spec.rate >= 0)
             {
-                FileLineSourceDefault<CharT>(fileName, [this](const CharT *s, size_t len)
-                {
-                    double t = _dist(_gen);
-                    for (int i = 0; i < _numOutputs; i++)
-                    {
-                        auto &prog = _outputProgressList[i];
-                        if (t < prog.randomThreshold)
-                        {
-                            prog.out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
-                            ++prog.lineCount;
-                            break;
-                        }
-                        t -= prog.randomThreshold;
-                    }
-                });
+                _outputProgressList[i].randomThreshold = spec.rate;
             }
-
-            delete[] _outputProgressList;
-            _outputProgressList = nullptr;
+            else
+            {
+                return;
+            }
+            auto &out = _outputProgressList[i].out;
+            out.open(spec.fileName);
+            if (!out.is_open())
+            {
+                std::wcerr << "cannot open" << std::endl;
+                return;
+            }
         }
-    };
 
-    template <typename CharT>
-    void FileLineSample(const std::vector<fs::path>& inputPathList, const std::vector<OutputSpec>& outputSpecList)
-    {
-        LineSampleProcessor<CharT> proc;
-        proc.Run(inputPathList, outputSpecList);
+        for (auto &fileName : inputPathList)
+        {
+            FileLineSourceDefault<CharT>(fileName, [&_dist, &_gen, _outputProgressList, _numOutputs](const CharT *s, size_t len)
+            {
+                double t = _dist(_gen);
+                for (int i = 0; i < _numOutputs; i++)
+                {
+                    auto &prog = _outputProgressList[i];
+                    if (t < prog.randomThreshold)
+                    {
+                        prog.out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
+                        ++prog.lineCount;
+                        break;
+                    }
+                    t -= prog.randomThreshold;
+                }
+            });
+        }
+
+        delete[] _outputProgressList;
     }
 
     template<typename CharT>
