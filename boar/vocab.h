@@ -13,7 +13,7 @@ namespace boar
     {
         using StringT = std::basic_string<CharT>;
         using StringCountT = std::pair<StringT, uintmax_t>;
-        std::map<StringT, uintmax_t> vocabCount;
+        std::unordered_map<StringT, uintmax_t> vocabCount;
         for (auto& fileName : inputFileNameList)
         {
             FileWordSourceDefault<CharT>(fileName, [&vocabCount](const CharT *s, size_t len) {
@@ -27,17 +27,17 @@ namespace boar
                     }
                     else
                     {
-                        vocabCount.insert(it, StringCountT(std::move(key), 1));
+                        vocabCount.emplace(std::move(key), 1);
                     }
                 }
                 return true;
             });
         }
 
-        std::vector<StringCountT> v(vocabCount.begin(), vocabCount.end());
-        std::sort(v.begin(), v.end(), [](StringCountT &x, StringCountT &y)
+        std::vector<StringCountT> sortedKeyValue(vocabCount.cbegin(), vocabCount.cend());
+        std::sort(sortedKeyValue.begin(), sortedKeyValue.end(), [](const StringCountT &x, const StringCountT &y)
         {
-            return x.second > y.second;
+            return x.second == y.second ? x.first < y.first : x.second > y.second;
         });
 
         fs::basic_ofstream<CharT> out;
@@ -47,7 +47,7 @@ namespace boar
             std::wcerr << "cannot open" << std::endl;
             return;
         }
-        for (auto &kv : v)
+        for (auto &kv : sortedKeyValue)
         {
             out << kv.first << '\t' << kv.second << std::endl;
         }
