@@ -95,7 +95,7 @@ namespace boar
         return true;
     }
 
-    bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines)
+    bool TryParseRate(const std::wstring &s, double &rate)
     {
         try
         {
@@ -103,62 +103,60 @@ namespace boar
             {
                 return false;
             }
-            else if (s == L"_")
+
+            size_t idx;
+            double v = std::stod(s, &idx);
+            if (idx == s.size() - 1 && s[idx] == '%')
             {
-                rate = 1.0;
-                numberOfLines = 0;
+                if (v <= 0 || v > 100)
+                {
+                    return false;
+                }
+                rate = v / 100.0;
                 return true;
             }
-            else if (s.find('.') == std::wstring::npos)
+            else if (idx != s.size())
             {
-                // This must be percent or number
-                size_t idx = 0;
-                unsigned long long v = std::stoull(s, &idx);
-                if (idx == 0)
-                {
-                    return false;
-                }
-                if (idx == s.size() - 1 && s[idx] == '%')
-                {
-                    if (v <= 0 || v > 100)
-                    {
-                        return false;
-                    }
-                    rate = v / 100.0;
-                    numberOfLines = 0;
-                    return true;
-                }
-                else if (idx == s.size())
-                {
-                    if (v <= 0)
-                    {
-                        return false;
-                    }
-                    rate = 0.0;
-                    numberOfLines = v;
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
-            else
+            if (v <= 0 || v > 1.0)
             {
-                size_t idx;
-                double v = std::stod(s, &idx);
-                if (idx != s.size())
-                {
-                    return false;
-                }
-                if (v <= 0 || v > 1.0)
-                {
-                    return false;
-                }
-                rate = v;
-                numberOfLines = 0;
-                return true;
+                return false;
             }
+            rate = v;
+            return true;
+        }
+        catch (std::invalid_argument)
+        {
+            return false;
+        }
+        catch (std::out_of_range)
+        {
+            return false;
+        }
+    }
+
+    bool TryParseNumber(const std::wstring &s, uintmax_t &numberOfLines)
+    {
+        try
+        {
+            if (s.empty())
+            {
+                return false;
+            }
+
+            size_t idx = 0;
+            unsigned long long v = std::stoull(s, &idx);
+            if (idx != s.size())
+            {
+                return false;
+            }
+            if (v <= 0)
+            {
+                return false;
+            }
+            numberOfLines = v;
+            return true;
         }
         catch (std::invalid_argument)
         {

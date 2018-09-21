@@ -15,7 +15,8 @@ namespace boar {
     int VocabCommand(int argc, wchar_t *argv[]);
     bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
-    bool ParseRate(const std::wstring &s, double &rate, uintmax_t &numberOfLines);
+    bool TryParseRate(const std::wstring &s, double &rate);
+    bool TryParseNumber(const std::wstring &s, uintmax_t &numberOfLines);
 
     template <typename CharT>
     bool IsNewLine(CharT ch)

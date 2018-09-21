@@ -14,7 +14,7 @@ namespace boar
 
     static int SampleUsage()
     {
-        std::wcout << "Usage: boar sample [OPTION]... INPUTFILE... - RATE OUTPUTFILE [RATE OUTPUTFILE]..." << std::endl;
+        std::wcout << "Usage: boar sample [OPTION]... INPUTFILE... [[-o|-n LINES|-r RATE] OUTPUTFILE]..." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         no simple mode" << std::endl;
         std::wcout << " -f         force overwrite output files" << std::endl;
@@ -22,8 +22,9 @@ namespace boar
         std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
         std::wcout << " -s         shuffle output files" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
-        std::wcout << " -          seperator between input and output files" << std::endl;
-        std::wcout << " RATE       sampling rate. Probability, percent or target number of lines" << std::endl;
+        std::wcout << " -o         sample all lines" << std::endl;
+        std::wcout << " -n LINES   sample around n lines" << std::endl;
+        std::wcout << " -r RATE    sampling rate. Probability (0.0,1.0] or percent (0,100]%" << std::endl;
         std::wcout << " OURPUTFILE output file" << std::endl;
         std::wcout << std::endl;
 
@@ -36,6 +37,7 @@ namespace boar
         bool noSimpleMode = false;
         bool forceOverwrite = false;
         bool shuffleOutput = false;
+        bool hasOutputAll = false;
         bool quickMode = false;
         std::vector<fs::path> inputFileNameList;
         std::vector<OutputSpec> outputSpecList;
@@ -48,47 +50,48 @@ namespace boar
         while (optind < argc)
         {
             const wchar_t *p = argv[optind++];
-            if (*p == '-')
-            {
-                ++p;
-                if (*p == '\0')
-                {
-                    std::cerr << "Separator `-' is not allowed before input files." << std::endl;
-                    return 1;
-                }
-                else
-                {
-                    while (*p != '\0')
-                    {
-                        switch (*p)
-                        {
-                        case 'c':
-                            noSimpleMode = true;
-                            break;
-                        case 'f':
-                            forceOverwrite = true;
-                            break;
-                        case 'h':
-                            return SampleUsage();
-                        case 'q':
-                            quickMode = true;
-                            break;
-                        case 's':
-                            shuffleOutput = true;
-                            break;
-                        default:
-                            std::wcerr << "Unknown option `" << *p << "'." << std::endl;
-                            return 1;
-                        }
-                        ++p;
-                    }
-                }
-            }
-            else
+            if (*p != '-')
             {
                 // Input files start.
                 optind--;
                 break;
+            }
+
+            ++p;
+            if (*p == '\0')
+            {
+                std::cerr << "An option is expected." << std::endl;
+                return 1;
+            }
+
+            while (*p != '\0')
+            {
+                switch (*p)
+                {
+                case 'c':
+                    noSimpleMode = true;
+                    break;
+                case 'f':
+                    forceOverwrite = true;
+                    break;
+                case 'h':
+                    return SampleUsage();
+                case 'q':
+                    quickMode = true;
+                    break;
+                case 's':
+                    shuffleOutput = true;
+                    break;
+                case 'n':
+                case 'o':
+                case 'r':
+                    std::wcerr << "No input files." << std::endl;
+                    return 1;
+                default:
+                    std::wcerr << "Unknown option `" << *p << "'." << std::endl;
+                    return 1;
+                }
+                ++p;
             }
         }
 
@@ -97,22 +100,12 @@ namespace boar
             const wchar_t *p = argv[optind++];
             if (*p == '-')
             {
-                ++p;
-                if (*p == '\0')
-                {
-                    // Separator
-                    break;
-                }
-                else
-                {
-                    std::cerr << "Options are not allowed between input files." << std::endl;
-                    return 1;
-                }
+                // Output files start.
+                optind--;
+                break;
             }
-            else
-            {
-                inputFileNameList.push_back(p);
-            }
+
+            inputFileNameList.push_back(p);
         }
 
         if (inputFileNameList.size() == 0)
@@ -124,25 +117,124 @@ namespace boar
         while (optind < argc)
         {
             const wchar_t *p = argv[optind++];
-            double rate;
-            uintmax_t targetNumLines;
-            if (!boar::ParseRate(p, rate, targetNumLines))
+            bool nextIsRate = false;
+            bool nextIsNumber = false;
+            if (*p++ != '-')
             {
-                std::wcerr << "Invalid rate `" << p << "'." << std::endl;
+                std::wcerr << "-r or -n is expected." << std::endl;
                 return 1;
             }
-            if (optind >= argc)
+
+            if (*p == '\0')
             {
-                std::wcerr << "Output file name is expected";
+                std::cerr << "An option is expected." << std::endl;
                 return 1;
             }
-            if (targetNumLines > 0)
+
+            switch (*p)
             {
-                outputSpecList.emplace_back(argv[optind++], targetNumLines);
+            case 'n':
+                nextIsNumber = true;
+                break;
+            case 'o':
+                if (hasOutputAll)
+                {
+                    std::wcerr << "More than one -o options are not allowed." << std::endl;
+                    return 1;
+                }
+                hasOutputAll = true;
+                break;
+            case 'r':
+                nextIsRate = true;
+                break;
+            default:
+                std::wcerr << "Unknown option `" << *p << "'." << std::endl;
+                return 1;
+            }
+            p++;
+
+            if (*p == '\0')
+            {
+                if (optind >= argc)
+                {
+                    if (nextIsRate)
+                    {
+                        std::wcerr << "Rate is expected." << std::endl;
+                    }
+                    else if (nextIsNumber)
+                    {
+                        std::wcerr << "Line number is expected." << std::endl;
+                    }
+                    else
+                    {
+                        std::wcerr << "Output file name is expected" << std::endl;
+                    }
+                    return 1;
+                }
+                p = argv[optind++];
+            }
+
+            double rate = 0.0;
+            uintmax_t targetNumLines = 0;
+
+            if (nextIsRate)
+            {
+                if (!TryParseRate(p, rate))
+                {
+                    std::wcerr << "Invalid rate `" << p << "'." << std::endl;
+                    return 1;
+                }
+            }
+            else if (nextIsNumber)
+            {
+                if (!TryParseNumber(p, targetNumLines))
+                {
+                    std::wcerr << "Invalid line number `" << p << "'." << std::endl;
+                    return 1;
+                }
+            }
+
+            if (nextIsRate || nextIsNumber)
+            {
+                if (optind >= argc)
+                {
+                    std::wcerr << "Output file name is expected" << std::endl;
+                    return 1;
+                }
+
+                p = argv[optind++];
+            }
+
+            if (*p == '-')
+            {
+                std::wcerr << "Output file name is expected" << std::endl;
+                return 1;
+            }
+
+            if (nextIsRate)
+            {
+                std::wcout << p << "\tTargetRate\t" << rate << std::endl;
+                outputSpecList.emplace_back(p, rate);
+                if (shuffleOutput)
+                {
+                    std::wcerr << "Target rate is not supported yet with shuffle." << std::endl;
+                    return 1;
+                }
+            }
+            else if (nextIsNumber)
+            {
+                std::wcout << p << "\tTargetNumLines\t" << targetNumLines << std::endl;
+                outputSpecList.emplace_back(p, targetNumLines);
+                if (!shuffleOutput)
+                {
+                    std::wcerr << "Target number of lines is not supported yet without shuffle." << std::endl;
+                    return 1;
+                }
             }
             else
             {
-                outputSpecList.emplace_back(argv[optind++], rate);
+                std::wcout << p << "\tTargetRate\t" << 1.0 << std::endl;
+                outputSpecList.emplace_back(p);
             }
         }
 
@@ -158,31 +250,7 @@ namespace boar
             return 1;
         }
 
-        for (auto& spec : outputSpecList)
-        {
-            if (spec.numberOfLines > 0)
-            {
-                std::wcerr << "Target number of lines is not supported yet." << std::endl;
-                return 1;
-            }
-        }
-
-        for (auto &fileName : inputFileNameList)
-        {
-            std::wcout << "Input file: " << fileName << std::endl;
-        }
-        for (auto &spec : outputSpecList)
-        {
-            if (spec.numberOfLines == 0)
-            {
-                std::wcout << "Output file: " << spec.fileName << " at " << 100.0 * spec.rate << "%" << std::endl;
-            }
-            else
-            {
-                std::wcout << "Output file: " << spec.fileName << " for " << spec.numberOfLines << " lines" << std::endl;
-            }
-        }
-
+        // Verify all the input files exist
         if (!CheckInputFiles(inputFileNameList))
         {
             return 1;
@@ -190,6 +258,7 @@ namespace boar
 
         if (!forceOverwrite)
         {
+            // Verify none of the output files exists
             std::vector<fs::path> outputFileNameList;
             for (auto& spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
             if (!CheckOutputFiles(outputFileNameList))
@@ -197,7 +266,7 @@ namespace boar
                 return 1;
             }
         }
-            
+
         std::srand(static_cast<int>(std::time(nullptr)));
 
         if (shuffleOutput)

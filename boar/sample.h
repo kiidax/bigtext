@@ -17,6 +17,7 @@ namespace boar
         fs::path fileName;
 
     public:
+        OutputSpec(const fs::path &fileName) : fileName(fileName), rate(1.0), numberOfLines(0) {}
         OutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
         OutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
     };
