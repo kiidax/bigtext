@@ -25,7 +25,7 @@ namespace boar
         std::wcout << " -o         sample all lines" << std::endl;
         std::wcout << " -n LINES   sample around n lines" << std::endl;
         std::wcout << " -r RATE    sampling rate. Probability (0.0,1.0] or percent (0,100]%" << std::endl;
-        std::wcout << " OURPUTFILE output file" << std::endl;
+        std::wcout << " OUTPUTFILE output file" << std::endl;
         std::wcout << std::endl;
 
         return 1;
@@ -215,11 +215,6 @@ namespace boar
             {
                 std::wcout << p << "\tTargetRate\t" << rate << std::endl;
                 outputSpecList.emplace_back(p, rate);
-                if (shuffleOutput)
-                {
-                    std::wcerr << "Target rate is not supported yet with shuffle." << std::endl;
-                    return 1;
-                }
             }
             else if (nextIsNumber)
             {

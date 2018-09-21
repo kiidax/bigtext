@@ -115,8 +115,6 @@ namespace boar
     template<typename CharT>
     void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec> &outputSpecList)
     {
-        rnd::mt19937_64 gen(std::time(nullptr));
-
         std::vector<size_t> lineIndexList;
         std::vector<const CharT *> linePositionList;
 
@@ -136,9 +134,9 @@ namespace boar
 
             const CharT *s = reinterpret_cast<const CharT *>(file.data());
             size_t len = file.size() / sizeof(CharT);
+            std::wcout << inputFileName.native() << "\tCharCount\t" << len << std::endl;
 
             linePositionList.push_back(s);
-            std::wcout << inputFileName.native() << "\tCharCount\t" << len << std::endl;
             for (size_t i = 0; i < len; i++)
             {
                 if (s[i] == '\n')
@@ -160,15 +158,18 @@ namespace boar
         // Shuffle lines
 
         size_t numLines = lineIndexList.size();
+        std::cout << "\tLineCount\t" << numLines << std::endl;
         if (lineIndex - inputFileNameList.size() != numLines)
         {
             std::wcerr << "something wrong" << std::endl;
+            return;
         }
-        std::cout << "\tLineCount\t" << numLines << std::endl;
+
+        rnd::mt19937_64 gen(std::time(nullptr));
         rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
         for (size_t i = 0; i < numLines - 1; i++)
         {
-            size_t j = dist(numLines - i);
+            size_t j = i + dist(numLines - i);
             std::swap(lineIndexList[i], lineIndexList[j]);
         }
 
@@ -209,7 +210,7 @@ namespace boar
                 }
 
                 size_t n = lineIndexList[curIndex++];
-                const CharT *first = linePositionList[curIndex];
+                const CharT *first = linePositionList[n];
                 const CharT *last = linePositionList[n + 1];
                 out.write(first, last - first);
             }
