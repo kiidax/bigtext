@@ -44,7 +44,7 @@ namespace boar
         out.open(outputFileName, std::ios::out);
         if (!out.is_open())
         {
-            std::wcerr << "cannot open" << std::endl;
+            std::wcerr << __wcserror(outputFileName.native().c_str());
             return;
         }
         for (auto &kv : sortedKeyValue)

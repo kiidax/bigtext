@@ -6,7 +6,7 @@
 
 #include "boar.h"
 
-int wmain(int argc, wchar_t** argv)
+int wmain(int argc, wchar_t **argv)
 {
     std::setlocale(LC_CTYPE, "");
     return boar::Main(argc, argv);

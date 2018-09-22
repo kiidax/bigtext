@@ -3,6 +3,7 @@
 */
 
 #pragma once
+#include <exception>
 
 namespace boar
 {
@@ -25,23 +26,24 @@ namespace boar
     template <typename CharT>
     void FileLineSample(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
     {
-        rnd::mt19937_64 _gen(std::time(nullptr));
-        rnd::bernoulli_distribution<> _dist(rate);
+        rnd::mt19937_64 gen(std::time(nullptr));
+        rnd::bernoulli_distribution<> dist(rate);
 
-        fs::ofstream _out;
-        _out.open(outputFileName, std::ios::out | std::ios::binary);
-        if (!_out.is_open())
+        fs::ofstream out;
+        out.open(outputFileName, std::ios::out | std::ios::binary);
+        if (!out.is_open())
         {
-            std::wcerr << "cannot open" << std::endl;
+            std::wcerr << __wcserror(outputFileName.native().c_str());
             return;
         }
+
         for (auto& fileName : inputFileNameList)
         {
-            FileLineSourceDefault<CharT>(fileName, [&_dist, &_gen, &_out](const CharT *s, size_t len)
+            FileLineSourceDefault<CharT>(fileName, [&dist, &gen, &out](const CharT *s, size_t len)
             {
-                if (_dist(_gen))
+                if (dist(gen))
                 {
-                    _out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
+                    out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
                 }
             });
         }
@@ -57,47 +59,47 @@ namespace boar
             fs::ofstream out;
         };
 
-        size_t _numOutputs;
-        OutputProgress *_outputProgressList;
-        rnd::mt19937_64 _gen(std::time(nullptr));
-        rnd::uniform_real_distribution<> _dist(0, 1);
+        size_t numOutputs;
+        OutputProgress *outputProgressList;
+        rnd::mt19937_64 gen(std::time(nullptr));
+        rnd::uniform_real_distribution<> dist(0, 1);
 
-        _numOutputs = outputSpecList.size();
-        _outputProgressList = new OutputProgress[_numOutputs];
+        numOutputs = outputSpecList.size();
+        outputProgressList = new OutputProgress[numOutputs];
 
-        for (size_t i = 0; i < _numOutputs; i++)
+        for (size_t i = 0; i < numOutputs; i++)
         {
             auto& spec = outputSpecList[i];
             if (spec.numberOfLines > 0)
             {
                 // TODO: overflow
-                _outputProgressList[i].randomThreshold = 0.0;
+                outputProgressList[i].randomThreshold = 0.0;
             }
             else if (spec.rate >= 0)
             {
-                _outputProgressList[i].randomThreshold = spec.rate;
+                outputProgressList[i].randomThreshold = spec.rate;
             }
             else
             {
                 return;
             }
-            auto &out = _outputProgressList[i].out;
+            auto &out = outputProgressList[i].out;
             out.open(spec.fileName);
             if (!out.is_open())
             {
-                std::wcerr << "cannot open" << std::endl;
+                std::wcerr << __wcserror(spec.fileName.native().c_str());
                 return;
             }
         }
 
         for (auto &fileName : inputPathList)
         {
-            FileLineSourceDefault<CharT>(fileName, [&_dist, &_gen, _outputProgressList, _numOutputs](const CharT *s, size_t len)
+            FileLineSourceDefault<CharT>(fileName, [&dist, &gen, outputProgressList, numOutputs](const CharT *s, size_t len)
             {
-                double t = _dist(_gen);
-                for (int i = 0; i < _numOutputs; i++)
+                double t = dist(gen);
+                for (int i = 0; i < numOutputs; i++)
                 {
-                    auto &prog = _outputProgressList[i];
+                    auto &prog = outputProgressList[i];
                     if (t < prog.randomThreshold)
                     {
                         prog.out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
@@ -109,7 +111,7 @@ namespace boar
             });
         }
 
-        delete[] _outputProgressList;
+        delete[] outputProgressList;
     }
 
     template<typename CharT>
@@ -128,7 +130,7 @@ namespace boar
             file.open(inputFileName);
             if (!file.is_open())
             {
-                std::wcerr << "error" << std::endl;
+                std::wcerr << __wcserror(inputFileName.native().c_str());
                 return;
             }
 
@@ -198,7 +200,7 @@ namespace boar
             out.open(outputSpec.fileName, std::ios::out | std::ios::binary);
             if (!out.is_open())
             {
-                std::wcerr << "write error" << std::endl;
+                std::wcerr << __wcserror(outputSpec.fileName.native().c_str());
                 return;
             }
 

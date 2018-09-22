@@ -27,7 +27,7 @@ namespace boar
         }
         else
         {
-            std::cout << "error" << std::endl;
+            std::wcerr << __wcserror(fileName.native().c_str());
         }
     }
 

@@ -131,17 +131,18 @@ namespace boar
                 return 1;
             }
 
+            if (hasOutputAll)
+            {
+                std::wcerr << "Another output after -o option is not allowed." << std::endl;
+                return 1;
+            }
+
             switch (*p)
             {
             case 'n':
                 nextIsNumber = true;
                 break;
             case 'o':
-                if (hasOutputAll)
-                {
-                    std::wcerr << "More than one -o options are not allowed." << std::endl;
-                    return 1;
-                }
                 hasOutputAll = true;
                 break;
             case 'r':
@@ -218,7 +219,7 @@ namespace boar
             }
             else if (nextIsNumber)
             {
-                std::wcout << p << "\tTargetNumLines\t" << targetNumLines << std::endl;
+                std::wcout << p << "\tTargetLineCount\t" << targetNumLines << std::endl;
                 outputSpecList.emplace_back(p, targetNumLines);
                 if (!shuffleOutput)
                 {
