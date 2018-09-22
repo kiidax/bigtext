@@ -17,6 +17,7 @@ namespace boar
         std::wcout << "Estimate number of lines in the file by reading only the first 100MB." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         full count mode" << std::endl;
+        std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
         std::wcout << std::endl;
         return 1;

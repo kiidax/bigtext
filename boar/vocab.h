@@ -8,6 +8,17 @@
 
 namespace boar
 {
+    namespace fs = boost::filesystem;
+
+    struct VocabOutputSpec
+    {
+        fs::path fileName;
+        int column;
+
+        VocabOutputSpec(const fs::path &fileName) : VocabOutputSpec(fileName, 0) {}
+        VocabOutputSpec(const fs::path &fileName, int column) : fileName(fileName), column(column) {}
+    };
+
     template <typename CharT>
     void FileCountVocab(const std::vector<fs::path> &inputFileNameList, fs::path& outputFileName)
     {

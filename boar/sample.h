@@ -11,16 +11,16 @@ namespace boar
     namespace ios = boost::iostreams;
     namespace rnd = boost::random;
 
-    struct OutputSpec
+    struct SampleOutputSpec
     {
+        fs::path fileName;
         uintmax_t numberOfLines;
         double rate;
-        fs::path fileName;
 
     public:
-        OutputSpec(const fs::path &fileName) : fileName(fileName), rate(1.0), numberOfLines(0) {}
-        OutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
-        OutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
+        SampleOutputSpec(const fs::path &fileName) : fileName(fileName), rate(1.0), numberOfLines(0) {}
+        SampleOutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
+        SampleOutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
     };
 
     template <typename CharT>
@@ -50,7 +50,7 @@ namespace boar
     }
 
     template <typename CharT>
-    void FileLineSample(const std::vector<fs::path> &inputPathList, const std::vector<OutputSpec> &outputSpecList)
+    void FileLineSample(const std::vector<fs::path> &inputPathList, const std::vector<SampleOutputSpec> &outputSpecList)
     {
         struct OutputProgress
         {
@@ -115,7 +115,7 @@ namespace boar
     }
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<OutputSpec> &outputSpecList)
+    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList)
     {
         std::vector<size_t> lineIndexList;
         std::vector<const CharT *> linePositionList;

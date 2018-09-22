@@ -40,7 +40,7 @@ namespace boar
         bool hasOutputAll = false;
         bool quickMode = false;
         std::vector<fs::path> inputFileNameList;
-        std::vector<OutputSpec> outputSpecList;
+        std::vector<SampleOutputSpec> outputSpecList;
 
         if (argc <= 1)
         {
@@ -121,7 +121,7 @@ namespace boar
             bool nextIsNumber = false;
             if (*p++ != '-')
             {
-                std::wcerr << "-r or -n is expected." << std::endl;
+                std::wcerr << "-r, -n or -o is expected." << std::endl;
                 return 1;
             }
 
