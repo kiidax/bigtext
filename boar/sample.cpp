@@ -264,34 +264,26 @@ namespace boar
 
         std::srand(static_cast<int>(std::time(nullptr)));
 
+        boost::timer::cpu_timer timer;
+
         if (shuffleOutput)
         {
-            DumpProfile([&inputFileNameList, &outputSpecList]()
-            {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList);
-                return true;
-            });
+            FileShuffleLines<char>(inputFileNameList, outputSpecList);
         }
         else
         {
             if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
             {
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
-                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
-                {
-                    FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
-                    return false;
-                });
+                FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
             }
             else
             {
-                boar::DumpProfile([&inputFileNameList, &outputSpecList]()
-                {
-                    FileLineSample<char>(inputFileNameList, outputSpecList);
-                    return false;
-                });
+                FileLineSample<char>(inputFileNameList, outputSpecList);
             }
         }
+
+        std::cerr << timer.format() << std::endl;
 
         return 0;
     }

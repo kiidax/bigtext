@@ -86,15 +86,13 @@ namespace boar
         {
             if (fullCountMode)
             {
-                status = DumpProfile([&fileName]()
-                {
-                    // 1059203072      404601
-                    // 36,762,348,544 bytes.
-                    // AMD E2-7110
-                    uintmax_t lineCount = FileCountLines<char>(fileName);
-                    std::wcout << fileName.native() << "\tLineCount\t" << lineCount << std::endl;
-                    return true;
-                });
+                boost::timer::cpu_timer timer;
+                // 1059203072      404601
+                // 36,762,348,544 bytes.
+                // AMD E2-7110
+                uintmax_t lineCount = FileCountLines<char>(fileName);
+                std::cerr << timer.format() << std::endl;
+                std::wcout << fileName.native() << "\tLineCount\t" << lineCount << std::endl;
             }
             else
             {

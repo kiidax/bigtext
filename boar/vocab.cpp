@@ -82,24 +82,21 @@ namespace boar
 
         int status;
 
+        boost::timer::cpu_timer timer;
+
         if (fullCountMode)
         {
-            status = DumpProfile([&inputFileNameList]()
-            {
-                std::cout << "multi" << std::endl;
-                FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
-                return true;
-            });
+            std::cout << "multi" << std::endl;
+            FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
+            status = 0;
         }
         else
         {
-            status = DumpProfile([&inputFileNameList]()
-            {
-                FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
-                return true;
-            });
+            FileCountVocab<char>(inputFileNameList, fs::path(L"vocab.txt"));
             status = 0;
         }
+
+        std::cerr << timer.format() << std::endl;
 
         return status;
     }
