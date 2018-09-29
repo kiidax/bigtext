@@ -73,12 +73,23 @@ namespace boar
 
     bool CheckOutputFiles(const std::vector<fs::path>& outputFileNameList)
     {
-        for (auto& fileName : outputFileNameList)
+        for (auto &it = outputFileNameList.cbegin(); it != outputFileNameList.cend(); ++it)
         {
+            auto &fileName = *it;
             if (fs::exists(fileName))
             {
-                std::wcerr << "`" << fileName.wstring() << "' already exists." << std::endl;
+                std::wcerr << "`" << fileName.native() << "' already exists." << std::endl;
                 return false;
+            }
+
+            for (auto &it2 = outputFileNameList.cbegin(); it2 != it; ++it2)
+            {
+                auto &fileName2 = *it2;
+                if (fileName == fileName2)
+                {
+                    std::wcerr << "Duplicated output file `" << fileName.native() << "'." << std::endl;
+                    return false;
+                }
             }
         }
         return true;
