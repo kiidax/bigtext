@@ -11,3 +11,17 @@ int wmain(int argc, wchar_t **argv)
     std::setlocale(LC_CTYPE, "");
     return boar::Main(argc, argv);
 }
+
+namespace boar
+{
+    uintmax_t GetPhysicalMemorySize()
+    {
+        MEMORYSTATUSEX memInfo;
+        memInfo.dwLength = sizeof(memInfo);
+        if (GlobalMemoryStatusEx(&memInfo))
+        {
+            return static_cast<uintmax_t>(memInfo.ullTotalPhys);
+        }
+        return 0;
+    }
+}

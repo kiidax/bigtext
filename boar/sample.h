@@ -218,4 +218,10 @@ namespace boar
             }
         }
     }
+
+    template<typename CharT>
+    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize)
+    {
+        std::wcerr << "Interleaving mode is not supported yet." << std::endl;
+    }
 }

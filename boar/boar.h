@@ -16,6 +16,7 @@ namespace boar {
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
     bool TryParseRate(const std::wstring &s, double &rate);
     bool TryParseNumber(const std::wstring &s, uintmax_t &numberOfLines);
+    uintmax_t GetPhysicalMemorySize();
 
     template <typename CharT>
     bool IsNewLine(CharT ch)

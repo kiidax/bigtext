@@ -16,7 +16,7 @@ namespace boar
     {
         std::wcout << "Usage: boar sample [OPTION]... INPUTFILE... [[-o|-n LINES|-r RATE] OUTPUTFILE]..." << std::endl;
         std::wcout << std::endl;
-        std::wcout << " -c         no simple mode" << std::endl;
+        std::wcout << " -c N       shuffle output files with N interleaving" << std::endl;
         std::wcout << " -f         force overwrite output files" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
@@ -34,7 +34,7 @@ namespace boar
     int SampleCommand(int argc, wchar_t *argv[])
     {
         int optind = 1;
-        bool noSimpleMode = false;
+        uintmax_t interleavingSize = 0;
         bool forceOverwrite = false;
         bool shuffleOutput = false;
         bool hasOutputAll = false;
@@ -64,12 +64,13 @@ namespace boar
                 return 1;
             }
 
+            bool nextIsNumber = false;
             while (*p != '\0')
             {
                 switch (*p)
                 {
                 case 'c':
-                    noSimpleMode = true;
+                    nextIsNumber = true;
                     break;
                 case 'f':
                     forceOverwrite = true;
@@ -92,7 +93,33 @@ namespace boar
                     return 1;
                 }
                 ++p;
+
+                if (nextIsNumber)
+                {
+                    if (*p == '\0')
+                    {
+                        if (optind >= argc)
+                        {
+                            std::wcerr << "Interlaving size is expected." << std::endl;
+                            return 1;
+                        }
+                        p = argv[optind++];
+                    }
+
+                    if (!TryParseNumber(p, interleavingSize))
+                    {
+                        std::wcerr << "Invalid interleaving size." << std::endl;
+                        return 1;
+                    }
+                    break;
+                }
             }
+        }
+
+        if (interleavingSize > 0 && !shuffleOutput)
+        {
+            std::wcerr << "Interleaving size is allowed only in the shuffle mode." << std::endl;
+            return 1;
         }
 
         while (optind < argc)
@@ -256,7 +283,7 @@ namespace boar
         {
             // Verify none of the output files exists
             std::vector<fs::path> outputFileNameList;
-            for (auto& spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
+            for (auto &spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
             if (!CheckOutputFiles(outputFileNameList))
             {
                 return 1;
@@ -269,11 +296,38 @@ namespace boar
 
         if (shuffleOutput)
         {
-            FileShuffleLines<char>(inputFileNameList, outputSpecList);
+            if (interleavingSize == 0)
+            {
+                uintmax_t memSize = GetPhysicalMemorySize();
+                uintmax_t usableSize = memSize * 8 / 10;
+                if (usableSize == 0)
+                {
+                    interleavingSize = 1;
+                }
+                else
+                {
+                    uintmax_t size = 0;
+                    for (auto &fileName : inputFileNameList)
+                    {
+                        size += fs::file_size(fileName);
+                    }
+                    interleavingSize = (size + usableSize) / usableSize; // interleavingSize must be >= 1.
+                    std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
+                }
+            }
+
+            if (interleavingSize == 1)
+            {
+                FileShuffleLines<char>(inputFileNameList, outputSpecList);
+            }
+            else
+            {
+                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize);
+            }
         }
         else
         {
-            if (!noSimpleMode && outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+            if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
             {
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
                 FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
