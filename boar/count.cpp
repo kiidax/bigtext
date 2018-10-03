@@ -111,7 +111,7 @@ namespace boar
                 }
                 else
                 {
-                    double estLineCount = info.stdLineSize == 0 ? 1.0 : info.avgLineSize; // We assume the char size is 1.
+                    double estLineCount = info.avgLineSize == 0 ? 1.0 : (size / info.avgLineSize); // We assume the char size is 1.
                     std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
                 }
 
