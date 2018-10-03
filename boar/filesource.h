@@ -18,8 +18,6 @@ namespace boar
     template <typename CharT>
     void FileLineSourceDefault(const fs::path &fileName, std::function<void(const CharT *, size_t)> callback)
     {
-        std::wcout << sizeof(callback) << std::endl;
-
         uintmax_t lineCount = 0;
         std::basic_string<CharT> _previousPartialLine;
 

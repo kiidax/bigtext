@@ -296,24 +296,29 @@ namespace boar
 
         if (shuffleOutput)
         {
-            uintmax_t memSize = GetPhysicalMemorySize();
-            size_t usableSize = memSize * 8 / 10;
+            size_t maxBufferSize = 0;
 
-            if (interleavingSize == 0)
+            if (interleavingSize != 1)
             {
-                if (usableSize == 0)
+                uintmax_t memSize = GetPhysicalMemorySize();
+                maxBufferSize = memSize * 8 / 10;
+
+                if (interleavingSize == 0)
                 {
-                    interleavingSize = 1;
-                }
-                else
-                {
-                    uintmax_t size = 0;
-                    for (auto &fileName : inputFileNameList)
+                    if (maxBufferSize == 0)
                     {
-                        size += fs::file_size(fileName);
+                        interleavingSize = 1;
                     }
-                    interleavingSize = (size + usableSize) / usableSize; // interleavingSize must be >= 1.
-                    std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
+                    else
+                    {
+                        uintmax_t size = 0;
+                        for (auto &fileName : inputFileNameList)
+                        {
+                            size += fs::file_size(fileName);
+                        }
+
+                        interleavingSize = (size + maxBufferSize) / maxBufferSize; // interleavingSize must be >= 1.
+                    }
                 }
             }
 
@@ -323,7 +328,7 @@ namespace boar
             }
             else
             {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize, usableSize);
+                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize, maxBufferSize);
             }
         }
         else

@@ -20,8 +20,12 @@ namespace boar
         memInfo.dwLength = sizeof(memInfo);
         if (GlobalMemoryStatusEx(&memInfo))
         {
-            std::wcout << memInfo.ullTotalPhys << std::endl;
-            return static_cast<uintmax_t>(memInfo.ullTotalPhys);
+            uintmax_t res = static_cast<uintmax_t>(memInfo.ullTotalPhys);
+            std::wcout << "\tPhysicalMemorySize\t" << res << std::endl;
+#if !_WIN64
+            if (res >= 1 << 31) res = 1 << 31;
+#endif
+            return res;
         }
         return 0;
     }

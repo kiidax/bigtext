@@ -223,8 +223,9 @@ namespace boar
     void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize, size_t maxBufferSize)
     {
         std::wcerr << "Interleaving mode is not supported yet." << std::endl;
+        std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
         std::vector<const CharT *> linePositionList;
-        std::wcout << maxBufferSize << " bytes" << std::endl;
+        std::wcout << "\tMaxBufferSize\t" << maxBufferSize << std::endl;
         CharT *buffer = new CharT[maxBufferSize / sizeof(CharT)];
 
         size_t lineIndex = 0;
@@ -233,20 +234,19 @@ namespace boar
         for (uintmax_t sliceStart = interleavingSize; sliceStart > 0; --sliceStart)
         {
             uintmax_t currentSlice = sliceStart;
-            std::wcout << "CurrentSlice: " << currentSlice << std::endl;
+            std::wcout << "\tCurrentSlice\t" << currentSlice << std::endl;
 
             for (auto &inputFileName : inputFileNameList)
             {
                 linePositionList.push_back(p);
-                std::wcerr << inputFileName.native() << std::endl;
+                std::wcout << inputFileName.native() << "\tReading" << std::endl;
                 FileLineSourceDefault<CharT>(inputFileName, [&p, last, &currentSlice, &linePositionList, interleavingSize](const CharT *s, size_t len)
                 {
                     if (len > 0)
                     {
                         if (--currentSlice == 0)
                         {
-                            //std::wcout << (void*)p << " " << (void*)s << " " << (void*)last << " " << len << std::endl;
-                            memcpy(p, s, len * sizeof(CharT));
+                            std::memcpy(p, s, len * sizeof(CharT));
                             p += len;
                             linePositionList.push_back(p);
                             currentSlice = interleavingSize;
