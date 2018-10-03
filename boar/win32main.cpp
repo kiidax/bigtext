@@ -20,6 +20,7 @@ namespace boar
         memInfo.dwLength = sizeof(memInfo);
         if (GlobalMemoryStatusEx(&memInfo))
         {
+            std::wcout << memInfo.ullTotalPhys << std::endl;
             return static_cast<uintmax_t>(memInfo.ullTotalPhys);
         }
         return 0;

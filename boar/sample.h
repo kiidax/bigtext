@@ -220,8 +220,107 @@ namespace boar
     }
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize)
+    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize, size_t maxBufferSize)
     {
         std::wcerr << "Interleaving mode is not supported yet." << std::endl;
+        std::vector<const CharT *> linePositionList;
+        std::wcout << maxBufferSize << " bytes" << std::endl;
+        CharT *buffer = new CharT[maxBufferSize / sizeof(CharT)];
+
+        size_t lineIndex = 0;
+        CharT *p = buffer;
+        CharT *last = buffer + maxBufferSize / sizeof(CharT);
+        for (uintmax_t sliceStart = interleavingSize; sliceStart > 0; --sliceStart)
+        {
+            uintmax_t currentSlice = sliceStart;
+            std::wcout << "CurrentSlice: " << currentSlice << std::endl;
+
+            for (auto &inputFileName : inputFileNameList)
+            {
+                linePositionList.push_back(p);
+                std::wcerr << inputFileName.native() << std::endl;
+                FileLineSourceDefault<CharT>(inputFileName, [&p, last, &currentSlice, &linePositionList, interleavingSize](const CharT *s, size_t len)
+                {
+                    if (len > 0)
+                    {
+                        if (--currentSlice == 0)
+                        {
+                            //std::wcout << (void*)p << " " << (void*)s << " " << (void*)last << " " << len << std::endl;
+                            memcpy(p, s, len * sizeof(CharT));
+                            p += len;
+                            linePositionList.push_back(p);
+                            currentSlice = interleavingSize;
+                        }
+                    }
+                });
+            }
+
+            // Shuffle lines
+
+            std::vector<size_t> lineIndexList;
+            uintmax_t numLines = linePositionList.size() - 1;
+            std::wcout << "Shuffling " << numLines << " lines" << std::endl;
+            std::wcout.flush();
+            lineIndexList.resize(numLines);
+            for (size_t i = 0; i != numLines; i++)
+            {
+                lineIndexList[i] = i;
+            }
+
+            rnd::mt19937_64 gen(std::time(nullptr));
+            rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
+            for (size_t i = 0; i < numLines - 1; i++)
+            {
+                size_t j = i + dist(numLines - i);
+                std::swap(lineIndexList[i], lineIndexList[j]);
+            }
+
+            // Write lines
+
+            size_t curIndex = 0;
+            for (auto &outputSpec : outputSpecList)
+            {
+                uintmax_t lineCount;
+                if (outputSpec.numberOfLines > 0)
+                {
+                    lineCount = outputSpec.numberOfLines;
+                }
+                else if (outputSpec.rate >= 1.0)
+                {
+                    lineCount = numLines;
+                }
+                else
+                {
+                    lineCount = static_cast<uintmax_t>(numLines * outputSpec.rate + 0.5);
+                }
+
+                std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
+
+                fs::basic_ofstream<CharT> out;
+                out.open(outputSpec.fileName, std::ios::out | std::ios::binary | std::ios::app);
+                if (!out.is_open())
+                {
+                    std::wcerr << __wcserror(outputSpec.fileName.native().c_str());
+                    return;
+                }
+
+                for (uintmax_t i = 0; i < lineCount; i++)
+                {
+                    if (curIndex >= numLines)
+                    {
+                        break;
+                    }
+
+                    size_t n = lineIndexList[curIndex++];
+                    const CharT *first = linePositionList[n];
+                    const CharT *last = linePositionList[n + 1];
+                    out.write(first, last - first);
+                }
+            }
+
+            linePositionList.clear();
+        }
+
+        delete[] buffer;
     }
 }

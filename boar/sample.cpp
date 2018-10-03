@@ -296,10 +296,11 @@ namespace boar
 
         if (shuffleOutput)
         {
+            uintmax_t memSize = GetPhysicalMemorySize();
+            size_t usableSize = memSize * 8 / 10;
+
             if (interleavingSize == 0)
             {
-                uintmax_t memSize = GetPhysicalMemorySize();
-                uintmax_t usableSize = memSize * 8 / 10;
                 if (usableSize == 0)
                 {
                     interleavingSize = 1;
@@ -322,7 +323,7 @@ namespace boar
             }
             else
             {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize);
+                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize, usableSize);
             }
         }
         else
