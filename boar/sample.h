@@ -195,7 +195,7 @@ namespace boar
             }
 
             std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
-            
+
             fs::basic_ofstream<CharT> out;
             out.open(outputSpec.fileName, std::ios::out | std::ios::binary);
             if (!out.is_open())
@@ -220,7 +220,7 @@ namespace boar
     }
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize, size_t maxBufferSize)
+    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize)
     {
         std::wcerr << "Interleaving mode is not supported yet." << std::endl;
         std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
@@ -233,14 +233,15 @@ namespace boar
         CharT *last = buffer + maxBufferSize / sizeof(CharT);
         for (uintmax_t sliceStart = interleavingSize; sliceStart > 0; --sliceStart)
         {
+            std::wcout << "\tCurrentSlice\t" << sliceStart << std::endl;
             uintmax_t currentSlice = sliceStart;
-            std::wcout << "\tCurrentSlice\t" << currentSlice << std::endl;
+            uintmax_t lineCount = 0;
 
             for (auto &inputFileName : inputFileNameList)
             {
                 linePositionList.push_back(p);
                 std::wcout << inputFileName.native() << "\tReading" << std::endl;
-                FileLineSourceDefault<CharT>(inputFileName, [&p, last, &currentSlice, &linePositionList, interleavingSize](const CharT *s, size_t len)
+                FileLineSourceDefault<CharT>(inputFileName, [&p, last, &currentSlice, &linePositionList, &lineCount, interleavingSize](const CharT *s, size_t len)
                 {
                     if (len > 0)
                     {
@@ -251,6 +252,7 @@ namespace boar
                             linePositionList.push_back(p);
                             currentSlice = interleavingSize;
                         }
+                        lineCount++;
                     }
                 });
             }
