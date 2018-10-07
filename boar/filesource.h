@@ -126,4 +126,67 @@ namespace boar
             }
         });
     }
+
+    template <typename CharT, CharT LINE_SEPARATOR = '\n', CharT COLUMN_SEPARATOR = '\t'>
+    void FileWordSourceWithColumnDefault(const fs::path &fileName, std::function<void(const CharT *, size_t, int column)> callback)
+    {
+        uintmax_t lineCount = 0;
+        std::basic_string<CharT> _previousPartialLine;
+
+        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
+        {
+            const CharT *s = reinterpret_cast<const CharT *>(_s);
+            int column = 0;
+            size_t len = _len / sizeof(CharT);
+
+            if (s == nullptr)
+            {
+                if (_previousPartialLine.size() > 0)
+                {
+                    callback(_previousPartialLine.data(), _previousPartialLine.size(), column);
+                    lineCount++;
+                }
+            }
+            else
+            {
+                size_t c = 0;
+                const CharT *last = reinterpret_cast<const CharT *>(s + len);
+                const CharT *p = reinterpret_cast<const CharT *>(s);
+                const CharT* lineStart = p;
+
+                while (p != last)
+                {
+                    if (IsWhiteSpace(*p))
+                    {
+                        if (_previousPartialLine.size() > 0)
+                        {
+                            _previousPartialLine.append(lineStart, p);
+                            callback(_previousPartialLine.data(), _previousPartialLine.size(), column);
+                            _previousPartialLine.clear();
+                        }
+                        else if (p - lineStart > 0)
+                        {
+                            callback(lineStart, p - lineStart, column);
+                        }
+
+                        if (*p == LINE_SEPARATOR)
+                        {
+                            column = 0;
+                            c++;
+                        }
+                        else if (*p == COLUMN_SEPARATOR)
+                        {
+                            column++;
+                        }
+
+                        lineStart = p + 1;
+                    }
+
+                    p++;
+                }
+                _previousPartialLine.append(lineStart, last);
+                lineCount += c;
+            }
+        });
+    }
 }

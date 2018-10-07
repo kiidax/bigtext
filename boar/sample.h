@@ -195,7 +195,7 @@ namespace boar
             }
 
             std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
-
+            
             fs::basic_ofstream<CharT> out;
             out.open(outputSpec.fileName, std::ios::out | std::ios::binary);
             if (!out.is_open())
