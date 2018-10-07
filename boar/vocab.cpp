@@ -21,7 +21,7 @@ namespace boar
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
         std::wcout << " -o         count words in all columns" << std::endl;
-        std::wcout << " -m COLUMN  count words in COLUMN-th column" << std::endl;
+        std::wcout << " -c COLUMN  count words in COLUMN-th column" << std::endl;
         std::wcout << " OUTPUTFILE output file" << std::endl;
         std::wcout << std::endl;
         return 1;
@@ -72,7 +72,7 @@ namespace boar
                 case 'q':
                     quickMode = true;
                     break;
-                case 'm':
+                case 'c':
                 case 'o':
                     std::wcerr << "No input files." << std::endl;
                     return 1;
@@ -127,7 +127,7 @@ namespace boar
 
             switch (*p)
             {
-            case 'm':
+            case 'c':
                 nextIsNumber = true;
                 break;
             case 'o':
@@ -184,7 +184,7 @@ namespace boar
             if (nextIsNumber)
             {
                 std::wcout << p << "\tTargetColumn\t" << columnNumber << std::endl;
-                outputSpecList.emplace_back(p, static_cast<int>(columnNumber));
+                outputSpecList.emplace_back(p, static_cast<int>(columnNumber - 1));
             }
             else
             {
@@ -226,20 +226,26 @@ namespace boar
 
         boost::timer::cpu_timer timer;
 
-        if (outputSpecList.size() == 1 && outputSpecList[0].column == 0)
+        if (outputSpecList.size() == 1)
         {
-            // Count all columns.
-            auto &fileName = outputSpecList[0].fileName;
-            FileCountVocab<char>(inputFileNameList, fileName);
-            status = 0;
+            if (outputSpecList[0].column == -1)
+            {
+                // Count all columns.
+                auto &fileName = outputSpecList[0].fileName;
+                FileCountVocab<char>(inputFileNameList, fileName);
+                status = 0;
+            }
+            else
+            {
+                // Count one column.
+                FileCountVocab<char>(inputFileNameList, outputSpecList[0]);
+                status = 0;
+            }
         }
         else
         {
-            std::cout << "multi" << std::endl;
-            for (auto &spec : outputSpecList)
-            {
-                FileCountVocab<char>(inputFileNameList, spec.fileName);
-            }
+            // Count specified columns.
+            FileCountVocab<char>(inputFileNameList, outputSpecList);
             status = 0;
         }
 
