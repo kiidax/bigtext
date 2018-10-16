@@ -6,6 +6,7 @@
 
 #include "boar.h"
 #include "filesource.h"
+#include "count.h"
 #include "sample.h"
 
 namespace boar
@@ -29,6 +30,50 @@ namespace boar
         std::wcout << std::endl;
 
         return 1;
+    }
+
+    static bool HasNumberOfLines(const std::vector<SampleOutputSpec> &outputSpecList)
+    {
+        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines != 0; });
+    }
+
+    static void ConvertToRate(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
+    {
+        for (auto &spec : outputSpecList)
+        {
+            if (spec.numberOfLines != 0)
+            {
+                spec.rate = static_cast<double>(spec.numberOfLines) / totalNumberOfLines;
+                spec.numberOfLines = 0;
+                std::wcout << spec.fileName.native() << "\tRate\t" << spec.rate << std::endl;
+            }
+        }
+    }
+
+    template <typename CharT>
+    static double GuessTotalNumberOfLines(const std::vector<fs::path> &inputFileNameList)
+    {
+        double totalNumberOfLines = 0;
+
+        for (auto &fileName : inputFileNameList)
+        {
+            GuessLineInfo info = FileStatLines<CharT>(fileName);
+            double estLineCount;
+            if (info.isAccurate)
+            {
+                std::wcout << fileName.native() << "\tEstLineCount\t" << info.lineCount << std::endl;
+                estLineCount = static_cast<double>(info.lineCount);
+            }
+            else
+            {
+                uintmax_t size = fs::file_size(fileName);
+                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof (CharT) * info.avgLineSize));
+                std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
+            }
+            totalNumberOfLines += estLineCount;
+        }
+
+        return totalNumberOfLines;
     }
 
     int SampleCommand(int argc, wchar_t *argv[])
@@ -248,11 +293,6 @@ namespace boar
             {
                 std::wcout << p << "\tTargetLineCount\t" << targetNumLines << std::endl;
                 outputSpecList.emplace_back(p, targetNumLines);
-                if (!shuffleOutput)
-                {
-                    std::wcerr << "Target number of lines is not supported yet without shuffle." << std::endl;
-                    return 1;
-                }
             }
             else
             {
@@ -327,9 +367,17 @@ namespace boar
         }
         else
         {
+            if (HasNumberOfLines(outputSpecList))
+            {
+                std::cout << "Target number of lines is specified. Guessing number of lines." << std::endl;
+                double totalNumberOfLines = GuessTotalNumberOfLines(inputFileNameList);
+                ConvertToRate(outputSpecList, totalNumberOfLines);
+            }
+
             if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
             {
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
+                assert(outputSpecList[0].numberOfLines == 0);
                 FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
             }
             else
