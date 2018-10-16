@@ -67,7 +67,7 @@ namespace boar
             else
             {
                 uintmax_t size = fs::file_size(fileName);
-                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof (CharT) * info.avgLineSize));
+                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof(CharT) * info.avgLineSize));
                 std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
             }
             totalNumberOfLines += estLineCount;
@@ -376,7 +376,7 @@ namespace boar
             if (HasNumberOfLines(outputSpecList))
             {
                 std::cout << "Target number of lines is specified. Guessing number of lines." << std::endl;
-                double totalNumberOfLines = GuessTotalNumberOfLines(inputFileNameList);
+                double totalNumberOfLines = GuessTotalNumberOfLines<char>(inputFileNameList);
                 ConvertToRate(outputSpecList, totalNumberOfLines);
             }
 

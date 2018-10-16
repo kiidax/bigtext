@@ -23,6 +23,28 @@ namespace boar
         return 1;
     }
 
+    template <typename CharT>
+    static void DumpFileStat(const fs::path fileName)
+    {
+        GuessLineInfo info = FileStatLines<CharT>(fileName);
+        std::wcout << fileName.native() << "\tMinLineSize\t" << info.minLineSize << std::endl;
+        std::wcout << fileName.native() << "\tMaxLineSize\t" << info.maxLineSize << std::endl;
+        std::wcout << fileName.native() << "\tAvgLineSize\t" << std::fixed << std::setprecision(2) << info.avgLineSize << std::endl;
+        std::wcout << fileName.native() << "\tStdLineSize\t" << info.stdLineSize << std::endl;
+        std::wcout << fileName.native() << "\tUsedLineCount\t" << info.lineCount << std::endl;
+        uintmax_t size = fs::file_size(fileName);
+        std::wcout << fileName.native() << "\tFileSize\t" << size << std::endl;
+        if (info.isAccurate)
+        {
+            std::wcout << fileName.native() << "\tEstLineCount\t" << info.lineCount << std::endl;
+        }
+        else
+        {
+            double estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof(CharT) * info.avgLineSize));
+            std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
+        }
+    }
+
     int CountCommand(int argc, wchar_t *argv[])
     {
         int optind = 1;
@@ -97,24 +119,7 @@ namespace boar
             }
             else
             {
-                GuessLineInfo info = FileStatLines<char>(fileName);
-                std::wcout << fileName.native() << "\tMinLineSize\t" << info.minLineSize << std::endl;
-                std::wcout << fileName.native() << "\tMaxLineSize\t" << info.maxLineSize << std::endl;
-                std::wcout << fileName.native() << "\tAvgLineSize\t" << std::fixed << std::setprecision(2) << info.avgLineSize << std::endl;
-                std::wcout << fileName.native() << "\tStdLineSize\t" << info.stdLineSize << std::endl;
-                std::wcout << fileName.native() << "\tUsedLineCount\t" << info.lineCount << std::endl;
-                uintmax_t size = fs::file_size(fileName);
-                std::wcout << fileName.native() << "\tFileSize\t" << size << std::endl;
-                if (info.isAccurate)
-                {
-                    std::wcout << fileName.native() << "\tEstLineCount\t" << info.lineCount << std::endl;
-                }
-                else
-                {
-                    double estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof (char) * info.avgLineSize));
-                    std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
-                }
-
+                DumpFileStat<char>(fileName);
                 status = 0;
             }
         }
