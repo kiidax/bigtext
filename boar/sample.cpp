@@ -370,7 +370,7 @@ namespace boar
             if (HasNumberOfLines(outputSpecList))
             {
                 std::cout << "Target number of lines is specified. Guessing number of lines." << std::endl;
-                double totalNumberOfLines = GuessTotalNumberOfLines(inputFileNameList);
+                double totalNumberOfLines = GuessTotalNumberOfLines<char>(inputFileNameList);
                 ConvertToRate(outputSpecList, totalNumberOfLines);
             }
 
