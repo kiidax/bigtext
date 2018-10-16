@@ -67,7 +67,7 @@ namespace boar
             else
             {
                 uintmax_t size = fs::file_size(fileName);
-                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof (CharT) * info.avgLineSize));
+                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof(CharT) * info.avgLineSize));
                 std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
             }
             totalNumberOfLines += estLineCount;
