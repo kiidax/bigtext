@@ -13,11 +13,11 @@ namespace boar
 
     struct SampleOutputSpec
     {
+    public:
         fs::path fileName;
         uintmax_t numberOfLines;
         double rate;
 
-    public:
         SampleOutputSpec(const fs::path &fileName) : fileName(fileName), rate(1.0), numberOfLines(0) {}
         SampleOutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
         SampleOutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
@@ -70,10 +70,9 @@ namespace boar
         for (size_t i = 0; i < numOutputs; i++)
         {
             auto& spec = outputSpecList[i];
-            if (spec.numberOfLines > 0)
+            if (spec.numberOfLines != 0)
             {
-                // TODO: overflow
-                outputProgressList[i].randomThreshold = 0.0;
+                throw std::logic_error("Taget lines is not allowed.");
             }
             else if (spec.rate >= 0)
             {
@@ -81,7 +80,7 @@ namespace boar
             }
             else
             {
-                return;
+                throw std::logic_error("None of taget lines or rate is specified.");
             }
             auto &out = outputProgressList[i].out;
             out.open(spec.fileName);
