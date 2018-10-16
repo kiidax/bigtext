@@ -34,7 +34,7 @@ namespace boar
 
     static bool HasNumberOfLines(const std::vector<SampleOutputSpec> &outputSpecList)
     {
-        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines > 0; });
+        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines != 0; });
     }
 
     static void ConvertToRate(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
@@ -50,13 +50,14 @@ namespace boar
         }
     }
 
+    template <typename CharT>
     static double GuessTotalNumberOfLines(const std::vector<fs::path> &inputFileNameList)
     {
         double totalNumberOfLines = 0;
 
         for (auto &fileName : inputFileNameList)
         {
-            GuessLineInfo info = FileStatLines<char>(fileName);
+            GuessLineInfo info = FileStatLines<CharT>(fileName);
             double estLineCount;
             if (info.isAccurate)
             {
@@ -66,7 +67,7 @@ namespace boar
             else
             {
                 uintmax_t size = fs::file_size(fileName);
-                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / info.avgLineSize); // We assume the char size is 1.
+                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof (CharT) * info.avgLineSize));
                 std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
             }
             totalNumberOfLines += estLineCount;
