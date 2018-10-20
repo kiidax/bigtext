@@ -357,7 +357,8 @@ namespace boar
                             size += fs::file_size(fileName);
                         }
 
-                        interleavingSize = (size + maxBufferSize) / maxBufferSize; // interleavingSize must be >= 1.
+                        interleavingSize = (size + maxBufferSize) / maxBufferSize;
+                        assert(interleavingSize >= 1);
                     }
                 }
             }

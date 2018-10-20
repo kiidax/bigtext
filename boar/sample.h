@@ -225,11 +225,11 @@ namespace boar
         std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
         std::vector<const CharT *> linePositionList;
         std::wcout << "\tMaxBufferSize\t" << maxBufferSize << std::endl;
-        CharT *buffer = new CharT[maxBufferSize / sizeof(CharT)];
+        heap_vector<CharT> heap(maxBufferSize / sizeof(CharT));
 
         size_t lineIndex = 0;
-        CharT *p = buffer;
-        CharT *last = buffer + maxBufferSize / sizeof(CharT);
+        CharT *p = heap.ptr();
+        CharT *last = heap.ptr() + maxBufferSize / sizeof(CharT);
         for (uintmax_t sliceStart = interleavingSize; sliceStart > 0; --sliceStart)
         {
             std::wcout << "\tCurrentSlice\t" << sliceStart << std::endl;
@@ -321,7 +321,5 @@ namespace boar
 
             linePositionList.clear();
         }
-
-        delete[] buffer;
     }
 }

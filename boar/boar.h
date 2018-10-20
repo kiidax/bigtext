@@ -29,4 +29,29 @@ namespace boar {
     {
         return ch <= ' ';
     }
+
+#ifdef WIN32
+    template <typename T>
+    class heap_vector
+    {
+    public:
+        heap_vector(size_t max_size)
+        {
+            ptr_ = VirtualAlloc(NULL, max_size, MEM_COMMIT, PAGE_READWRITE);
+            if (ptr_ == NULL)
+            {
+                throw std::bad_alloc();
+            }
+        }
+
+        ~heap_vector()
+        {
+            VirtualFree(ptr_, 0, MEM_RELEASE);
+        }
+
+        T *ptr() const { return reinterpret_cast<T *>(ptr_); }
+
+        LPVOID ptr_;
+    };
+#endif
 }
