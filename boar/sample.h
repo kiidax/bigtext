@@ -24,6 +24,12 @@ namespace boar
     };
 
     template <typename CharT>
+    void FileQuickSampleFileLines(fs::path &inputFileName, const std::vector<SampleOutputSpec> &outputSpecList, bool shuffleOutput)
+    {
+        std::wcerr << "Quick mode is not supported yet." << std::endl;
+    }
+
+    template <typename CharT>
     void FileLineSample(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
     {
         rnd::mt19937_64 gen(std::time(nullptr));
@@ -221,7 +227,6 @@ namespace boar
     template<typename CharT>
     void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize, size_t maxBufferSize)
     {
-        std::wcerr << "Interleaving mode is not supported yet." << std::endl;
         std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
         std::vector<const CharT *> linePositionList;
         std::wcout << "\tMaxBufferSize\t" << maxBufferSize << std::endl;

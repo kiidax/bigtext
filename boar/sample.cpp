@@ -76,6 +76,38 @@ namespace boar
         return totalNumberOfLines;
     }
 
+    static void DetermineBufferSize(const std::vector<fs::path> &inputFileNameList, uintmax_t &interleavingSize, size_t &maxBufferSize)
+    {
+        if (interleavingSize == 1)
+        {
+            maxBufferSize = 0;
+        }
+        else
+        {
+            uintmax_t memSize = GetPhysicalMemorySize();
+            maxBufferSize = memSize * 8 / 10;
+
+            if (interleavingSize == 0)
+            {
+                if (maxBufferSize == 0)
+                {
+                    interleavingSize = 1;
+                }
+                else
+                {
+                    uintmax_t size = 0;
+                    for (auto &fileName : inputFileNameList)
+                    {
+                        size += fs::file_size(fileName);
+                    }
+
+                    interleavingSize = (size + maxBufferSize) / maxBufferSize;
+                    assert(interleavingSize >= 1);
+                }
+            }
+        }
+    }
+
     int SampleCommand(int argc, wchar_t *argv[])
     {
         int optind = 1;
@@ -307,12 +339,6 @@ namespace boar
             return 1;
         }
 
-        if (quickMode)
-        {
-            std::wcerr << "Quick mode is not supported yet." << std::endl;
-            return 1;
-        }
-
         // Verify all the input files exist
         if (!CheckInputFiles(inputFileNameList))
         {
@@ -334,34 +360,20 @@ namespace boar
 
         boost::timer::cpu_timer timer;
 
-        if (shuffleOutput)
+        if (quickMode)
         {
-            size_t maxBufferSize = 0;
-
-            if (interleavingSize != 1)
+            if (inputFileNameList.size() != 1)
             {
-                uintmax_t memSize = GetPhysicalMemorySize();
-                maxBufferSize = memSize * 8 / 10;
-
-                if (interleavingSize == 0)
-                {
-                    if (maxBufferSize == 0)
-                    {
-                        interleavingSize = 1;
-                    }
-                    else
-                    {
-                        uintmax_t size = 0;
-                        for (auto &fileName : inputFileNameList)
-                        {
-                            size += fs::file_size(fileName);
-                        }
-
-                        interleavingSize = (size + maxBufferSize) / maxBufferSize;
-                        assert(interleavingSize >= 1);
-                    }
-                }
+                std::wcerr << "Only one input file is allowed." << std::endl;
+                return 1;
             }
+
+            FileQuickSampleFileLines<char>(inputFileNameList[0], outputSpecList, shuffleOutput);
+        }
+        else if (shuffleOutput)
+        {
+            size_t maxBufferSize;
+            DetermineBufferSize(inputFileNameList, interleavingSize, maxBufferSize);
 
             if (interleavingSize == 1)
             {
