@@ -303,7 +303,12 @@ namespace boar
                 std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
 
                 fs::basic_ofstream<CharT> out;
-                out.open(outputSpec.fileName, std::ios::out | std::ios::binary | std::ios::app);
+                int mode = std::ios::out | std::ios::binary;
+                if (sliceStart != interleavingSize)
+                {
+                    mode |= std::ios::app;
+                }
+                out.open(outputSpec.fileName, mode);
                 if (!out.is_open())
                 {
                     std::wcerr << __wcserror(outputSpec.fileName.native().c_str());
