@@ -24,12 +24,6 @@ namespace boar
     };
 
     template <typename CharT>
-    void FileQuickSampleFileLines(fs::path &inputFileName, const std::vector<SampleOutputSpec> &outputSpecList, bool shuffleOutput)
-    {
-        std::wcerr << "Quick mode is not supported yet." << std::endl;
-    }
-
-    template <typename CharT>
     void FileLineSample(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
     {
         rnd::mt19937_64 gen(std::time(nullptr));
@@ -330,6 +324,47 @@ namespace boar
             }
 
             linePositionList.clear();
+        }
+    }
+
+    template <typename CharT>
+    void FileQuickSampleFileLines(fs::path &inputFileName, const std::vector<SampleOutputSpec> &outputSpecList, bool shuffleOutput)
+    {
+        static_assert(sizeof(CharT) == sizeof(char), "Only char type is supported.");
+        rnd::mt19937_64 gen(std::time(nullptr));
+        uintmax_t fileSize = fs::file_size(inputFileName);
+        rnd::uniform_int_distribution<std::streamoff> dist(0, fileSize);
+        fs::ifstream fin(inputFileName);
+        if (!fin.is_open())
+        {
+            return;
+        }
+        for (auto &spec : outputSpecList)
+        {
+            std::vector<std::basic_string<CharT>> lineList;
+            for (int i = 0; i < spec.numberOfLines; i++)
+            {
+                uintmax_t pos = dist(gen);
+                fin.seekg(pos);
+                std::basic_string<CharT> line;
+                std::getline(fin, line);
+                if (fin.eof())
+                {
+                    fin.clear();
+                    fin.seekg(0);
+                }
+                std::getline(fin, line);
+                if (fin.eof())
+                {
+                    fin.clear();
+                }
+                lineList.push_back(std::move(line));
+            }
+            fs::ofstream fout(spec.fileName, std::ios::out | std::ios::binary);
+            for (auto &line : lineList)
+            {
+                fout << line << std::endl;
+            }
         }
     }
 }
