@@ -1,10 +1,11 @@
 del result.txt
 
-
-..\x64\Release\boar.exe sample -s -c 2 test.txt test2.txt -o result.txt
+..\x64\Release\boar.exe sample -q test.txt -r 0.5 result.txt
+..\x64\Release\boar.exe count -c result.txt
 
 exit /b
 
+..\x64\Release\boar.exe sample -s -c 2 test.txt test2.txt -o result.txt
 ..\x64\Release\boar.exe sample ..\boar\test2.txt test.txt -n 1000 result.txt
 ..\x64\Release\boar count result.txt
 ..\x64\Release\boar.exe vocab ..\boar\test2.txt -c 1 result.txt

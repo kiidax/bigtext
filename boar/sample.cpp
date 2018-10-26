@@ -37,6 +37,16 @@ namespace boar
         return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines != 0; });
     }
 
+    static bool HasSampleRate(const std::vector<SampleOutputSpec> &outputSpecList)
+    {
+        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines == 0 && spec.rate < 1.0; });
+    }
+
+    static bool HasSampleAll(const std::vector<SampleOutputSpec> &outputSpecList)
+    {
+        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines == 0 && spec.rate == 1.0; });
+    }
+
     static void ConvertToRate(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
     {
         for (auto &spec : outputSpecList)
@@ -46,6 +56,19 @@ namespace boar
                 spec.rate = static_cast<double>(spec.numberOfLines) / totalNumberOfLines;
                 spec.numberOfLines = 0;
                 std::wcout << spec.fileName.native() << "\tRate\t" << spec.rate << std::endl;
+            }
+        }
+    }
+
+    static void ConvertToNumberOfLines(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
+    {
+        for (auto &spec : outputSpecList)
+        {
+            if (spec.rate > 0.0)
+            {
+                spec.numberOfLines = static_cast<uintmax_t>(spec.rate * totalNumberOfLines);
+                spec.rate = 0.0;
+                std::wcout << spec.fileName.native() << "\tNumberOfLines\t" << spec.numberOfLines << std::endl;
             }
         }
     }
@@ -362,10 +385,29 @@ namespace boar
 
         if (quickMode)
         {
+            if (shuffleOutput)
+            {
+                std::wcerr << "-s is not allowed with the quick mode. The quick mode shuffles outputs." << std::endl;
+                return 1;
+            }
+
             if (inputFileNameList.size() != 1)
             {
                 std::wcerr << "Only one input file is allowed." << std::endl;
                 return 1;
+            }
+
+            if (HasSampleAll(outputSpecList))
+            {
+                std::wcerr << "Sampling all lines doesn't make sense with quick mode." << std::endl;
+                return 1;
+            }
+
+            if (HasSampleRate(outputSpecList))
+            {
+                std::cout << "Target rate is specified. Guessing number of lines." << std::endl;
+                double totalNumberOfLines = GuessTotalNumberOfLines<char>(inputFileNameList);
+                ConvertToNumberOfLines(outputSpecList, totalNumberOfLines);
             }
 
             FileQuickSampleFileLines<char>(inputFileNameList[0], outputSpecList, shuffleOutput);
