@@ -1,4 +1,4 @@
-/* Boar - Boar is a collection of tools to process text files.
+/* Boar - Boar is a collection of tools to process large text files.
  * Copyright (C) 2017 Katsuya Iida. All rights reserved.
  */
 
@@ -13,7 +13,7 @@ namespace boar
         std::wcout <<
             L"usage: boar COMMAND [ARGS]\n"
             "\n"
-            "Boar is a set tools to process text files.\n"
+            "Boar is a collection of tools to process large text files.\n"
             "\n"
             "List of commands:\n"
             "\n"
