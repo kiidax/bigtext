@@ -1,3 +1,3 @@
-# BigText
+# bigtext
 
-BigText is a collection of tools to process large text files.
+bigtext is a collection of tools to process large text files.
