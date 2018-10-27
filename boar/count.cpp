@@ -19,8 +19,7 @@ namespace boar
         std::wcout << " -c         full count mode" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
-        std::wcout << std::endl;
-        return 1;
+        return 0;
     }
 
     template <typename CharT>

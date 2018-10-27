@@ -20,8 +20,30 @@ namespace boar
             "   count      Count the number of lines in the files.\n"
             "   sample     Sample lines from the files.\n"
             "   vocab      Count the words in the files.\n"
-            << std::endl;
-        return 1;
+            "   version    Show the version info.\n";
+        return 0;
+    }
+
+    const wchar_t *PROGRAM_NAME = L"boar";
+    const int MAJOR_VERSION = 0;
+    const int MINOR_VERSION = 9;
+    const int BUILD_VERSION = 1;
+    const int REVISION_VERSION = 0;
+
+    std::wstring GetVersionString()
+    {
+        return std::to_wstring(MAJOR_VERSION) + L"."
+            + std::to_wstring(MINOR_VERSION) + L"."
+            + std::to_wstring(BUILD_VERSION) + L"."
+            + std::to_wstring(REVISION_VERSION);
+    }
+
+    static int VersionCommand(int argc, wchar_t *argv[])
+    {
+        std::wcout
+            << PROGRAM_NAME << " " << GetVersionString() << std::endl
+            << L"Copyright (C) 2017 Katsuya Iida. All rights reserved." << std::endl;
+        return 0;
     }
 
     int Main(int argc, wchar_t *argv[])
@@ -44,6 +66,10 @@ namespace boar
             else if (commandName == L"vocab")
             {
                 return VocabCommand(argc - 1, argv + 1);
+            }
+            else if (commandName == L"version")
+            {
+                return VersionCommand(argc - 1, argv + 1);
             }
             else
             {

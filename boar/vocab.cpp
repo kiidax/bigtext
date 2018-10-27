@@ -23,8 +23,7 @@ namespace boar
         std::wcout << " -o         count words in all columns" << std::endl;
         std::wcout << " -c COLUMN  count words in COLUMN-th column" << std::endl;
         std::wcout << " OUTPUTFILE output file" << std::endl;
-        std::wcout << std::endl;
-        return 1;
+        return 0;
     }
 
     int VocabCommand(int argc, wchar_t *argv[])

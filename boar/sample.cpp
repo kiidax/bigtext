@@ -20,16 +20,14 @@ namespace boar
         std::wcout << " -c N       shuffle output files with N interleaving" << std::endl;
         std::wcout << " -f         force overwrite output files" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
-        std::wcout << " -q         quick mode (NOT IMPLEMENTED)" << std::endl;
+        std::wcout << " -q         quick mode" << std::endl;
         std::wcout << " -s         shuffle output files" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
         std::wcout << " -o         sample all lines" << std::endl;
         std::wcout << " -n LINES   sample around n lines" << std::endl;
         std::wcout << " -r RATE    sampling rate. Probability (0.0,1.0] or percent (0,100]%" << std::endl;
         std::wcout << " OUTPUTFILE output file" << std::endl;
-        std::wcout << std::endl;
-
-        return 1;
+        return 0;
     }
 
     static bool HasNumberOfLines(const std::vector<SampleOutputSpec> &outputSpecList)

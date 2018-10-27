@@ -8,10 +8,18 @@ namespace boar {
 
     namespace fs = boost::filesystem;
 
+    extern const wchar_t* PROGRAM_NAME;
+    extern const int MAJOR_VERSION;
+    extern const int MINOR_VERSION;
+    extern const int BUILD_VERSION;
+    extern const int REVISION_VERSION;
+
     int Main(int argc, wchar_t *argv[]);
     int CountCommand(int argc, wchar_t *argv[]);
     int SampleCommand(int argc, wchar_t *argv[]);
     int VocabCommand(int argc, wchar_t *argv[]);
+    int VersionCommand(int argc, wchar_t *argv[]);
+    std::wstring GetVersionString();
     bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
     bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
     bool TryParseRate(const std::wstring &s, double &rate);

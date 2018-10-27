@@ -294,7 +294,7 @@ namespace boar
                     lineCount = static_cast<uintmax_t>(numLines * outputSpec.rate + 0.5);
                 }
 
-                std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
+                std::wcerr << outputSpec.fileName.native() << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
 
                 fs::basic_ofstream<CharT> out;
                 int mode = std::ios::out | std::ios::binary;
@@ -363,7 +363,7 @@ namespace boar
             fs::ofstream fout(spec.fileName, std::ios::out | std::ios::binary);
             for (auto &line : lineList)
             {
-                fout << line << std::endl;
+                fout << line << '\n';
             }
         }
     }
