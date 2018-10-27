@@ -1,19 +1,19 @@
-/* Boar - Boar is a collection of tools to process large text files.
+/* bigtext - bigtext is a collection of tools to process large text files.
  * Copyright (C) 2017 Katsuya Iida. All rights reserved.
  */
 
 #include "stdafx.h"
 
-#include "boar.h"
+#include "bigtext.h"
 
-namespace boar
+namespace bigtext
 {
     static int MainUsage()
     {
         std::wcout <<
-            L"usage: boar COMMAND [ARGS]\n"
+            L"usage: bigtext COMMAND [ARGS]\n"
             "\n"
-            "Boar is a collection of tools to process large text files.\n"
+            "bigtext is a collection of tools to process large text files.\n"
             "\n"
             "List of commands:\n"
             "\n"
@@ -24,7 +24,7 @@ namespace boar
         return 0;
     }
 
-    const wchar_t *PROGRAM_NAME = L"boar";
+    const wchar_t *PROGRAM_NAME = L"bigtext";
     const int MAJOR_VERSION = 0;
     const int MINOR_VERSION = 9;
     const int BUILD_VERSION = 1;

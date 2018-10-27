@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "boar", "boar\boar.vcxproj", "{358B8E43-7DF7-4A5E-B239-584B35E7B983}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bigtext", "bigtext\bigtext.vcxproj", "{358B8E43-7DF7-4A5E-B239-584B35E7B983}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

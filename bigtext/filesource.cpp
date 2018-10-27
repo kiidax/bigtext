@@ -1,14 +1,14 @@
-/* Boar - Boar is a collection of tools to process large text files.
+/* bigtext - bigtext is a collection of tools to process large text files.
 * Copyright (C) 2017 Katsuya Iida. All rights reserved.
 */
 
 #include "stdafx.h"
 
-#include "boar.h"
+#include "bigtext.h"
 #include "filesource.h"
 #include <boost/iostreams/device/mapped_file.hpp>
 
-namespace boar
+namespace bigtext
 {
     namespace fs = boost::filesystem;
 

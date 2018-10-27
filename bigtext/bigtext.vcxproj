@@ -147,7 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="boar.cpp" />
+    <ClCompile Include="bigtext.cpp" />
     <ClCompile Include="count.cpp" />
     <ClCompile Include="filesource.cpp" />
     <ClCompile Include="sample.cpp" />
@@ -161,7 +161,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="boar.h" />
+    <ClInclude Include="bigtext.h" />
     <ClInclude Include="count.h" />
     <ClInclude Include="filesource.h" />
     <ClInclude Include="sample.h" />

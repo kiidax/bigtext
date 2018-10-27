@@ -1,3 +1,3 @@
-# Boar
+# BigText
 
-Boar is a collection of tools to process large text files.
+BigText is a collection of tools to process large text files.

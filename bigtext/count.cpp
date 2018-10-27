@@ -1,19 +1,19 @@
-/* Boar - Boar is a collection of tools to process large text files.
+/* bigtext - bigtext is a collection of tools to process large text files.
 * Copyright (C) 2017 Katsuya Iida. All rights reserved.
 */
 
 #include "stdafx.h"
 
-#include "boar.h"
+#include "bigtext.h"
 #include "count.h"
 
-namespace boar
+namespace bigtext
 {
     namespace fs = boost::filesystem;
 
     static int CountUsage()
     {
-        std::wcout << "Usage: boar count [OPTION]... INPUTFILE..." << std::endl;
+        std::wcout << "Usage: bigtext count [OPTION]... INPUTFILE..." << std::endl;
         std::wcout << "Estimate number of lines in the file by reading only the first 100MB." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         full count mode" << std::endl;

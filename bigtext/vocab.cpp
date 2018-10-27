@@ -1,19 +1,19 @@
-/* Boar - Boar is a collection of tools to process large text files.
+/* bigtext - bigtext is a collection of tools to process large text files.
 * Copyright (C) 2018 Katsuya Iida. All rights reserved.
 */
 
 #include "stdafx.h"
 
-#include "boar.h"
+#include "bigtext.h"
 #include "vocab.h"
 
-namespace boar
+namespace bigtext
 {
     namespace fs = boost::filesystem;
 
     static int VocabUsage()
     {
-        std::wcout << "Usage: boar vocab [OPTION]... INPUTFILE... [[-o|-m COLUMN] OUTPUTFILE]..." << std::endl;
+        std::wcout << "Usage: bigtext vocab [OPTION]... INPUTFILE... [[-o|-m COLUMN] OUTPUTFILE]..." << std::endl;
         std::wcout << "Count words in the files and make vocabulary list." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -q         quick mode" << std::endl;
