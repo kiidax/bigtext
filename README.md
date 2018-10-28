@@ -4,8 +4,7 @@ bigtext is a collection of tools to process large text files.
 
 ## Getting binary
 
-[bigtext_0.9.1.0_x64_Release.exe]
-(https://github.com/kiidax/bigtext/releases/download/v0.9.1/bigtext_0.9.1.0_x64_Release.exe)
+https://github.com/kiidax/bigtext/releases/download/v0.9.1/bigtext_0.9.1.0_x64_Release.exe
 
 ## Show help message
 
