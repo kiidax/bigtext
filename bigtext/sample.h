@@ -278,10 +278,13 @@ namespace bigtext
 
             rnd::mt19937_64 gen(std::time(nullptr));
             rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
-            for (size_t i = 0; i < num_lines - 1; i++)
+            if (num_lines > 0)
             {
-                size_t j = i + dist(num_lines - i);
-                std::swap(line_index_list[i], line_index_list[j]);
+                for (size_t i = 0; i < num_lines - 1; i++)
+                {
+                    size_t j = i + dist(num_lines - i);
+                    std::swap(line_index_list[i], line_index_list[j]);
+                }
             }
 
             // Write lines
