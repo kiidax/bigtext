@@ -118,6 +118,7 @@ namespace bigtext
     {
         std::vector<size_t> line_index_list;
         std::vector<const CharT *> line_position_list;
+        std::basic_string<CharT> end_of_line;
 
         std::vector<ios::mapped_file_source> file_list;
         size_t line_index = 0;
@@ -154,6 +155,22 @@ namespace bigtext
             }
             if (len > 0 && s[len - 1] != '\n')
             {
+                if (end_of_line.empty() && line_index > prev_line_index)
+                {
+                    // Keep the new line string to add to this line.
+                    const CharT *last = line_position_list[line_position_list.size() - 1];
+                    const CharT *first = last - 1;
+                    if (first >= s)
+                    {
+                        if (*first == '\n') --first;
+                    }
+                    if (first >= s)
+                    {
+                        if (*first == '\r') --first;
+                    }
+                    ++first;
+                    end_of_line = std::basic_string<CharT>(first, last);
+                }
                 line_index_list.push_back(line_index++);
                 line_position_list.push_back(&s[len]);
             }
@@ -223,6 +240,10 @@ namespace bigtext
                 const CharT *first = line_position_list[n];
                 const CharT *last = line_position_list[n + 1];
                 out.write(first, last - first);
+                if (*(last - 1) != '\n')
+                {
+                    out.write(end_of_line.c_str(), end_of_line.size());
+                }
             }
         }
     }
