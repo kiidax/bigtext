@@ -10,6 +10,8 @@ namespace bigtext
 {
     namespace fs = boost::filesystem;
 
+    static const uintmax_t QUICK_LINE_COUNT = 100 * 1024 * 1024;
+
     struct VocabOutputSpec
     {
         fs::path fileName;

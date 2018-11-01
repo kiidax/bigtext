@@ -16,7 +16,6 @@ namespace bigtext
         std::wcout << "Usage: bigtext vocab [OPTION]... INPUTFILE... [[-o|-m COLUMN] OUTPUTFILE]..." << std::endl;
         std::wcout << "Count words in the files and make vocabulary list." << std::endl;
         std::wcout << std::endl;
-        std::wcout << " -q         quick mode" << std::endl;
         std::wcout << " -f         force overwrite output files" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
         std::wcout << " INPUTFILE  input file" << std::endl;
@@ -33,7 +32,6 @@ namespace bigtext
         bool forceOverwrite = false;
         bool shuffleOutput = false;
         bool hasOutputAll = false;
-        bool quickMode = false;
         std::vector<fs::path> inputFileNameList;
         std::vector<VocabOutputSpec> outputSpecList;
 
@@ -68,9 +66,6 @@ namespace bigtext
                     break;
                 case 'h':
                     return VocabUsage();
-                case 'q':
-                    quickMode = true;
-                    break;
                 case 'c':
                 case 'o':
                     std::wcerr << "No input files." << std::endl;
@@ -195,12 +190,6 @@ namespace bigtext
         if (outputSpecList.size() == 0)
         {
             std::wcerr << "No output files." << std::endl;
-            return 1;
-        }
-
-        if (quickMode)
-        {
-            std::wcerr << "Quick mode is not supported yet." << std::endl;
             return 1;
         }
 

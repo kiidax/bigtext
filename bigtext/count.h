@@ -10,7 +10,7 @@ namespace bigtext
 {
     namespace fs = boost::filesystem;
 
-    static const uintmax_t GUESS_LINE_SIZE = 100 * 1024 * 1024;
+    static const uintmax_t GUESS_LINE_COUNT = 100 * 1024 * 1024;
 
     template<typename CharT>
     uintmax_t FileCountLines(const fs::path &fname)
@@ -92,7 +92,7 @@ namespace bigtext
             }
             info.lineCount = c;
             curSize = l;
-        }, GUESS_LINE_SIZE);
+        }, GUESS_LINE_COUNT);
         if (info.lineCount == 0)
         {
             info.minLineSize = 0;
