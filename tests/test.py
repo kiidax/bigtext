@@ -68,7 +68,10 @@ class TestBigtext(unittest.TestCase):
         for source_fname in self.FILES:
             self._run_command('sample %s -n 1000 result.txt -r 0.2 result2.txt' % source_fname)
             self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
-            self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
+            if source_fname == 'test7.txt':
+                self.assertFileIsSampledFrom('result2.txt', source_fname, 0.0, False)
+            else:
+                self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
 
     def test_sample_double_num_all(self):
         for source_fname in self.FILES:
@@ -88,6 +91,7 @@ class TestBigtext(unittest.TestCase):
             for source_fname in ['shakespeare.txt', 'test1.txt', 'test3.txt', 'test6.txt', 'test7.txt']:
                 self._run_command('sample %s%s -o result.txt' % (opt, source_fname))
                 self.assertFileIsSampledFrom('result.txt', source_fname, 0, True)
+                self.assertFileIsShuffledFrom('result.txt', source_fname)
 
     def test_shuffle_single_num_rate(self):
         for opt in ['-s ', '-s -c 3 ']:
@@ -179,6 +183,17 @@ class TestBigtext(unittest.TestCase):
                     raise AssertionError("Exception at line %d" % (i + 1))
                 if s[0] != sum(s[1:]):
                     raise AssertionError("Wrong data at line %d" % (i + 1))
+
+    def assertFileIsShuffledFrom(self, actual_fname, source_fname):
+        logging.info("Veryfying files contain identical set of lines.")
+        actual = read_sample(actual_fname)
+        source = read_sample(source_fname)
+        actual_len = len(actual)
+        source_len = len(source)
+        self.assertEqual(source_len, actual_len)
+        actual.sort()
+        source.sort()
+        self.assertSequenceEqual(source, actual)
 
     def _run_command(self, args=[]):
         self._remove_output()
