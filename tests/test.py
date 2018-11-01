@@ -11,77 +11,114 @@ logging.basicConfig(level=logging.INFO)
 class TestBigtext(unittest.TestCase):
 
     FILES = ['shakespeare.txt']
+    OUTPUT_FILES = ['result.txt', 'result2.txt']
 
     @classmethod
     def tearDownClass(cls):
-        os.unlink('result.txt')
+        cls._remove_output()
+
+    def setUp(self):
+        self._remove_output()
 
     def test_help(self):
-        x = exec_command()
-        self.assertIn('List of commands', x)
+        self._run_command()
+        self.assertIn('List of commands', self.command_result)
 
     def test_version(self):
-        x = exec_command('version')
-        self.assertIn('Copyright (C)', x)
+        self._run_command('version')
+        self.assertIn('Copyright (C)', self.command_result)
 
     def test_count_quick(self):
-        for fname in self.FILES:
-            res = exec_command('count %s' % fname)
-            res = parse_triple(res)
-            self.assertIn(fname, res)
-            logging.info('%s %s %s' % (fname, 'EstLineCount', res[fname]['EstLineCount']))
-            diff = abs(res[fname]['EstLineCount'] / count_lines(fname) - 1)
+        for source_fname in self.FILES:
+            self._run_command('count %s' % source_fname)
+            self.assertIn(source_fname, self.parsed_result)
+            res = self.parsed_result
+            logging.info('%s %s %s' % (source_fname, 'EstLineCount', res[source_fname]['EstLineCount']))
+            diff = abs(res[source_fname]['EstLineCount'] / count_lines(source_fname) - 1)
             self.assertLess(diff, .2)
 
     def test_count_full(self):
-        for fname in self.FILES:
-            res = exec_command('count -c %s' % fname)
-            res = parse_triple(res)
-            self.assertIn(fname, res)
-            self.assertEqual(res[fname]['LineCount'], count_lines(fname))
+        for source_fname in self.FILES:
+            self._run_command('count -c %s' % source_fname)
+            self.assertIn(source_fname, self.parsed_result)
+            res = self.parsed_result
+            self.assertEqual(res[source_fname]['LineCount'], count_lines(source_fname))
 
     def test_vocab_full(self):
-        for fname in self.FILES:
-            res = exec_command('vocab %s -o result.txt' % fname)
-            res = parse_triple(res)
+        for source_fname in self.FILES:
+            self._run_command('vocab %s -o result.txt' % source_fname)
             actual = read_vocab('result.txt')
-            expected = get_vocab(fname)
+            expected = get_vocab(source_fname)
             compare_dict(expected, actual)
 
     def test_sample_single_all(self):
-        for fname in self.FILES:
-            res = exec_command('sample %s -o result.txt' % fname)
-            res = parse_triple(res)
-            actual = read_sample('result.txt')
-            expected = read_sample(fname)
-            self.assertEqual(len(expected), len(actual))
-            check_sample(expected, actual)
+        for source_fname in self.FILES:
+            self._run_command('sample %s -o result.txt' % source_fname)
+            self.assertFileIsSampledFrom('result.txt', source_fname, 0, True)
 
     def test_sample_single_rate(self):
-        for fname in self.FILES:
-            res = exec_command('sample %s -r 0.2 result.txt' % fname)
-            res = parse_triple(res)
-            actual = read_sample('result.txt')
-            expected = read_sample(fname)
-            actual_len = len(actual)
-            expected_len = 0.2 * len(expected)
-            logging.info("%d lines sampled, expected around %d lines.", actual_len, expected_len)
-            diff = abs(actual_len / expected_len - 1)
-            self.assertLess(diff, .2)
-            check_sample(expected, actual)
+        for source_fname in self.FILES:
+            self._run_command('sample %s -r 0.2 result.txt' % source_fname)
+            self.assertFileIsSampledFrom('result.txt', source_fname, 0.2, False)
 
     def test_sample_single_num(self):
-        for fname in self.FILES:
-            res = exec_command('sample %s -n 1000 result.txt' % fname)
-            res = parse_triple(res)
-            actual = read_sample('result.txt')
-            expected = read_sample(fname)
-            actual_len = len(actual)
-            expected_len = 1000
+        for source_fname in self.FILES:
+            self._run_command('sample %s -n 1000 result.txt' % source_fname)
+            self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
+
+    def test_sample_double_num_rate(self):
+        for source_fname in self.FILES:
+            self._run_command('sample %s -n 1000 result.txt -r 0.2 result2.txt' % source_fname)
+            self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
+            self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
+
+    def test_sample_double_num_all(self):
+        for source_fname in self.FILES:
+            self._run_command('sample %s -n 1000 result.txt -o result2.txt' % source_fname)
+            self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
+            self.assertFileIsSampledFrom('result2.txt', source_fname, -1000, False)
+
+    def assertFileIsSampledFrom(self, actual_fname, source_fname, rate_or_number, exact):
+        actual = read_sample(actual_fname)
+        source = read_sample(source_fname)
+        actual_len = len(actual)
+        source_len = len(source)
+        if isinstance(rate_or_number, float):
+            expected_len = rate_or_number * source_len
+        elif isinstance(rate_or_number, int):
+            if rate_or_number > 0:
+                expected_len = rate_or_number
+            elif rate_or_number < 0:
+                expected_len = source_len + rate_or_number
+            else:
+                expected_len = source_len
+        else:
+            raise ValueError()
+        if exact:
+            logging.info("%d lines sampled, expected exact %d lines.", len(actual), expected_len)
+            self.assertEqual(expected_len, actual_len)
+        else:
             logging.info("%d lines sampled, expected around %d lines.", len(actual), expected_len)
             diff = abs(actual_len / expected_len - 1)
             self.assertLess(diff, .2)
-            check_sample(expected, actual)
+        #self.assertLessEqual(actual, source)
+        actual = set(actual)
+        source = set(source)
+        if not (actual <= source):
+            print(list(source)[0])
+            x = list(actual - source)[0]
+            raise AssertionError('%s is not included in the source.' % x)
+
+    def _run_command(self, args=[]):
+        self.command_result = exec_command(args)
+        self.parsed_result = parse_triple(self.command_result)
+
+    @classmethod
+    def _remove_output(cls):
+        for output_file in cls.OUTPUT_FILES:
+            if os.path.exists(output_file):
+                os.unlink(output_file)
+
 
 # Utility functions
 
@@ -138,13 +175,6 @@ def compare_dict(d1, d2):
 def read_sample(fname):
     with open(fname, 'rb') as f:
         return f.readlines()
-
-def check_sample(s1, s2):
-    s1 = set(s1)
-    s2 = set(s2)
-    for x in s2:
-        if x not in s1:
-            raise ValueError()
 
 if __name__ == '__main__':
     unittest.main()
