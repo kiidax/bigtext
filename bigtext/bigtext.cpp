@@ -171,6 +171,11 @@ namespace bigtext
                 return false;
             }
 
+            if (s.find('-') != std::string::npos)
+            {
+                return false;
+            }
+
             size_t idx = 0;
             unsigned long long v = std::stoull(s, &idx);
             if (idx != s.size())
