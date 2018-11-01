@@ -263,3 +263,4 @@ __pycache__/
 # Project local files.
 /tests/test*.txt
 /tests/result.txt
+/tests/shakespeare.txt
