@@ -8,29 +8,29 @@ namespace bigtext
 {
     namespace fs = boost::filesystem;
 
-    using DataSourceCallback = std::function<void(const char *, size_t)>;
+    using data_source_callback = std::function<void(const char *, size_t)>;
 
-    void FileSourceWithMemoryMapping(const fs::path &fileName, DataSourceCallback callback);
-    void FileSourceWithFileRead(const fs::path &fileName, DataSourceCallback callback);
-    void FileSourceWithOverlapRead(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
-    void FileSourceDefault(const fs::path &fileName, DataSourceCallback callback, uintmax_t maxSize = 0);
+    void file_source_with_memory_mapping(const fs::path &file_name, data_source_callback callback);
+    void file_source_with_file_read(const fs::path &file_name, data_source_callback callback);
+    void file_source_with_overlap_read(const fs::path &file_name, data_source_callback callback, uintmax_t max_size = 0);
+    void file_source_default(const fs::path &file_name, data_source_callback callback, uintmax_t max_size = 0);
 
     template <typename CharT>
-    void FileLineSourceDefault(const fs::path &fileName, std::function<void(const CharT *, size_t)> callback)
+    void file_line_source_default(const fs::path &file_name, std::function<void(const CharT *, size_t)> callback)
     {
-        uintmax_t lineCount = 0;
-        std::basic_string<CharT> _previousPartialLine;
+        uintmax_t line_count = 0;
+        std::basic_string<CharT> _previous_partial_line;
 
-        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
+        file_source_default(file_name, [&line_count, &_previous_partial_line, callback](const char *_s, size_t _len)
         {
             const CharT *s = reinterpret_cast<const CharT *>(_s);
             size_t len = _len / sizeof(CharT);
 
             if (s == nullptr)
             {
-                if (_previousPartialLine.size() > 0)
+                if (_previous_partial_line.size() > 0)
                 {
-                    callback(_previousPartialLine.data(), _previousPartialLine.size());
+                    callback(_previous_partial_line.data(), _previous_partial_line.size());
                 }
             }
             else
@@ -39,53 +39,53 @@ namespace bigtext
                 const CharT *first = reinterpret_cast<const CharT *>(s);
                 const CharT *last = s + len;
                 const CharT *p = first;
-                if (_previousPartialLine.size() > 0)
+                if (_previous_partial_line.size() > 0)
                 {
                     while (p != last)
                     {
-                        if (IsNewLine(*p++))
+                        if (is_new_line(*p++))
                         {
-                            _previousPartialLine.append(first, p);
-                            callback(_previousPartialLine.data(), _previousPartialLine.size());
+                            _previous_partial_line.append(first, p);
+                            callback(_previous_partial_line.data(), _previous_partial_line.size());
                             c++;
-                            _previousPartialLine.clear();
+                            _previous_partial_line.clear();
                             break;
                         }
                     }
                 }
-                const CharT* lineStart = p;
+                const CharT* line_start = p;
                 while (p != last)
                 {
-                    if (IsNewLine(*p++))
+                    if (is_new_line(*p++))
                     {
-                        callback(lineStart, p - lineStart);
+                        callback(line_start, p - line_start);
                         c++;
-                        lineStart = p;
+                        line_start = p;
                     }
                 }
-                _previousPartialLine.append(lineStart, last);
-                lineCount += c;
+                _previous_partial_line.append(line_start, last);
+                line_count += c;
             }
         });
     }
 
     template <typename CharT>
-    void FileWordSourceDefault(const fs::path &fileName, std::function<void(const CharT *, size_t)> callback)
+    void file_word_source_default(const fs::path &file_name, std::function<void(const CharT *, size_t)> callback)
     {
-        uintmax_t lineCount = 0;
-        std::basic_string<CharT> _previousPartialLine;
+        uintmax_t line_count = 0;
+        std::basic_string<CharT> _previous_partial_line;
 
-        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
+        file_source_default(file_name, [&line_count, &_previous_partial_line, callback](const char *_s, size_t _len)
         {
             const CharT *s = reinterpret_cast<const CharT *>(_s);
             size_t len = _len / sizeof(CharT);
 
             if (s == nullptr)
             {
-                if (_previousPartialLine.size() > 0)
+                if (_previous_partial_line.size() > 0)
                 {
-                    callback(_previousPartialLine.data(), _previousPartialLine.size());
-                    lineCount++;
+                    callback(_previous_partial_line.data(), _previous_partial_line.size());
+                    line_count++;
                 }
             }
             else
@@ -94,46 +94,46 @@ namespace bigtext
                 const CharT *first = reinterpret_cast<const CharT *>(s);
                 const CharT *last = s + len;
                 const CharT *p = first;
-                if (_previousPartialLine.size() > 0)
+                if (_previous_partial_line.size() > 0)
                 {
                     while (p != last)
                     {
-                        if (IsWhiteSpace(*p++))
+                        if (is_white_space(*p++))
                         {
-                            _previousPartialLine.append(first, p - 1);
-                            callback(_previousPartialLine.data(), _previousPartialLine.size());
+                            _previous_partial_line.append(first, p - 1);
+                            callback(_previous_partial_line.data(), _previous_partial_line.size());
                             c++;
-                            _previousPartialLine.clear();
+                            _previous_partial_line.clear();
                             break;
                         }
                     }
                 }
-                const CharT* lineStart = p;
+                const CharT* line_start = p;
                 while (p != last)
                 {
-                    if (IsWhiteSpace(*p++))
+                    if (is_white_space(*p++))
                     {
-                        if (p - lineStart - 1 > 0)
+                        if (p - line_start - 1 > 0)
                         {
-                            callback(lineStart, p - lineStart - 1);
+                            callback(line_start, p - line_start - 1);
                             c++;
                         }
-                        lineStart = p;
+                        line_start = p;
                     }
                 }
-                _previousPartialLine.append(lineStart, last);
-                lineCount += c;
+                _previous_partial_line.append(line_start, last);
+                line_count += c;
             }
         });
     }
 
     template <typename CharT, CharT LINE_SEPARATOR = '\n', CharT COLUMN_SEPARATOR = '\t'>
-    void FileWordSourceWithColumnDefault(const fs::path &fileName, std::function<void(const CharT *, size_t, int column)> callback)
+    void file_word_source_with_column_default(const fs::path &file_name, std::function<void(const CharT *, size_t, int column)> callback)
     {
-        uintmax_t lineCount = 0;
-        std::basic_string<CharT> _previousPartialLine;
+        uintmax_t line_count = 0;
+        std::basic_string<CharT> _previous_partial_line;
 
-        FileSourceDefault(fileName, [&lineCount, &_previousPartialLine, callback](const char *_s, size_t _len)
+        file_source_default(file_name, [&line_count, &_previous_partial_line, callback](const char *_s, size_t _len)
         {
             const CharT *s = reinterpret_cast<const CharT *>(_s);
             int column = 0;
@@ -141,10 +141,10 @@ namespace bigtext
 
             if (s == nullptr)
             {
-                if (_previousPartialLine.size() > 0)
+                if (_previous_partial_line.size() > 0)
                 {
-                    callback(_previousPartialLine.data(), _previousPartialLine.size(), column);
-                    lineCount++;
+                    callback(_previous_partial_line.data(), _previous_partial_line.size(), column);
+                    line_count++;
                 }
             }
             else
@@ -152,21 +152,21 @@ namespace bigtext
                 size_t c = 0;
                 const CharT *last = reinterpret_cast<const CharT *>(s + len);
                 const CharT *p = reinterpret_cast<const CharT *>(s);
-                const CharT* lineStart = p;
+                const CharT* line_start = p;
 
                 while (p != last)
                 {
-                    if (IsWhiteSpace(*p))
+                    if (is_white_space(*p))
                     {
-                        if (_previousPartialLine.size() > 0)
+                        if (_previous_partial_line.size() > 0)
                         {
-                            _previousPartialLine.append(lineStart, p);
-                            callback(_previousPartialLine.data(), _previousPartialLine.size(), column);
-                            _previousPartialLine.clear();
+                            _previous_partial_line.append(line_start, p);
+                            callback(_previous_partial_line.data(), _previous_partial_line.size(), column);
+                            _previous_partial_line.clear();
                         }
-                        else if (p - lineStart > 0)
+                        else if (p - line_start > 0)
                         {
-                            callback(lineStart, p - lineStart, column);
+                            callback(line_start, p - line_start, column);
                         }
 
                         if (*p == LINE_SEPARATOR)
@@ -179,13 +179,13 @@ namespace bigtext
                             column++;
                         }
 
-                        lineStart = p + 1;
+                        line_start = p + 1;
                     }
 
                     p++;
                 }
-                _previousPartialLine.append(lineStart, last);
-                lineCount += c;
+                _previous_partial_line.append(line_start, last);
+                line_count += c;
             }
         });
     }

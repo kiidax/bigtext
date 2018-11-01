@@ -261,11 +261,6 @@ __pycache__/
 *.pyc
 
 # Project local files.
-/bigtext/test.txt
-/bigtext/test.cmd
-/bigtext/test.csx
-/bigtext/test2.txt
-/bigtext/test2_sample.txt
 /tests/test*.txt
 /tests/result.txt
 /tests/shakespeare.txt

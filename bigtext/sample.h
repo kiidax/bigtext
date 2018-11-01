@@ -11,35 +11,35 @@ namespace bigtext
     namespace ios = boost::iostreams;
     namespace rnd = boost::random;
 
-    struct SampleOutputSpec
+    struct sample_output_spec
     {
     public:
-        fs::path fileName;
-        uintmax_t numberOfLines;
+        fs::path file_name;
+        uintmax_t number_of_lines;
         double rate;
 
-        SampleOutputSpec(const fs::path &fileName) : fileName(fileName), rate(1.0), numberOfLines(0) {}
-        SampleOutputSpec(const fs::path &fileName, double rate) : fileName(fileName), rate(rate), numberOfLines(0) {}
-        SampleOutputSpec(const fs::path &fileName, uintmax_t numberOfLines) : fileName(fileName), rate(0.0), numberOfLines(numberOfLines) {}
+        sample_output_spec(const fs::path &file_name) : file_name(file_name), rate(1.0), number_of_lines(0) {}
+        sample_output_spec(const fs::path &file_name, double rate) : file_name(file_name), rate(rate), number_of_lines(0) {}
+        sample_output_spec(const fs::path &file_name, uintmax_t number_of_lines) : file_name(file_name), rate(0.0), number_of_lines(number_of_lines) {}
     };
 
     template <typename CharT>
-    void FileLineSample(const std::vector<fs::path> &inputFileNameList, double rate, fs::path& outputFileName)
+    void file_line_sample(const std::vector<fs::path> &input_file_name_list, double rate, fs::path &output_file_name)
     {
         rnd::mt19937_64 gen(std::time(nullptr));
         rnd::bernoulli_distribution<> dist(rate);
 
         fs::ofstream out;
-        out.open(outputFileName, std::ios::out | std::ios::binary);
+        out.open(output_file_name, std::ios::out | std::ios::binary);
         if (!out.is_open())
         {
-            std::wcerr << __wcserror(outputFileName.native().c_str());
+            std::wcerr << __wcserror(output_file_name.native().c_str());
             return;
         }
 
-        for (auto& fileName : inputFileNameList)
+        for (auto& file_name : input_file_name_list)
         {
-            FileLineSourceDefault<CharT>(fileName, [&dist, &gen, &out](const CharT *s, size_t len)
+            file_line_source_default<CharT>(file_name, [&dist, &gen, &out](const CharT *s, size_t len)
             {
                 if (dist(gen))
                 {
@@ -50,117 +50,117 @@ namespace bigtext
     }
 
     template <typename CharT>
-    void FileLineSample(const std::vector<fs::path> &inputPathList, const std::vector<SampleOutputSpec> &outputSpecList)
+    void file_line_sample(const std::vector<fs::path> &input_path_list, const std::vector<sample_output_spec> &output_spec_list)
     {
-        struct OutputProgress
+        struct output_progress
         {
-            double randomThreshold;
-            uintmax_t lineCount;
+            double random_threshold;
+            uintmax_t line_count;
             fs::ofstream out;
         };
 
-        size_t numOutputs;
-        OutputProgress *outputProgressList;
+        size_t num_outputs;
+        output_progress *output_progress_list;
         rnd::mt19937_64 gen(std::time(nullptr));
         rnd::uniform_real_distribution<> dist(0, 1);
 
-        numOutputs = outputSpecList.size();
-        outputProgressList = new OutputProgress[numOutputs];
+        num_outputs = output_spec_list.size();
+        output_progress_list = new output_progress[num_outputs];
 
-        for (size_t i = 0; i < numOutputs; i++)
+        for (size_t i = 0; i < num_outputs; i++)
         {
-            auto& spec = outputSpecList[i];
-            if (spec.numberOfLines != 0)
+            auto& spec = output_spec_list[i];
+            if (spec.number_of_lines != 0)
             {
                 throw std::logic_error("Taget lines is not allowed.");
             }
             else if (spec.rate >= 0)
             {
-                outputProgressList[i].randomThreshold = spec.rate;
+                output_progress_list[i].random_threshold = spec.rate;
             }
             else
             {
                 throw std::logic_error("None of taget lines or rate is specified.");
             }
-            auto &out = outputProgressList[i].out;
-            out.open(spec.fileName);
+            auto &out = output_progress_list[i].out;
+            out.open(spec.file_name, std::ios::out | std::ios::binary);
             if (!out.is_open())
             {
-                std::wcerr << __wcserror(spec.fileName.native().c_str());
+                std::wcerr << __wcserror(spec.file_name.native().c_str());
                 return;
             }
         }
 
-        for (auto &fileName : inputPathList)
+        for (auto &file_name : input_path_list)
         {
-            FileLineSourceDefault<CharT>(fileName, [&dist, &gen, outputProgressList, numOutputs](const CharT *s, size_t len)
+            file_line_source_default<CharT>(file_name, [&dist, &gen, output_progress_list, num_outputs](const CharT *s, size_t len)
             {
                 double t = dist(gen);
-                for (int i = 0; i < numOutputs; i++)
+                for (int i = 0; i < num_outputs; i++)
                 {
-                    auto &prog = outputProgressList[i];
-                    if (t < prog.randomThreshold)
+                    auto &prog = output_progress_list[i];
+                    if (t < prog.random_threshold)
                     {
                         prog.out.write(reinterpret_cast<const char *>(s), sizeof(CharT) * len);
-                        ++prog.lineCount;
+                        ++prog.line_count;
                         break;
                     }
-                    t -= prog.randomThreshold;
+                    t -= prog.random_threshold;
                 }
             });
         }
 
-        delete[] outputProgressList;
+        delete[] output_progress_list;
     }
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList)
+    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list)
     {
-        std::vector<size_t> lineIndexList;
-        std::vector<const CharT *> linePositionList;
+        std::vector<size_t> line_index_list;
+        std::vector<const CharT *> line_position_list;
 
-        std::vector<ios::mapped_file_source> fileList;
-        size_t lineIndex = 0;
-        for (auto &inputFileName : inputFileNameList)
+        std::vector<ios::mapped_file_source> file_list;
+        size_t line_index = 0;
+        for (auto &input_file_name : input_file_name_list)
         {
-            size_t prevLineIndex = lineIndex;
-            fileList.emplace_back();
-            auto &file = fileList.back();
-            file.open(inputFileName);
+            size_t prev_line_index = line_index;
+            file_list.emplace_back();
+            auto &file = file_list.back();
+            file.open(input_file_name);
             if (!file.is_open())
             {
-                std::wcerr << __wcserror(inputFileName.native().c_str());
+                std::wcerr << __wcserror(input_file_name.native().c_str());
                 return;
             }
 
             const CharT *s = reinterpret_cast<const CharT *>(file.data());
             size_t len = file.size() / sizeof(CharT);
-            std::wcout << inputFileName.native() << "\tCharCount\t" << len << std::endl;
+            std::wcout << input_file_name.native() << "\tCharCount\t" << len << std::endl;
 
-            linePositionList.push_back(s);
+            line_position_list.push_back(s);
             for (size_t i = 0; i < len; i++)
             {
                 if (s[i] == '\n')
                 {
-                    lineIndexList.push_back(lineIndex++);
-                    linePositionList.push_back(&s[i + 1]);
+                    line_index_list.push_back(line_index++);
+                    line_position_list.push_back(&s[i + 1]);
                 }
             }
             if (s[len - 1] != '\n')
             {
-                lineIndexList.push_back(lineIndex++);
-                linePositionList.push_back(&s[len]);
+                line_index_list.push_back(line_index++);
+                line_position_list.push_back(&s[len]);
             }
 
-            std::wcout << inputFileName.native() << "\tLineCount\t" << (lineIndex - prevLineIndex) << std::endl;
-            lineIndex++;
+            std::wcout << input_file_name.native() << "\tLineCount\t" << (line_index - prev_line_index) << std::endl;
+            line_index++;
         }
 
         // Shuffle lines
 
-        size_t numLines = lineIndexList.size();
-        std::cout << "\tLineCount\t" << numLines << std::endl;
-        if (lineIndex - inputFileNameList.size() != numLines)
+        size_t num_lines = line_index_list.size();
+        std::cout << "\tLineCount\t" << num_lines << std::endl;
+        if (line_index - input_file_name_list.size() != num_lines)
         {
             std::wcerr << "something wrong" << std::endl;
             return;
@@ -168,181 +168,181 @@ namespace bigtext
 
         rnd::mt19937_64 gen(std::time(nullptr));
         rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
-        for (size_t i = 0; i < numLines - 1; i++)
+        for (size_t i = 0; i < num_lines - 1; i++)
         {
-            size_t j = i + dist(numLines - i);
-            std::swap(lineIndexList[i], lineIndexList[j]);
+            size_t j = i + dist(num_lines - i);
+            std::swap(line_index_list[i], line_index_list[j]);
         }
 
         // Write lines
 
-        size_t curIndex = 0;
-        for (auto &outputSpec : outputSpecList)
+        size_t cur_index = 0;
+        for (auto &output_spec : output_spec_list)
         {
-            uintmax_t lineCount;
-            if (outputSpec.numberOfLines > 0)
+            uintmax_t line_count;
+            if (output_spec.number_of_lines > 0)
             {
-                lineCount = outputSpec.numberOfLines;
+                line_count = output_spec.number_of_lines;
             }
-            else if (outputSpec.rate >= 1.0)
+            else if (output_spec.rate >= 1.0)
             {
-                lineCount = numLines;
+                line_count = num_lines;
             }
             else
             {
-                lineCount = static_cast<uintmax_t>(numLines * outputSpec.rate + 0.5);
+                line_count = static_cast<uintmax_t>(num_lines * output_spec.rate + 0.5);
             }
 
-            std::wcerr << outputSpec.fileName << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
+            std::wcerr << output_spec.file_name << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
 
             fs::basic_ofstream<CharT> out;
-            out.open(outputSpec.fileName, std::ios::out | std::ios::binary);
+            out.open(output_spec.file_name, std::ios::out | std::ios::binary);
             if (!out.is_open())
             {
-                std::wcerr << __wcserror(outputSpec.fileName.native().c_str());
+                std::wcerr << __wcserror(output_spec.file_name.native().c_str());
                 return;
             }
 
-            for (uintmax_t i = 0; i < lineCount; i++)
+            for (uintmax_t i = 0; i < line_count; i++)
             {
-                if (curIndex >= numLines)
+                if (cur_index >= num_lines)
                 {
                     break;
                 }
 
-                size_t n = lineIndexList[curIndex++];
-                const CharT *first = linePositionList[n];
-                const CharT *last = linePositionList[n + 1];
+                size_t n = line_index_list[cur_index++];
+                const CharT *first = line_position_list[n];
+                const CharT *last = line_position_list[n + 1];
                 out.write(first, last - first);
             }
         }
     }
 
     template<typename CharT>
-    void FileShuffleLines(const std::vector<fs::path> &inputFileNameList, const std::vector<SampleOutputSpec> &outputSpecList, uintmax_t interleavingSize, size_t maxBufferSize)
+    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, size_t max_buffer_size)
     {
-        std::wcout << "\tInterleavingSize\t" << interleavingSize << std::endl;
-        std::vector<const CharT *> linePositionList;
-        std::wcout << "\tMaxBufferSize\t" << maxBufferSize << std::endl;
-        heap_vector<CharT> heap(maxBufferSize / sizeof(CharT));
+        std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
+        std::vector<const CharT *> line_position_list;
+        std::wcout << "\tMaxBufferSize\t" << max_buffer_size << std::endl;
+        heap_vector<CharT> heap(max_buffer_size / sizeof(CharT));
 
-        size_t lineIndex = 0;
+        size_t line_index = 0;
         CharT *p = heap.ptr();
-        CharT *last = heap.ptr() + maxBufferSize / sizeof(CharT);
-        for (uintmax_t sliceStart = interleavingSize; sliceStart > 0; --sliceStart)
+        CharT *last = heap.ptr() + max_buffer_size / sizeof(CharT);
+        for (uintmax_t slice_start = interleaving_size; slice_start > 0; --slice_start)
         {
-            std::wcout << "\tCurrentSlice\t" << sliceStart << std::endl;
-            uintmax_t currentSlice = sliceStart;
-            uintmax_t lineCount = 0;
+            std::wcout << "\tCurrentSlice\t" << slice_start << std::endl;
+            uintmax_t current_slice = slice_start;
+            uintmax_t line_count = 0;
 
-            for (auto &inputFileName : inputFileNameList)
+            for (auto &input_file_name : input_file_name_list)
             {
-                linePositionList.push_back(p);
-                std::wcout << inputFileName.native() << "\tReading" << std::endl;
-                FileLineSourceDefault<CharT>(inputFileName, [&p, last, &currentSlice, &linePositionList, &lineCount, interleavingSize](const CharT *s, size_t len)
+                line_position_list.push_back(p);
+                std::wcout << input_file_name.native() << "\tReading" << std::endl;
+                file_line_source_default<CharT>(input_file_name, [&p, last, &current_slice, &line_position_list, &line_count, interleaving_size](const CharT *s, size_t len)
                 {
                     if (len > 0)
                     {
-                        if (--currentSlice == 0)
+                        if (--current_slice == 0)
                         {
                             std::memcpy(p, s, len * sizeof(CharT));
                             p += len;
-                            linePositionList.push_back(p);
-                            currentSlice = interleavingSize;
+                            line_position_list.push_back(p);
+                            current_slice = interleaving_size;
                         }
-                        lineCount++;
+                        line_count++;
                     }
                 });
             }
 
             // Shuffle lines
 
-            std::vector<size_t> lineIndexList;
-            uintmax_t numLines = linePositionList.size() - 1;
-            std::wcout << "Shuffling " << numLines << " lines" << std::endl;
+            std::vector<size_t> line_index_list;
+            uintmax_t num_lines = line_position_list.size() - 1;
+            std::wcout << "Shuffling " << num_lines << " lines" << std::endl;
             std::wcout.flush();
-            lineIndexList.resize(numLines);
-            for (size_t i = 0; i != numLines; i++)
+            line_index_list.resize(num_lines);
+            for (size_t i = 0; i != num_lines; i++)
             {
-                lineIndexList[i] = i;
+                line_index_list[i] = i;
             }
 
             rnd::mt19937_64 gen(std::time(nullptr));
             rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
-            for (size_t i = 0; i < numLines - 1; i++)
+            for (size_t i = 0; i < num_lines - 1; i++)
             {
-                size_t j = i + dist(numLines - i);
-                std::swap(lineIndexList[i], lineIndexList[j]);
+                size_t j = i + dist(num_lines - i);
+                std::swap(line_index_list[i], line_index_list[j]);
             }
 
             // Write lines
 
-            size_t curIndex = 0;
-            for (auto &outputSpec : outputSpecList)
+            size_t cur_index = 0;
+            for (auto &output_spec : output_spec_list)
             {
-                uintmax_t lineCount;
-                if (outputSpec.numberOfLines > 0)
+                uintmax_t line_count;
+                if (output_spec.number_of_lines > 0)
                 {
-                    lineCount = outputSpec.numberOfLines;
+                    line_count = output_spec.number_of_lines;
                 }
-                else if (outputSpec.rate >= 1.0)
+                else if (output_spec.rate >= 1.0)
                 {
-                    lineCount = numLines;
+                    line_count = num_lines;
                 }
                 else
                 {
-                    lineCount = static_cast<uintmax_t>(numLines * outputSpec.rate + 0.5);
+                    line_count = static_cast<uintmax_t>(num_lines * output_spec.rate + 0.5);
                 }
 
-                std::wcerr << outputSpec.fileName.native() << "\tLineCount\t" << min(lineCount, numLines - curIndex) << std::endl;
+                std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
 
                 fs::basic_ofstream<CharT> out;
                 int mode = std::ios::out | std::ios::binary;
-                if (sliceStart != interleavingSize)
+                if (slice_start != interleaving_size)
                 {
                     mode |= std::ios::app;
                 }
-                out.open(outputSpec.fileName, mode);
+                out.open(output_spec.file_name, mode);
                 if (!out.is_open())
                 {
-                    std::wcerr << __wcserror(outputSpec.fileName.native().c_str());
+                    std::wcerr << __wcserror(output_spec.file_name.native().c_str());
                     return;
                 }
 
-                for (uintmax_t i = 0; i < lineCount; i++)
+                for (uintmax_t i = 0; i < line_count; i++)
                 {
-                    if (curIndex >= numLines)
+                    if (cur_index >= num_lines)
                     {
                         break;
                     }
 
-                    size_t n = lineIndexList[curIndex++];
-                    const CharT *first = linePositionList[n];
-                    const CharT *last = linePositionList[n + 1];
+                    size_t n = line_index_list[cur_index++];
+                    const CharT *first = line_position_list[n];
+                    const CharT *last = line_position_list[n + 1];
                     out.write(first, last - first);
                 }
             }
 
-            linePositionList.clear();
+            line_position_list.clear();
         }
     }
 
     template <typename CharT>
-    void FileQuickSampleFileLines(fs::path &inputFileName, const std::vector<SampleOutputSpec> &outputSpecList, bool shuffleOutput)
+    void file_quick_sample_file_lines(fs::path &input_file_name, const std::vector<sample_output_spec> &output_spec_list, bool shuffle_output)
     {
         static_assert(sizeof(CharT) == sizeof(char), "Only char type is supported.");
         rnd::mt19937_64 gen(std::time(nullptr));
-        uintmax_t fileSize = fs::file_size(inputFileName);
-        rnd::uniform_int_distribution<std::streamoff> dist(0, fileSize);
-        fs::ifstream fin(inputFileName);
+        uintmax_t file_size = fs::file_size(input_file_name);
+        rnd::uniform_int_distribution<std::streamoff> dist(0, file_size);
+        fs::ifstream fin(input_file_name);
         if (!fin.is_open())
         {
             return;
         }
-        for (auto &spec : outputSpecList)
+        for (auto &spec : output_spec_list)
         {
-            std::vector<std::basic_string<CharT>> lineList;
-            for (int i = 0; i < spec.numberOfLines; i++)
+            std::vector<std::basic_string<CharT>> line_list;
+            for (int i = 0; i < spec.number_of_lines; i++)
             {
                 uintmax_t pos = dist(gen);
                 fin.seekg(pos);
@@ -358,10 +358,10 @@ namespace bigtext
                 {
                     fin.clear();
                 }
-                lineList.push_back(std::move(line));
+                line_list.push_back(std::move(line));
             }
-            fs::ofstream fout(spec.fileName, std::ios::out | std::ios::binary);
-            for (auto &line : lineList)
+            fs::ofstream fout(spec.file_name, std::ios::out | std::ios::binary);
+            for (auto &line : line_list)
             {
                 fout << line << '\n';
             }
