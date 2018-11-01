@@ -83,7 +83,7 @@ namespace bigtext
                 throw std::logic_error("None of taget lines or rate is specified.");
             }
             auto &out = outputProgressList[i].out;
-            out.open(spec.fileName);
+            out.open(spec.fileName, std::ios::out | std::ios::binary);
             if (!out.is_open())
             {
                 std::wcerr << __wcserror(spec.fileName.native().c_str());
