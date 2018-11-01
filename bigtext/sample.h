@@ -295,7 +295,16 @@ namespace bigtext
                 uintmax_t line_count;
                 if (output_spec.number_of_lines > 0)
                 {
-                    line_count = output_spec.number_of_lines;
+                    if (slice_start == interleaving_size)
+                    {
+                        uintmax_t u = slice_start * output_spec.number_of_lines / interleaving_size;
+                        uintmax_t t = (slice_start - 1) * output_spec.number_of_lines / interleaving_size;
+                        line_count = u - t;
+                    }
+                    else
+                    {
+                        line_count = output_spec.number_of_lines / interleaving_size;
+                    }
                 }
                 else if (output_spec.rate >= 1.0)
                 {
