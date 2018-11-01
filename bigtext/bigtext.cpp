@@ -86,7 +86,7 @@ namespace bigtext
 
     bool check_input_files(const std::vector<fs::path> &input_file_name_list)
     {
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             if (!fs::is_regular_file(file_name))
             {

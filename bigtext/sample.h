@@ -37,7 +37,7 @@ namespace bigtext
             return;
         }
 
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             file_line_source_default<CharT>(file_name, [&dist, &gen, &out](const CharT *s, size_t len)
             {
@@ -69,7 +69,7 @@ namespace bigtext
 
         for (size_t i = 0; i < num_outputs; i++)
         {
-            auto& spec = output_spec_list[i];
+            auto &spec = output_spec_list[i];
             if (spec.number_of_lines != 0)
             {
                 throw std::logic_error("Taget lines is not allowed.");

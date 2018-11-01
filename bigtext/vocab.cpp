@@ -203,7 +203,7 @@ namespace bigtext
         {
             // Verify none of the output files exists
             std::vector<fs::path> output_file_name_list;
-            for (auto& spec : output_spec_list) output_file_name_list.push_back(spec.file_name);
+            for (auto &spec : output_spec_list) output_file_name_list.push_back(spec.file_name);
             if (!check_output_files(output_file_name_list))
             {
                 return 1;
