@@ -8,17 +8,22 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+# shakespeare.txt Texts from Shakespeare.
+# test1.txt       20K normal lines
+# test2.txt       20K normal lines but the last line without newline.
+# test3.txt       1 normal line
+# test4.txt       Empty file
+# test5.txt       A file only with one newline.
+# test6.txt       single very long lines.
+
 class TestBigtext(unittest.TestCase):
 
-    FILES = ['shakespeare.txt']
+    FILES = ['shakespeare.txt'] + ['test%d.txt' % i for i in range(1, 7)]
     OUTPUT_FILES = ['result.txt', 'result2.txt']
 
     @classmethod
     def tearDownClass(cls):
         cls._remove_output()
-
-    def setUp(self):
-        self._remove_output()
 
     def test_help(self):
         self._run_command()
@@ -31,25 +36,17 @@ class TestBigtext(unittest.TestCase):
     def test_count_quick(self):
         for source_fname in self.FILES:
             self._run_command('count %s' % source_fname)
-            self.assertIn(source_fname, self.parsed_result)
-            res = self.parsed_result
-            logging.info('%s %s %s' % (source_fname, 'EstLineCount', res[source_fname]['EstLineCount']))
-            diff = abs(res[source_fname]['EstLineCount'] / count_lines(source_fname) - 1)
-            self.assertLess(diff, .2)
+            self.assertFileIsCountedFrom(source_fname, False)
 
     def test_count_full(self):
         for source_fname in self.FILES:
             self._run_command('count -c %s' % source_fname)
-            self.assertIn(source_fname, self.parsed_result)
-            res = self.parsed_result
-            self.assertEqual(res[source_fname]['LineCount'], count_lines(source_fname))
+            self.assertFileIsCountedFrom(source_fname, True)
 
-    def test_vocab_full(self):
+    def test_vocab(self):
         for source_fname in self.FILES:
             self._run_command('vocab %s -o result.txt' % source_fname)
-            actual = read_vocab('result.txt')
-            expected = get_vocab(source_fname)
-            compare_dict(expected, actual)
+            self.assertFileIsVocabOf('result.txt', source_fname)
 
     def test_sample_single_all(self):
         for source_fname in self.FILES:
@@ -78,6 +75,33 @@ class TestBigtext(unittest.TestCase):
             self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
             self.assertFileIsSampledFrom('result2.txt', source_fname, -1000, False)
 
+    def assertFileIsCountedFrom(self, source_fname, exact):
+        res = self.parsed_result
+        self.assertIn(source_fname, res)
+        if exact:
+            actual_len = res[source_fname]['LineCount']
+        else:
+            actual_len = res[source_fname]['EstLineCount']
+        expected_len = count_lines(source_fname)
+        if exact or expected_len == 0:
+            logging.info("%d lines counted, expected exact %d lines.", actual_len, expected_len)
+        else:
+            logging.info("%d lines counted, expected around %d lines.", actual_len, expected_len)
+            diff = abs(actual_len / expected_len - 1)
+            self.assertLess(diff, .2)
+
+    def assertFileIsVocabOf(self, actual_fname, source_fname):
+        actual = read_vocab(actual_fname)
+        expected = get_vocab(source_fname)
+        actual_len = len(actual)
+        expected_len = len(expected)
+        logging.info("%d words counted, expected %d words.", actual_len, expected_len)
+        if len(actual) != len(expected):
+            pass #raise ValueError()
+        for k, v in actual.items():
+            if k not in expected: raise AssertionError('%s is not found in the source file.' % k[:10])
+            if v != expected[k]: raise AssertionError('Count of %s is %d in %s. Expected %d.' % (k[:10], v, source_fname, expected[k]))
+
     def assertFileIsSampledFrom(self, actual_fname, source_fname, rate_or_number, exact):
         actual = read_sample(actual_fname)
         source = read_sample(source_fname)
@@ -94,22 +118,25 @@ class TestBigtext(unittest.TestCase):
                 expected_len = source_len
         else:
             raise ValueError()
-        if exact:
-            logging.info("%d lines sampled, expected exact %d lines.", len(actual), expected_len)
+        if source_len == 1:
+            logging.info("%d lines sampled, the source only contains single line.", actual_len)
+        elif exact:
+            logging.info("%d lines sampled, expected exact %d lines.", actual_len, expected_len)
             self.assertEqual(expected_len, actual_len)
         else:
-            logging.info("%d lines sampled, expected around %d lines.", len(actual), expected_len)
+            logging.info("%d lines sampled, expected around %d lines.", actual_len, expected_len)
             diff = abs(actual_len / expected_len - 1)
             self.assertLess(diff, .2)
         #self.assertLessEqual(actual, source)
         actual = set(actual)
         source = set(source)
         if not (actual <= source):
-            print(list(source)[0])
+            #print(list(source)[0])
             x = list(actual - source)[0]
             raise AssertionError('%s is not included in the source.' % x)
 
     def _run_command(self, args=[]):
+        self._remove_output()
         self.command_result = exec_command(args)
         self.parsed_result = parse_triple(self.command_result)
 
@@ -145,7 +172,11 @@ def count_lines(fname):
 def get_vocab(fname):
     c = Counter()
     with open(fname, 'rb') as f:
-        c.update(f.read()[3:].split())
+        x = f.read()
+    # Remove BOM
+    if x.startswith(b'\xef\xbb\xbf'):
+        x = x[3:]
+    c.update(x.split())
     return c
 
 def read_vocab(fname):
@@ -155,22 +186,16 @@ def read_vocab(fname):
     with open(fname, 'rb') as f:
         for x in f.readlines():
             x = x.rstrip(b'\r\n').split(b'\t')
-            if len(x) != 2: raise ValueError()
+            if len(x) != 2: raise ValueError(x)
             word, count = x
-            if not num_pat.match(count): raise ValueError()
+            if not num_pat.match(count): raise ValueError(x)
             count = int(count)
             if prev_count is not None:
-                if prev_count < count: raise ValueError()
+                if prev_count < count: raise ValueError(x)
             prev_count = count
-            if word in res: raise ValueError()
+            if word in res: raise ValueError(x)
             res[word] = count
     return res
-
-def compare_dict(d1, d2):
-    if len(d1) != len(d2):
-        pass #raise ValueError()
-    for k, v in d1.items():
-        if v != d2[k]: raise ValueError() 
 
 def read_sample(fname):
     with open(fname, 'rb') as f:
