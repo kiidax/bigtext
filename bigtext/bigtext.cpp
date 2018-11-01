@@ -8,7 +8,7 @@
 
 namespace bigtext
 {
-    static int MainUsage()
+    static int main_usage()
     {
         std::wcout <<
             L"usage: bigtext COMMAND [ARGS]\n"
@@ -30,7 +30,7 @@ namespace bigtext
     const int BUILD_VERSION = 1;
     const int REVISION_VERSION = 0;
 
-    std::wstring GetVersionString()
+    std::wstring get_version_string()
     {
         return std::to_wstring(MAJOR_VERSION) + L"."
             + std::to_wstring(MINOR_VERSION) + L"."
@@ -38,82 +38,82 @@ namespace bigtext
             + std::to_wstring(REVISION_VERSION);
     }
 
-    static int VersionCommand(int argc, wchar_t *argv[])
+    static int version_command(int argc, wchar_t *argv[])
     {
         std::wcout
-            << PROGRAM_NAME << " " << GetVersionString() << std::endl
+            << PROGRAM_NAME << " " << get_version_string() << std::endl
             << L"Copyright (C) 2017 Katsuya Iida. All rights reserved." << std::endl;
         return 0;
     }
 
-    int Main(int argc, wchar_t *argv[])
+    int main(int argc, wchar_t *argv[])
     {
         if (argc == 1)
         {
-            return MainUsage();
+            return main_usage();
         }
         else if (argc >= 2)
         {
-            const std::wstring commandName(argv[1]);
-            if (commandName == L"count")
+            const std::wstring command_name(argv[1]);
+            if (command_name == L"count")
             {
-                return CountCommand(argc - 1, argv + 1);
+                return count_command(argc - 1, argv + 1);
             }
-            else if (commandName == L"sample")
+            else if (command_name == L"sample")
             {
-                return SampleCommand(argc - 1, argv + 1);
+                return sample_command(argc - 1, argv + 1);
             }
-            else if (commandName == L"vocab")
+            else if (command_name == L"vocab")
             {
-                return VocabCommand(argc - 1, argv + 1);
+                return vocab_command(argc - 1, argv + 1);
             }
-            else if (commandName == L"version")
+            else if (command_name == L"version")
             {
-                return VersionCommand(argc - 1, argv + 1);
+                return version_command(argc - 1, argv + 1);
             }
             else
             {
-                std::wcerr << L"Unknown command `" << commandName << L"'." << std::endl;
+                std::wcerr << L"Unknown command `" << command_name << L"'." << std::endl;
                 exit(1);
             }
         }
         else
         {
-            return MainUsage();
+            return main_usage();
         }
         return 0;
     }
 
-    bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList)
+    bool check_input_files(const std::vector<fs::path> &input_file_name_list)
     {
-        for (auto& fileName : inputFileNameList)
+        for (auto& file_name : input_file_name_list)
         {
-            if (!fs::is_regular_file(fileName))
+            if (!fs::is_regular_file(file_name))
             {
-                std::wcerr << "`" << fileName.wstring() << "' doesn't exist." << std::endl;
+                std::wcerr << "`" << file_name.wstring() << "' doesn't exist." << std::endl;
                 return false;
             }
         }
         return true;
     }
 
-    bool CheckOutputFiles(const std::vector<fs::path>& outputFileNameList)
+    bool check_output_files(const std::vector<fs::path>& output_file_name_list)
     {
-        for (auto &it = outputFileNameList.cbegin(); it != outputFileNameList.cend(); ++it)
+        for (auto &it = output_file_name_list.cbegin(); it != output_file_name_list.cend(); ++it)
         {
-            auto &fileName = *it;
-            if (fs::exists(fileName))
+            auto &file_name = *it;
+            if (fs::exists(file_name))
             {
-                std::wcerr << "`" << fileName.native() << "' already exists." << std::endl;
+                std::wcerr << "`" << file_name.native() << "' already exists." << std::endl;
                 return false;
             }
 
-            for (auto &it2 = outputFileNameList.cbegin(); it2 != it; ++it2)
+            for (auto &it2 = output_file_name_list.cbegin(); it2 != it; ++it2)
             {
-                auto &fileName2 = *it2;
-                if (fileName == fileName2)
+                auto &file_name2 = *it2;
+                if (file_name == file_name2)
                 {
-                    std::wcerr << "Duplicated output file `" << fileName.native() << "'." << std::endl;
+                    std::wcerr << "Duplicated output file `" << file_name.native() << "'." << std::endl;
                     return false;
                 }
             }
@@ -121,7 +121,7 @@ namespace bigtext
         return true;
     }
 
-    bool TryParseRate(const std::wstring &s, double &rate)
+    bool try_parse_rate(const std::wstring &s, double &rate)
     {
         try
         {
@@ -162,7 +162,7 @@ namespace bigtext
         }
     }
 
-    bool TryParseNumber(const std::wstring &s, uintmax_t &numberOfLines)
+    bool try_parse_number(const std::wstring &s, uintmax_t &number_of_lines)
     {
         try
         {
@@ -181,7 +181,7 @@ namespace bigtext
             {
                 return false;
             }
-            numberOfLines = v;
+            number_of_lines = v;
             return true;
         }
         catch (std::invalid_argument)

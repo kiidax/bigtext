@@ -14,26 +14,26 @@ namespace bigtext {
     extern const int BUILD_VERSION;
     extern const int REVISION_VERSION;
 
-    int Main(int argc, wchar_t *argv[]);
-    int CountCommand(int argc, wchar_t *argv[]);
-    int SampleCommand(int argc, wchar_t *argv[]);
-    int VocabCommand(int argc, wchar_t *argv[]);
-    int VersionCommand(int argc, wchar_t *argv[]);
-    std::wstring GetVersionString();
-    bool CheckInputFiles(const std::vector<fs::path> &inputFileNameList);
-    bool CheckOutputFiles(const std::vector<fs::path> &outputFileNameList);
-    bool TryParseRate(const std::wstring &s, double &rate);
-    bool TryParseNumber(const std::wstring &s, uintmax_t &numberOfLines);
-    uintmax_t GetPhysicalMemorySize();
+    int main(int argc, wchar_t *argv[]);
+    int count_command(int argc, wchar_t *argv[]);
+    int sample_command(int argc, wchar_t *argv[]);
+    int vocab_command(int argc, wchar_t *argv[]);
+    int version_command(int argc, wchar_t *argv[]);
+    std::wstring get_version_string();
+    bool check_input_files(const std::vector<fs::path> &input_file_name_list);
+    bool check_output_files(const std::vector<fs::path> &output_file_name_list);
+    bool try_parse_rate(const std::wstring &s, double &rate);
+    bool try_parse_number(const std::wstring &s, uintmax_t &number_of_lines);
+    uintmax_t get_physical_memory_size();
 
     template <typename CharT>
-    bool IsNewLine(CharT ch)
+    bool is_new_line(CharT ch)
     {
         return ch == '\n';
     }
 
     template <typename CharT>
-    bool IsWhiteSpace(CharT ch)
+    bool is_white_space(CharT ch)
     {
         return ch <= ' ';
     }

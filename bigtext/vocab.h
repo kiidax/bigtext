@@ -12,33 +12,33 @@ namespace bigtext
 
     static const uintmax_t QUICK_LINE_COUNT = 100 * 1024 * 1024;
 
-    struct VocabOutputSpec
+    struct vocab_output_spec
     {
-        fs::path fileName;
+        fs::path file_name;
         int column; // 0 indexed. -1 for all.
 
-        VocabOutputSpec(const fs::path &fileName) : VocabOutputSpec(fileName, -1) {}
-        VocabOutputSpec(const fs::path &fileName, int column) : fileName(fileName), column(column) {}
+        vocab_output_spec(const fs::path &file_name) : vocab_output_spec(file_name, -1) {}
+        vocab_output_spec(const fs::path &file_name, int column) : file_name(file_name), column(column) {}
     };
 
     template <typename CharT, typename StringT = std::basic_string<CharT>>
-    bool WriteVocabCount(const std::unordered_map<StringT, uintmax_t> &vocabCount, const fs::path &outputFileName)
+    bool write_vocab_count(const std::unordered_map<StringT, uintmax_t> &vocab_count, const fs::path &output_file_name)
     {
         using StringCountT = std::pair<StringT, uintmax_t>;
-        std::vector<StringCountT> sortedKeyValue(vocabCount.cbegin(), vocabCount.cend());
-        std::sort(sortedKeyValue.begin(), sortedKeyValue.end(), [](const StringCountT &x, const StringCountT &y)
+        std::vector<StringCountT> sorted_key_value(vocab_count.cbegin(), vocab_count.cend());
+        std::sort(sorted_key_value.begin(), sorted_key_value.end(), [](const StringCountT &x, const StringCountT &y)
         {
             return x.second == y.second ? x.first < y.first : x.second > y.second;
         });
 
         fs::basic_ofstream<CharT> out;
-        out.open(outputFileName, std::ios::out);
+        out.open(output_file_name, std::ios::out);
         if (!out.is_open())
         {
-            std::wcerr << __wcserror(outputFileName.native().c_str());
+            std::wcerr << __wcserror(output_file_name.native().c_str());
             return false;
         }
-        for (auto &kv : sortedKeyValue)
+        for (auto &kv : sorted_key_value)
         {
             out << kv.first << '\t' << kv.second << std::endl;
         }
@@ -46,89 +46,89 @@ namespace bigtext
     }
 
     template <typename CharT, typename StringT = std::basic_string<CharT>>
-    void IncrementVocabCount(std::unordered_map<StringT, uintmax_t> &vocabCount, const CharT *s, size_t len)
+    void increment_vocab_count(std::unordered_map<StringT, uintmax_t> &vocab_count, const CharT *s, size_t len)
     {
         StringT key(s, s + len);
-        auto it = vocabCount.find(key);
-        if (it != vocabCount.end())
+        auto it = vocab_count.find(key);
+        if (it != vocab_count.end())
         {
             (*it).second += 1;
         }
         else
         {
-            vocabCount.emplace(std::move(key), 1);
+            vocab_count.emplace(std::move(key), 1);
         }
     }
 
     template <typename CharT>
-    void FileCountVocab(const std::vector<fs::path> &inputFileNameList, const fs::path& outputFileName)
+    void file_count_vocab(const std::vector<fs::path> &input_file_name_list, const fs::path& output_file_name)
     {
         using StringT = std::basic_string<CharT>;
-        std::unordered_map<StringT, uintmax_t> vocabCount;
-        for (auto& fileName : inputFileNameList)
+        std::unordered_map<StringT, uintmax_t> vocab_count;
+        for (auto& file_name : input_file_name_list)
         {
-            FileWordSourceDefault<CharT>(fileName, [&vocabCount](const CharT *s, size_t len) {
+            file_word_source_default<CharT>(file_name, [&vocab_count](const CharT *s, size_t len) {
                 if (s != nullptr)
                 {
-                    IncrementVocabCount(vocabCount, s, len);
+                    increment_vocab_count(vocab_count, s, len);
                 }
                 return true;
             });
         }
 
-        WriteVocabCount<CharT>(vocabCount, outputFileName);
+        write_vocab_count<CharT>(vocab_count, output_file_name);
     }
 
     template <typename CharT>
-    void FileCountVocab(const std::vector<fs::path> &inputFileNameList, const VocabOutputSpec &outputSpec)
+    void file_count_vocab(const std::vector<fs::path> &input_file_name_list, const vocab_output_spec &output_spec)
     {
         using StringT = std::basic_string<CharT>;
-        std::unordered_map<StringT, uintmax_t> vocabCount;
-        int targetColumn = outputSpec.column;
+        std::unordered_map<StringT, uintmax_t> vocab_count;
+        int target_column = output_spec.column;
 
-        for (auto& fileName : inputFileNameList)
+        for (auto& file_name : input_file_name_list)
         {
-            FileWordSourceWithColumnDefault<CharT>(fileName, [&vocabCount, targetColumn](const CharT *s, size_t len, int column) {
+            file_word_source_with_column_default<CharT>(file_name, [&vocab_count, target_column](const CharT *s, size_t len, int column) {
                 if (s != nullptr)
                 {
-                    if (column == targetColumn)
+                    if (column == target_column)
                     {
-                        IncrementVocabCount(vocabCount, s, len);
+                        increment_vocab_count(vocab_count, s, len);
                     }
                 }
                 return true;
             });
         }
 
-        WriteVocabCount<CharT>(vocabCount, outputSpec.fileName);
+        write_vocab_count<CharT>(vocab_count, output_spec.file_name);
     }
 
     template <typename CharT>
-    void FileCountVocab(const std::vector<fs::path> &inputFileNameList, const std::vector<VocabOutputSpec> &outputSpecList)
+    void file_count_vocab(const std::vector<fs::path> &input_file_name_list, const std::vector<vocab_output_spec> &output_spec_list)
     {
         using StringT = std::basic_string<CharT>;
         using StringCountT = std::pair<StringT, uintmax_t>;
-        std::vector<std::auto_ptr<std::unordered_map<StringT, uintmax_t>>> vocabCountList;
-        for (auto &outputSpec : outputSpecList)
+        std::vector<std::auto_ptr<std::unordered_map<StringT, uintmax_t>>> vocab_count_list;
+        for (auto &output_spec : output_spec_list)
         {
-            while (vocabCountList.size() <= outputSpec.column)
+            while (vocab_count_list.size() <= output_spec.column)
             {
-                vocabCountList.emplace_back();
+                vocab_count_list.emplace_back();
             }
-            vocabCountList[outputSpec.column].reset(new std::unordered_map<StringT, uintmax_t >());
+            vocab_count_list[output_spec.column].reset(new std::unordered_map<StringT, uintmax_t >());
         }
 
-        for (auto& fileName : inputFileNameList)
+        for (auto& file_name : input_file_name_list)
         {
-            FileWordSourceWithColumnDefault<CharT>(fileName, [&vocabCountList](const CharT *s, size_t len, int column) {
+            file_word_source_with_column_default<CharT>(file_name, [&vocab_count_list](const CharT *s, size_t len, int column) {
                 if (s != nullptr)
                 {
-                    if (column < vocabCountList.size())
+                    if (column < vocab_count_list.size())
                     {
-                        auto vocabCount = vocabCountList[column].get();
-                        if (vocabCount != nullptr)
+                        auto vocab_count = vocab_count_list[column].get();
+                        if (vocab_count != nullptr)
                         {
-                            IncrementVocabCount(*vocabCount, s, len);
+                            increment_vocab_count(*vocab_count, s, len);
                         }
                     }
                 }
@@ -136,10 +136,10 @@ namespace bigtext
             });
         }
 
-        for (auto &outputSpec : outputSpecList)
+        for (auto &output_spec : output_spec_list)
         {
-            auto vocabCount = vocabCountList[outputSpec.column];
-            WriteVocabCount<CharT>(*vocabCount, outputSpec.fileName);
+            auto vocab_count = vocab_count_list[output_spec.column];
+            write_vocab_count<CharT>(*vocab_count, output_spec.file_name);
         }
     }
 }

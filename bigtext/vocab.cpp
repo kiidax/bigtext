@@ -11,7 +11,7 @@ namespace bigtext
 {
     namespace fs = boost::filesystem;
 
-    static int VocabUsage()
+    static int vocab_usage()
     {
         std::wcout << "Usage: bigtext vocab [OPTION]... INPUTFILE... [[-o|-m COLUMN] OUTPUTFILE]..." << std::endl;
         std::wcout << "Count words in the files and make vocabulary list." << std::endl;
@@ -25,19 +25,19 @@ namespace bigtext
         return 0;
     }
 
-    int VocabCommand(int argc, wchar_t *argv[])
+    int vocab_command(int argc, wchar_t *argv[])
     {
         int optind = 1;
-        bool noSimpleMode = false;
-        bool forceOverwrite = false;
-        bool shuffleOutput = false;
-        bool hasOutputAll = false;
-        std::vector<fs::path> inputFileNameList;
-        std::vector<VocabOutputSpec> outputSpecList;
+        bool no_simple_mode = false;
+        bool force_overwrite = false;
+        bool shuffle_output = false;
+        bool has_output_all = false;
+        std::vector<fs::path> input_file_name_list;
+        std::vector<vocab_output_spec> output_spec_list;
 
         if (argc <= 1)
         {
-            return VocabUsage();
+            return vocab_usage();
         }
 
         while (optind < argc)
@@ -62,10 +62,10 @@ namespace bigtext
                 switch (*p)
                 {
                 case 'f':
-                    forceOverwrite = true;
+                    force_overwrite = true;
                     break;
                 case 'h':
-                    return VocabUsage();
+                    return vocab_usage();
                 case 'c':
                 case 'o':
                     std::wcerr << "No input files." << std::endl;
@@ -88,10 +88,10 @@ namespace bigtext
                 break;
             }
 
-            inputFileNameList.push_back(p);
+            input_file_name_list.push_back(p);
         }
 
-        if (inputFileNameList.size() == 0)
+        if (input_file_name_list.size() == 0)
         {
             std::cerr << "No input files." << std::endl;
             return 1;
@@ -100,7 +100,7 @@ namespace bigtext
         while (optind < argc)
         {
             const wchar_t *p = argv[optind++];
-            bool nextIsNumber = false;
+            bool next_is_number = false;
             if (*p++ != '-')
             {
                 std::wcerr << "-m or -o is expected." << std::endl;
@@ -113,7 +113,7 @@ namespace bigtext
                 return 1;
             }
 
-            if (hasOutputAll)
+            if (has_output_all)
             {
                 std::wcerr << "Another output after -o option is not allowed." << std::endl;
                 return 1;
@@ -122,10 +122,10 @@ namespace bigtext
             switch (*p)
             {
             case 'c':
-                nextIsNumber = true;
+                next_is_number = true;
                 break;
             case 'o':
-                hasOutputAll = true;
+                has_output_all = true;
                 break;
             default:
                 std::wcerr << "Unknown option `" << *p << "'." << std::endl;
@@ -137,7 +137,7 @@ namespace bigtext
             {
                 if (optind >= argc)
                 {
-                    if (nextIsNumber)
+                    if (next_is_number)
                     {
                         std::wcerr << "Line number is expected." << std::endl;
                     }
@@ -150,11 +150,11 @@ namespace bigtext
                 p = argv[optind++];
             }
 
-            uintmax_t columnNumber = 0;
+            uintmax_t column_number = 0;
 
-            if (nextIsNumber)
+            if (next_is_number)
             {
-                if (!TryParseNumber(p, columnNumber) || columnNumber > INT_MAX)
+                if (!try_parse_number(p, column_number) || column_number > INT_MAX)
                 {
                     std::wcerr << "Invalid column number `" << p << "'." << std::endl;
                     return 1;
@@ -175,36 +175,36 @@ namespace bigtext
                 return 1;
             }
 
-            if (nextIsNumber)
+            if (next_is_number)
             {
-                std::wcout << p << "\tTargetColumn\t" << columnNumber << std::endl;
-                outputSpecList.emplace_back(p, static_cast<int>(columnNumber - 1));
+                std::wcout << p << "\tTargetColumn\t" << column_number << std::endl;
+                output_spec_list.emplace_back(p, static_cast<int>(column_number - 1));
             }
             else
             {
                 std::wcout << p << "\tTargetColumn\t" << 0 << std::endl;
-                outputSpecList.emplace_back(p);
+                output_spec_list.emplace_back(p);
             }
         }
 
-        if (outputSpecList.size() == 0)
+        if (output_spec_list.size() == 0)
         {
             std::wcerr << "No output files." << std::endl;
             return 1;
         }
 
         // Verify all the input files exist
-        if (!CheckInputFiles(inputFileNameList))
+        if (!check_input_files(input_file_name_list))
         {
             return 1;
         }
 
-        if (!forceOverwrite)
+        if (!force_overwrite)
         {
             // Verify none of the output files exists
-            std::vector<fs::path> outputFileNameList;
-            for (auto& spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
-            if (!CheckOutputFiles(outputFileNameList))
+            std::vector<fs::path> output_file_name_list;
+            for (auto& spec : output_spec_list) output_file_name_list.push_back(spec.file_name);
+            if (!check_output_files(output_file_name_list))
             {
                 return 1;
             }
@@ -214,26 +214,26 @@ namespace bigtext
 
         boost::timer::cpu_timer timer;
 
-        if (outputSpecList.size() == 1)
+        if (output_spec_list.size() == 1)
         {
-            if (outputSpecList[0].column == -1)
+            if (output_spec_list[0].column == -1)
             {
                 // Count all columns.
-                auto &fileName = outputSpecList[0].fileName;
-                FileCountVocab<char>(inputFileNameList, fileName);
+                auto &file_name = output_spec_list[0].file_name;
+                file_count_vocab<char>(input_file_name_list, file_name);
                 status = 0;
             }
             else
             {
                 // Count one column.
-                FileCountVocab<char>(inputFileNameList, outputSpecList[0]);
+                file_count_vocab<char>(input_file_name_list, output_spec_list[0]);
                 status = 0;
             }
         }
         else
         {
             // Count specified columns.
-            FileCountVocab<char>(inputFileNameList, outputSpecList);
+            file_count_vocab<char>(input_file_name_list, output_spec_list);
             status = 0;
         }
 

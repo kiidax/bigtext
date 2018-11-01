@@ -13,7 +13,7 @@ namespace bigtext
 {
     namespace fs = boost::filesystem;
 
-    static int SampleUsage()
+    static int sample_usage()
     {
         std::wcout << "Usage: bigtext sample [OPTION]... INPUTFILE... [[-o|-n LINES|-r RATE] OUTPUTFILE]..." << std::endl;
         std::wcout << std::endl;
@@ -30,119 +30,119 @@ namespace bigtext
         return 0;
     }
 
-    static bool HasNumberOfLines(const std::vector<SampleOutputSpec> &outputSpecList)
+    static bool has_number_of_lines(const std::vector<sample_output_spec> &output_spec_list)
     {
-        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines != 0; });
+        return std::any_of(output_spec_list.cbegin(), output_spec_list.cend(), [](auto &spec) { return spec.number_of_lines != 0; });
     }
 
-    static bool HasSampleRate(const std::vector<SampleOutputSpec> &outputSpecList)
+    static bool has_sample_rate(const std::vector<sample_output_spec> &output_spec_list)
     {
-        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines == 0 && spec.rate < 1.0; });
+        return std::any_of(output_spec_list.cbegin(), output_spec_list.cend(), [](auto &spec) { return spec.number_of_lines == 0 && spec.rate < 1.0; });
     }
 
-    static bool HasSampleAll(const std::vector<SampleOutputSpec> &outputSpecList)
+    static bool has_sample_all(const std::vector<sample_output_spec> &output_spec_list)
     {
-        return std::any_of(outputSpecList.cbegin(), outputSpecList.cend(), [](auto &spec) { return spec.numberOfLines == 0 && spec.rate == 1.0; });
+        return std::any_of(output_spec_list.cbegin(), output_spec_list.cend(), [](auto &spec) { return spec.number_of_lines == 0 && spec.rate == 1.0; });
     }
 
-    static void ConvertToRate(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
+    static void convert_to_rate(std::vector<sample_output_spec> &output_spec_list, double total_number_of_lines)
     {
-        for (auto &spec : outputSpecList)
+        for (auto &spec : output_spec_list)
         {
-            if (spec.numberOfLines != 0)
+            if (spec.number_of_lines != 0)
             {
-                spec.rate = static_cast<double>(spec.numberOfLines) / totalNumberOfLines;
-                spec.numberOfLines = 0;
-                std::wcout << spec.fileName.native() << "\tRate\t" << spec.rate << std::endl;
+                spec.rate = static_cast<double>(spec.number_of_lines) / total_number_of_lines;
+                spec.number_of_lines = 0;
+                std::wcout << spec.file_name.native() << "\tRate\t" << spec.rate << std::endl;
             }
         }
     }
 
-    static void ConvertToNumberOfLines(std::vector<SampleOutputSpec> &outputSpecList, double totalNumberOfLines)
+    static void convert_to_number_of_lines(std::vector<sample_output_spec> &output_spec_list, double total_number_of_lines)
     {
-        for (auto &spec : outputSpecList)
+        for (auto &spec : output_spec_list)
         {
             if (spec.rate > 0.0)
             {
-                spec.numberOfLines = static_cast<uintmax_t>(spec.rate * totalNumberOfLines);
+                spec.number_of_lines = static_cast<uintmax_t>(spec.rate * total_number_of_lines);
                 spec.rate = 0.0;
-                std::wcout << spec.fileName.native() << "\tNumberOfLines\t" << spec.numberOfLines << std::endl;
+                std::wcout << spec.file_name.native() << "\tNumberOfLines\t" << spec.number_of_lines << std::endl;
             }
         }
     }
 
     template <typename CharT>
-    static double GuessTotalNumberOfLines(const std::vector<fs::path> &inputFileNameList)
+    static double guess_total_number_of_lines(const std::vector<fs::path> &input_file_name_list)
     {
-        double totalNumberOfLines = 0;
+        double total_number_of_lines = 0;
 
-        for (auto &fileName : inputFileNameList)
+        for (auto &file_name : input_file_name_list)
         {
-            GuessLineInfo info = FileStatLines<CharT>(fileName);
-            double estLineCount;
-            if (info.isAccurate)
+            guess_line_info info = file_stat_lines<CharT>(file_name);
+            double est_line_count;
+            if (info.is_accurate)
             {
-                std::wcout << fileName.native() << "\tEstLineCount\t" << info.lineCount << std::endl;
-                estLineCount = static_cast<double>(info.lineCount);
+                std::wcout << file_name.native() << "\tEstLineCount\t" << info.line_count << std::endl;
+                est_line_count = static_cast<double>(info.line_count);
             }
             else
             {
-                uintmax_t size = fs::file_size(fileName);
-                estLineCount = info.avgLineSize == 0 ? 1.0 : (size / (sizeof(CharT) * info.avgLineSize));
-                std::wcout << fileName.native() << "\tEstLineCount\t" << estLineCount << std::endl;
+                uintmax_t size = fs::file_size(file_name);
+                est_line_count = info.avg_line_size == 0 ? 1.0 : (size / (sizeof(CharT) * info.avg_line_size));
+                std::wcout << file_name.native() << "\tEstLineCount\t" << est_line_count << std::endl;
             }
-            totalNumberOfLines += estLineCount;
+            total_number_of_lines += est_line_count;
         }
 
-        return totalNumberOfLines;
+        return total_number_of_lines;
     }
 
-    static void DetermineBufferSize(const std::vector<fs::path> &inputFileNameList, uintmax_t &interleavingSize, size_t &maxBufferSize)
+    static void determine_buffer_size(const std::vector<fs::path> &input_file_name_list, uintmax_t &interleaving_size, size_t &max_buffer_size)
     {
-        if (interleavingSize == 1)
+        if (interleaving_size == 1)
         {
-            maxBufferSize = 0;
+            max_buffer_size = 0;
         }
         else
         {
-            uintmax_t memSize = GetPhysicalMemorySize();
-            maxBufferSize = memSize * 8 / 10;
+            uintmax_t mem_size = get_physical_memory_size();
+            max_buffer_size = mem_size * 8 / 10;
 
-            if (interleavingSize == 0)
+            if (interleaving_size == 0)
             {
-                if (maxBufferSize == 0)
+                if (max_buffer_size == 0)
                 {
-                    interleavingSize = 1;
+                    interleaving_size = 1;
                 }
                 else
                 {
                     uintmax_t size = 0;
-                    for (auto &fileName : inputFileNameList)
+                    for (auto &file_name : input_file_name_list)
                     {
-                        size += fs::file_size(fileName);
+                        size += fs::file_size(file_name);
                     }
 
-                    interleavingSize = (size + maxBufferSize) / maxBufferSize;
-                    assert(interleavingSize >= 1);
+                    interleaving_size = (size + max_buffer_size) / max_buffer_size;
+                    assert(interleaving_size >= 1);
                 }
             }
         }
     }
 
-    int SampleCommand(int argc, wchar_t *argv[])
+    int sample_command(int argc, wchar_t *argv[])
     {
         int optind = 1;
-        uintmax_t interleavingSize = 0;
-        bool forceOverwrite = false;
-        bool shuffleOutput = false;
-        bool hasOutputAll = false;
-        bool quickMode = false;
-        std::vector<fs::path> inputFileNameList;
-        std::vector<SampleOutputSpec> outputSpecList;
+        uintmax_t interleaving_size = 0;
+        bool force_overwrite = false;
+        bool shuffle_output = false;
+        bool has_output_all = false;
+        bool quick_mode = false;
+        std::vector<fs::path> input_file_name_list;
+        std::vector<sample_output_spec> output_spec_list;
 
         if (argc <= 1)
         {
-            return SampleUsage();
+            return sample_usage();
         }
 
         while (optind < argc)
@@ -162,24 +162,24 @@ namespace bigtext
                 return 1;
             }
 
-            bool nextIsNumber = false;
+            bool next_is_number = false;
             while (*p != '\0')
             {
                 switch (*p)
                 {
                 case 'c':
-                    nextIsNumber = true;
+                    next_is_number = true;
                     break;
                 case 'f':
-                    forceOverwrite = true;
+                    force_overwrite = true;
                     break;
                 case 'h':
-                    return SampleUsage();
+                    return sample_usage();
                 case 'q':
-                    quickMode = true;
+                    quick_mode = true;
                     break;
                 case 's':
-                    shuffleOutput = true;
+                    shuffle_output = true;
                     break;
                 case 'n':
                 case 'o':
@@ -192,7 +192,7 @@ namespace bigtext
                 }
                 ++p;
 
-                if (nextIsNumber)
+                if (next_is_number)
                 {
                     if (*p == '\0')
                     {
@@ -204,7 +204,7 @@ namespace bigtext
                         p = argv[optind++];
                     }
 
-                    if (!TryParseNumber(p, interleavingSize))
+                    if (!try_parse_number(p, interleaving_size))
                     {
                         std::wcerr << "Invalid interleaving size." << std::endl;
                         return 1;
@@ -214,7 +214,7 @@ namespace bigtext
             }
         }
 
-        if (interleavingSize > 0 && !shuffleOutput)
+        if (interleaving_size > 0 && !shuffle_output)
         {
             std::wcerr << "Interleaving size is allowed only in the shuffle mode." << std::endl;
             return 1;
@@ -230,10 +230,10 @@ namespace bigtext
                 break;
             }
 
-            inputFileNameList.push_back(p);
+            input_file_name_list.push_back(p);
         }
 
-        if (inputFileNameList.size() == 0)
+        if (input_file_name_list.size() == 0)
         {
             std::cerr << "No input files." << std::endl;
             return 1;
@@ -242,8 +242,8 @@ namespace bigtext
         while (optind < argc)
         {
             const wchar_t *p = argv[optind++];
-            bool nextIsRate = false;
-            bool nextIsNumber = false;
+            bool next_is_rate = false;
+            bool next_is_number = false;
             if (*p++ != '-')
             {
                 std::wcerr << "-r, -n or -o is expected." << std::endl;
@@ -256,7 +256,7 @@ namespace bigtext
                 return 1;
             }
 
-            if (hasOutputAll)
+            if (has_output_all)
             {
                 std::wcerr << "Another output after -o option is not allowed." << std::endl;
                 return 1;
@@ -265,13 +265,13 @@ namespace bigtext
             switch (*p)
             {
             case 'n':
-                nextIsNumber = true;
+                next_is_number = true;
                 break;
             case 'o':
-                hasOutputAll = true;
+                has_output_all = true;
                 break;
             case 'r':
-                nextIsRate = true;
+                next_is_rate = true;
                 break;
             default:
                 std::wcerr << "Unknown option `" << *p << "'." << std::endl;
@@ -283,11 +283,11 @@ namespace bigtext
             {
                 if (optind >= argc)
                 {
-                    if (nextIsRate)
+                    if (next_is_rate)
                     {
                         std::wcerr << "Rate is expected." << std::endl;
                     }
-                    else if (nextIsNumber)
+                    else if (next_is_number)
                     {
                         std::wcerr << "Line number is expected." << std::endl;
                     }
@@ -301,26 +301,26 @@ namespace bigtext
             }
 
             double rate = 0.0;
-            uintmax_t targetNumLines = 0;
+            uintmax_t target_num_lines = 0;
 
-            if (nextIsRate)
+            if (next_is_rate)
             {
-                if (!TryParseRate(p, rate))
+                if (!try_parse_rate(p, rate))
                 {
                     std::wcerr << "Invalid rate `" << p << "'." << std::endl;
                     return 1;
                 }
             }
-            else if (nextIsNumber)
+            else if (next_is_number)
             {
-                if (!TryParseNumber(p, targetNumLines))
+                if (!try_parse_number(p, target_num_lines))
                 {
                     std::wcerr << "Invalid line number `" << p << "'." << std::endl;
                     return 1;
                 }
             }
 
-            if (nextIsRate || nextIsNumber)
+            if (next_is_rate || next_is_number)
             {
                 if (optind >= argc)
                 {
@@ -337,41 +337,41 @@ namespace bigtext
                 return 1;
             }
 
-            if (nextIsRate)
+            if (next_is_rate)
             {
                 std::wcout << p << "\tTargetRate\t" << rate << std::endl;
-                outputSpecList.emplace_back(p, rate);
+                output_spec_list.emplace_back(p, rate);
             }
-            else if (nextIsNumber)
+            else if (next_is_number)
             {
-                std::wcout << p << "\tTargetLineCount\t" << targetNumLines << std::endl;
-                outputSpecList.emplace_back(p, targetNumLines);
+                std::wcout << p << "\tTargetLineCount\t" << target_num_lines << std::endl;
+                output_spec_list.emplace_back(p, target_num_lines);
             }
             else
             {
                 std::wcout << p << "\tTargetRate\t" << 1.0 << std::endl;
-                outputSpecList.emplace_back(p);
+                output_spec_list.emplace_back(p);
             }
         }
 
-        if (outputSpecList.size() == 0)
+        if (output_spec_list.size() == 0)
         {
             std::wcerr << "No output files." << std::endl;
             return 1;
         }
 
         // Verify all the input files exist
-        if (!CheckInputFiles(inputFileNameList))
+        if (!check_input_files(input_file_name_list))
         {
             return 1;
         }
 
-        if (!forceOverwrite)
+        if (!force_overwrite)
         {
             // Verify none of the output files exists
-            std::vector<fs::path> outputFileNameList;
-            for (auto &spec : outputSpecList) outputFileNameList.push_back(spec.fileName);
-            if (!CheckOutputFiles(outputFileNameList))
+            std::vector<fs::path> output_file_name_list;
+            for (auto &spec : output_spec_list) output_file_name_list.push_back(spec.file_name);
+            if (!check_output_files(output_file_name_list))
             {
                 return 1;
             }
@@ -381,67 +381,67 @@ namespace bigtext
 
         boost::timer::cpu_timer timer;
 
-        if (quickMode)
+        if (quick_mode)
         {
-            if (shuffleOutput)
+            if (shuffle_output)
             {
                 std::wcerr << "-s is not allowed with the quick mode. The quick mode shuffles outputs." << std::endl;
                 return 1;
             }
 
-            if (inputFileNameList.size() != 1)
+            if (input_file_name_list.size() != 1)
             {
                 std::wcerr << "Only one input file is allowed." << std::endl;
                 return 1;
             }
 
-            if (HasSampleAll(outputSpecList))
+            if (has_sample_all(output_spec_list))
             {
                 std::wcerr << "Sampling all lines doesn't make sense with quick mode." << std::endl;
                 return 1;
             }
 
-            if (HasSampleRate(outputSpecList))
+            if (has_sample_rate(output_spec_list))
             {
                 std::cout << "Target rate is specified. Guessing number of lines." << std::endl;
-                double totalNumberOfLines = GuessTotalNumberOfLines<char>(inputFileNameList);
-                ConvertToNumberOfLines(outputSpecList, totalNumberOfLines);
+                double total_number_of_lines = guess_total_number_of_lines<char>(input_file_name_list);
+                convert_to_number_of_lines(output_spec_list, total_number_of_lines);
             }
 
-            FileQuickSampleFileLines<char>(inputFileNameList[0], outputSpecList, shuffleOutput);
+            file_quick_sample_file_lines<char>(input_file_name_list[0], output_spec_list, shuffle_output);
         }
-        else if (shuffleOutput)
+        else if (shuffle_output)
         {
-            size_t maxBufferSize;
-            DetermineBufferSize(inputFileNameList, interleavingSize, maxBufferSize);
+            size_t max_buffer_size;
+            determine_buffer_size(input_file_name_list, interleaving_size, max_buffer_size);
 
-            if (interleavingSize == 1)
+            if (interleaving_size == 1)
             {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList);
+                file_shuffle_lines<char>(input_file_name_list, output_spec_list);
             }
             else
             {
-                FileShuffleLines<char>(inputFileNameList, outputSpecList, interleavingSize, maxBufferSize);
+                file_shuffle_lines<char>(input_file_name_list, output_spec_list, interleaving_size, max_buffer_size);
             }
         }
         else
         {
-            if (HasNumberOfLines(outputSpecList))
+            if (has_number_of_lines(output_spec_list))
             {
                 std::cout << "Target number of lines is specified. Guessing number of lines." << std::endl;
-                double totalNumberOfLines = GuessTotalNumberOfLines<char>(inputFileNameList);
-                ConvertToRate(outputSpecList, totalNumberOfLines);
+                double total_number_of_lines = guess_total_number_of_lines<char>(input_file_name_list);
+                convert_to_rate(output_spec_list, total_number_of_lines);
             }
 
-            if (outputSpecList.size() == 1 && outputSpecList[0].numberOfLines == 0)
+            if (output_spec_list.size() == 1 && output_spec_list[0].number_of_lines == 0)
             {
                 std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
-                assert(outputSpecList[0].numberOfLines == 0);
-                FileLineSample<char>(inputFileNameList, outputSpecList[0].rate, outputSpecList[0].fileName);
+                assert(output_spec_list[0].number_of_lines == 0);
+                file_line_sample<char>(input_file_name_list, output_spec_list[0].rate, output_spec_list[0].file_name);
             }
             else
             {
-                FileLineSample<char>(inputFileNameList, outputSpecList);
+                file_line_sample<char>(input_file_name_list, output_spec_list);
             }
         }
 
