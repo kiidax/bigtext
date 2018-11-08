@@ -432,7 +432,7 @@ namespace bigtext
                 assert(interleaving_size >= 1);
                 std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
                 std::wcout << "\tBufferSize\t" << heap.size() << std::endl;
-                file_shuffle_lines<char>(input_file_name_list, output_spec_list, interleaving_size, heap.ptr(), heap.size());
+                file_shuffle_lines<char>(input_file_name_list, output_spec_list, interleaving_size, heap);
             }
         }
         else

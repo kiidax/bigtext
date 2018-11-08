@@ -67,7 +67,7 @@ namespace bigtext {
             size_t cur_size = max_size;
             while (cur_size >= min_size)
             {
-                ptr_ = VirtualAlloc(NULL, max_size, MEM_COMMIT, PAGE_READWRITE);
+                ptr_ = VirtualAlloc(NULL, cur_size, MEM_COMMIT, PAGE_READWRITE);
                 if (ptr_ != NULL)
                 {
                     size_ = cur_size;
@@ -76,6 +76,11 @@ namespace bigtext {
                 cur_size = cur_size * 8 / 10;
             }
             throw std::bad_alloc();
+        }
+
+        void clear()
+        {
+            VirtualAlloc(ptr_, size_, MEM_RESET, PAGE_READWRITE);
         }
 
     private:

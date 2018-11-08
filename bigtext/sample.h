@@ -230,16 +230,16 @@ namespace bigtext
     }
 
     template<typename CharT>
-    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, CharT *buffer, size_t buffer_size)
+    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, heap_vector<CharT> &heap)
     {
-        const CharT *buffer_last = buffer + buffer_size;
+        const CharT *buffer_last = heap.ptr() + heap.size();
         for (uintmax_t slice_start = interleaving_size; slice_start > 0; --slice_start)
         {
             std::wcout << "\tCurrentSlice\t" << slice_start << std::endl;
             std::vector<const CharT *> line_position_list;
             uintmax_t current_slice = slice_start;
             uintmax_t line_count = 0;
-            CharT *p = buffer;
+            CharT *p = heap.ptr();
 
             for (auto &input_file_name : input_file_name_list)
             {
@@ -340,6 +340,8 @@ namespace bigtext
                     out.write(first, last - first);
                 }
             }
+
+            heap.clear();
         }
     }
 
