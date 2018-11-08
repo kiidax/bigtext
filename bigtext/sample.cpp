@@ -104,36 +104,15 @@ namespace bigtext
         return total_number_of_lines;
     }
 
-    static void determine_buffer_size(const std::vector<fs::path> &input_file_name_list, uintmax_t &interleaving_size, size_t &max_buffer_size)
+
+    static uintmax_t get_total_file_size(const std::vector<fs::path> &file_name_list)
     {
-        if (interleaving_size == 1)
+        uintmax_t size = 0;
+        for (auto &file_name : file_name_list)
         {
-            max_buffer_size = 0;
+            size += fs::file_size(file_name);
         }
-        else
-        {
-            uintmax_t mem_size = get_physical_memory_size();
-            max_buffer_size = mem_size * 8 / 10;
-
-            if (interleaving_size == 0)
-            {
-                if (max_buffer_size == 0)
-                {
-                    interleaving_size = 1;
-                }
-                else
-                {
-                    uintmax_t size = 0;
-                    for (auto &file_name : input_file_name_list)
-                    {
-                        size += fs::file_size(file_name);
-                    }
-
-                    interleaving_size = (size + max_buffer_size) / max_buffer_size;
-                    assert(interleaving_size >= 1);
-                }
-            }
-        }
+        return size;
     }
 
     int sample_command(int argc, wchar_t *argv[])
@@ -419,8 +398,22 @@ namespace bigtext
         }
         else if (shuffle_output)
         {
-            size_t max_buffer_size;
-            determine_buffer_size(input_file_name_list, interleaving_size, max_buffer_size);
+            uintmax_t max_buffer_size;
+            uintmax_t total_file_size;
+
+            if (interleaving_size != 1)
+            {
+                max_buffer_size = get_physical_memory_size();
+                if (interleaving_size == 0)
+                {
+                    total_file_size = get_total_file_size(input_file_name_list);
+                    if (total_file_size < max_buffer_size * 8 / 10)
+                    {
+                        // if the files are small, then we don't try interleaving.
+                        interleaving_size = 1;
+                    }
+                }
+            }
 
             if (interleaving_size == 1)
             {
@@ -428,7 +421,18 @@ namespace bigtext
             }
             else
             {
-                file_shuffle_lines<char>(input_file_name_list, output_spec_list, interleaving_size, max_buffer_size);
+                std::wcout << "\tMaxBufferSize\t" << max_buffer_size << std::endl;
+                heap_vector<char> heap;
+                heap.alloc(SHUFFLE_MIN_BUFFER_SIZE, max_buffer_size);
+                size_t buffer_size = heap.size();
+                if (interleaving_size == 0)
+                {
+                    interleaving_size = (total_file_size + buffer_size) / buffer_size;
+                }
+                assert(interleaving_size >= 1);
+                std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
+                std::wcout << "\tBufferSize\t" << heap.size() << std::endl;
+                file_shuffle_lines<char>(input_file_name_list, output_spec_list, interleaving_size, heap.ptr(), heap.size());
             }
         }
         else

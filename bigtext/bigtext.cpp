@@ -27,7 +27,7 @@ namespace bigtext
     const wchar_t *PROGRAM_NAME = L"bigtext";
     const int MAJOR_VERSION = 0;
     const int MINOR_VERSION = 9;
-    const int BUILD_VERSION = 1;
+    const int BUILD_VERSION = 3;
     const int REVISION_VERSION = 0;
 
     std::wstring get_version_string()

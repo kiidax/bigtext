@@ -11,6 +11,8 @@ namespace bigtext
     namespace ios = boost::iostreams;
     namespace rnd = boost::random;
 
+    static const size_t SHUFFLE_MIN_BUFFER_SIZE = 1LL * 1024 * 1024;
+
     struct sample_output_spec
     {
     public:
@@ -228,16 +230,12 @@ namespace bigtext
     }
 
     template<typename CharT>
-    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, size_t max_buffer_size)
+    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, CharT *buffer, size_t buffer_size)
     {
-        std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
         std::vector<const CharT *> line_position_list;
-        std::wcout << "\tMaxBufferSize\t" << max_buffer_size << std::endl;
-        heap_vector<CharT> heap(max_buffer_size / sizeof(CharT));
-
         size_t line_index = 0;
-        CharT *p = heap.ptr();
-        CharT *last = heap.ptr() + max_buffer_size / sizeof(CharT);
+        CharT *p = buffer;
+        CharT *last = p + buffer_size;
         for (uintmax_t slice_start = interleaving_size; slice_start > 0; --slice_start)
         {
             std::wcout << "\tCurrentSlice\t" << slice_start << std::endl;
