@@ -9,7 +9,7 @@ or naiive code. But if your
 task needs more complicated processing, then you'll need to
 write your own code.
 
-bigtext is a small binary, it probably runs on cheapest laptop with
+bigtext is a small binary, it probably runs on a cheapest laptop with
 4GB RAM. But some of tasks needs large memory. At least more than 16GB
 RAM is recommended if you want to process text files of tens of giga
 bytes.
