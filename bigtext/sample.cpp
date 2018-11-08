@@ -422,6 +422,7 @@ namespace bigtext
             else
             {
                 std::wcout << "\tMaxBufferSize\t" << physical_memory_size << std::endl;
+                std::wcout << "\tTotalFileSize\t" << total_file_size << std::endl;
                 heap_vector<char> heap;
                 heap.alloc(SHUFFLE_MIN_BUFFER_SIZE, physical_memory_size);
                 size_t buffer_size = heap.size();
