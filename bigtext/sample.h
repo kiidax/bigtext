@@ -11,6 +11,8 @@ namespace bigtext
     namespace ios = boost::iostreams;
     namespace rnd = boost::random;
 
+    static const size_t SHUFFLE_MIN_BUFFER_SIZE = 1LL * 1024 * 1024;
+
     struct sample_output_spec
     {
     public:
@@ -228,27 +230,23 @@ namespace bigtext
     }
 
     template<typename CharT>
-    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, size_t max_buffer_size)
+    void file_shuffle_lines(const std::vector<fs::path> &input_file_name_list, const std::vector<sample_output_spec> &output_spec_list, uintmax_t interleaving_size, heap_vector<CharT> &heap)
     {
-        std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
-        std::vector<const CharT *> line_position_list;
-        std::wcout << "\tMaxBufferSize\t" << max_buffer_size << std::endl;
-        heap_vector<CharT> heap(max_buffer_size / sizeof(CharT));
-
-        size_t line_index = 0;
-        CharT *p = heap.ptr();
-        CharT *last = heap.ptr() + max_buffer_size / sizeof(CharT);
+        rnd::mt19937_64 gen(std::time(nullptr));
+        const CharT *buffer_last = heap.ptr() + heap.size();
         for (uintmax_t slice_start = interleaving_size; slice_start > 0; --slice_start)
         {
             std::wcout << "\tCurrentSlice\t" << slice_start << std::endl;
+            std::vector<const CharT *> line_position_list;
             uintmax_t current_slice = slice_start;
             uintmax_t line_count = 0;
+            CharT *p = heap.ptr();
+            line_position_list.push_back(p);
 
             for (auto &input_file_name : input_file_name_list)
             {
-                line_position_list.push_back(p);
                 std::wcout << input_file_name.native() << "\tReading" << std::endl;
-                file_line_source_default<CharT>(input_file_name, [&p, last, &current_slice, &line_position_list, &line_count, interleaving_size](const CharT *s, size_t len)
+                file_line_source_default<CharT>(input_file_name, [&p, buffer_last, &current_slice, &line_position_list, &line_count, interleaving_size](const CharT *s, size_t len)
                 {
                     if (s != nullptr)
                     {
@@ -276,7 +274,6 @@ namespace bigtext
                 line_index_list[i] = i;
             }
 
-            rnd::mt19937_64 gen(std::time(nullptr));
             rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
             if (num_lines > 0)
             {
@@ -297,9 +294,8 @@ namespace bigtext
                 {
                     if (slice_start == interleaving_size)
                     {
-                        uintmax_t u = slice_start * output_spec.number_of_lines / interleaving_size;
-                        uintmax_t t = (slice_start - 1) * output_spec.number_of_lines / interleaving_size;
-                        line_count = u - t;
+                        uintmax_t u = output_spec.number_of_lines / interleaving_size;
+                        line_count = output_spec.number_of_lines - u * (interleaving_size - 1);
                     }
                     else
                     {
@@ -344,7 +340,7 @@ namespace bigtext
                 }
             }
 
-            line_position_list.clear();
+            heap.clear();
         }
     }
 
