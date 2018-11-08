@@ -38,6 +38,7 @@ namespace bigtext
             std::wcerr << __wcserror(output_file_name.native().c_str());
             return;
         }
+        out.exceptions(std::ifstream::failbit);
 
         for (auto &file_name : input_file_name_list)
         {
@@ -91,6 +92,7 @@ namespace bigtext
                 std::wcerr << __wcserror(spec.file_name.native().c_str());
                 return;
             }
+            out.exceptions(std::ifstream::failbit);
         }
 
         for (auto &file_name : input_path_list)
@@ -213,6 +215,7 @@ namespace bigtext
                 std::wcerr << __wcserror(output_spec.file_name.native().c_str());
                 return;
             }
+            out.exceptions(std::ifstream::failbit);
 
             for (uintmax_t i = 0; i < line_count; i++)
             {
@@ -325,6 +328,7 @@ namespace bigtext
                     std::wcerr << __wcserror(output_spec.file_name.native().c_str());
                     return;
                 }
+                out.exceptions(std::ifstream::failbit);
 
                 for (uintmax_t i = 0; i < line_count; i++)
                 {
