@@ -398,16 +398,16 @@ namespace bigtext
         }
         else if (shuffle_output)
         {
-            uintmax_t max_buffer_size;
+            uintmax_t physical_memory_size;
             uintmax_t total_file_size;
 
             if (interleaving_size != 1)
             {
-                max_buffer_size = get_physical_memory_size();
+                physical_memory_size = get_physical_memory_size();
                 if (interleaving_size == 0)
                 {
                     total_file_size = get_total_file_size(input_file_name_list);
-                    if (total_file_size < max_buffer_size * 8 / 10)
+                    if (total_file_size < physical_memory_size * 8 / 10)
                     {
                         // if the files are small, then we don't try interleaving.
                         interleaving_size = 1;
@@ -421,13 +421,13 @@ namespace bigtext
             }
             else
             {
-                std::wcout << "\tMaxBufferSize\t" << max_buffer_size << std::endl;
+                std::wcout << "\tMaxBufferSize\t" << physical_memory_size << std::endl;
                 heap_vector<char> heap;
-                heap.alloc(SHUFFLE_MIN_BUFFER_SIZE, max_buffer_size);
+                heap.alloc(SHUFFLE_MIN_BUFFER_SIZE, physical_memory_size);
                 size_t buffer_size = heap.size();
                 if (interleaving_size == 0)
                 {
-                    interleaving_size = (total_file_size + buffer_size) / buffer_size;
+                    interleaving_size = (total_file_size * 8 / 10 + buffer_size) / buffer_size;
                 }
                 assert(interleaving_size >= 1);
                 std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
