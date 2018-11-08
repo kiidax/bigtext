@@ -65,7 +65,7 @@ namespace bigtext
     {
         using StringT = std::basic_string<CharT>;
         std::unordered_map<StringT, uintmax_t> vocab_count;
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             file_word_source_default<CharT>(file_name, [&vocab_count](const CharT *s, size_t len) {
                 if (s != nullptr)
@@ -86,7 +86,7 @@ namespace bigtext
         std::unordered_map<StringT, uintmax_t> vocab_count;
         int target_column = output_spec.column;
 
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             file_word_source_with_column_default<CharT>(file_name, [&vocab_count, target_column](const CharT *s, size_t len, int column) {
                 if (s != nullptr)
@@ -118,7 +118,7 @@ namespace bigtext
             vocab_count_list[output_spec.column].reset(new std::unordered_map<StringT, uintmax_t >());
         }
 
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             file_word_source_with_column_default<CharT>(file_name, [&vocab_count_list](const CharT *s, size_t len, int column) {
                 if (s != nullptr)

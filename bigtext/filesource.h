@@ -39,6 +39,7 @@ namespace bigtext
                 const CharT *first = reinterpret_cast<const CharT *>(s);
                 const CharT *last = s + len;
                 const CharT *p = first;
+                const CharT* line_start = p;
                 if (_previous_partial_line.size() > 0)
                 {
                     while (p != last)
@@ -47,20 +48,20 @@ namespace bigtext
                         {
                             _previous_partial_line.append(first, p);
                             callback(_previous_partial_line.data(), _previous_partial_line.size());
+                            line_start = p;
                             c++;
                             _previous_partial_line.clear();
                             break;
                         }
                     }
                 }
-                const CharT* line_start = p;
                 while (p != last)
                 {
                     if (is_new_line(*p++))
                     {
                         callback(line_start, p - line_start);
-                        c++;
                         line_start = p;
+                        c++;
                     }
                 }
                 _previous_partial_line.append(line_start, last);

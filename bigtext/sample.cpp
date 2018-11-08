@@ -51,7 +51,14 @@ namespace bigtext
         {
             if (spec.number_of_lines != 0)
             {
-                spec.rate = static_cast<double>(spec.number_of_lines) / total_number_of_lines;
+                if (total_number_of_lines > 0.0)
+                {
+                    spec.rate = static_cast<double>(spec.number_of_lines) / total_number_of_lines;
+                }
+                else
+                {
+                    spec.rate = 1.0;
+                }
                 spec.number_of_lines = 0;
                 std::wcout << spec.file_name.native() << "\tRate\t" << spec.rate << std::endl;
             }

@@ -15,10 +15,11 @@ logging.basicConfig(level=logging.INFO)
 # test4.txt       Empty file
 # test5.txt       A file only with one newline.
 # test6.txt       single very long lines.
+# test7.txt       500 long lines, some of which are more then 4KB.
 
 class TestBigtext(unittest.TestCase):
 
-    FILES = ['shakespeare.txt'] + ['test%d.txt' % i for i in range(1, 7)]
+    FILES = ['shakespeare.txt'] + ['test%d.txt' % i for i in range(1, 8)]
     OUTPUT_FILES = ['result.txt', 'result2.txt']
 
     @classmethod
@@ -67,13 +68,37 @@ class TestBigtext(unittest.TestCase):
         for source_fname in self.FILES:
             self._run_command('sample %s -n 1000 result.txt -r 0.2 result2.txt' % source_fname)
             self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
-            self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
+            if source_fname == 'test7.txt':
+                self.assertFileIsSampledFrom('result2.txt', source_fname, 0.0, False)
+            else:
+                self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
 
     def test_sample_double_num_all(self):
         for source_fname in self.FILES:
             self._run_command('sample %s -n 1000 result.txt -o result2.txt' % source_fname)
             self.assertFileIsSampledFrom('result.txt', source_fname, 1000, False)
             self.assertFileIsSampledFrom('result2.txt', source_fname, -1000, False)
+
+    def test_shuffle_single_all_no_crash(self):
+        for opt in ['-s ', '-s -c 3 ']:
+            for source_fname in self.FILES:
+                self._run_command('sample %s%s -o result.txt' % (opt, source_fname))
+                self.assertTrue(os.path.exists('result.txt'))
+                #self.assertFileIsSampledFrom('result.txt', source_fname, 0, True)
+
+    def test_shuffle_single_all(self):
+        for opt in ['-s ', '-s -c 3 ']:
+            for source_fname in ['shakespeare.txt', 'test1.txt', 'test3.txt', 'test6.txt', 'test7.txt']:
+                self._run_command('sample %s%s -o result.txt' % (opt, source_fname))
+                self.assertFileIsSampledFrom('result.txt', source_fname, 0, True)
+                self.assertFileIsShuffledFrom('result.txt', source_fname)
+
+    def test_shuffle_single_num_rate(self):
+        for opt in ['-s ', '-s -c 3 ']:
+            for source_fname in ['shakespeare.txt', 'test1.txt', 'test3.txt', 'test6.txt', 'test7.txt']:
+                self._run_command('sample %s%s -n 100 result.txt -r 0.2 result2.txt' % (opt, source_fname))
+                self.assertFileIsSampledFrom('result.txt', source_fname, 100, True)
+                self.assertFileIsSampledFrom('result2.txt', source_fname, 0.2, False)
 
     def assertFileIsCountedFrom(self, source_fname, exact):
         res = self.parsed_result
@@ -112,13 +137,22 @@ class TestBigtext(unittest.TestCase):
         elif isinstance(rate_or_number, int):
             if rate_or_number > 0:
                 expected_len = rate_or_number
+                if expected_len > source_len:
+                    logging.info('Expected number of lines %d is more than number of lines in the source %d.' % (expected_len, source_len))
+                    expected_len = source_len
             elif rate_or_number < 0:
                 expected_len = source_len + rate_or_number
+                if expected_len < 0:
+                    logging.info('There are no remaining lines.')
+                    expected_len = 0
             else:
                 expected_len = source_len
         else:
             raise ValueError()
-        if source_len == 1:
+        if expected_len == 0:
+            logging.info("%d lines sampled, the source contains no line.", actual_len)
+            self.assertEqual(0, actual_len)
+        elif source_len == 1:
             logging.info("%d lines sampled, the source only contains single line.", actual_len)
         elif exact:
             logging.info("%d lines sampled, expected exact %d lines.", actual_len, expected_len)
@@ -133,10 +167,37 @@ class TestBigtext(unittest.TestCase):
         if not (actual <= source):
             #print(list(source)[0])
             x = list(actual - source)[0]
-            raise AssertionError('%s is not included in the source.' % x)
+            raise AssertionError('%s is not included in the source.' % x[:100])
+
+        if source_fname.startswith('test') and os.path.getsize(source_fname) > 2:
+            self.assertSampleLinesAreCorrect(actual_fname)
+
+    def assertSampleLinesAreCorrect(self, actual_fname):
+        with open(actual_fname, 'r') as f:
+            logging.info("Veryfying lines are correct.")
+            for i, line in enumerate(f):
+                try:
+                    s = line.rstrip('\r\n').split('\t')
+                    s = [int(x) for x in s]
+                except:
+                    raise AssertionError("Exception at line %d" % (i + 1))
+                if s[0] != sum(s[1:]):
+                    raise AssertionError("Wrong data at line %d" % (i + 1))
+
+    def assertFileIsShuffledFrom(self, actual_fname, source_fname):
+        logging.info("Veryfying files contain identical set of lines.")
+        actual = read_sample(actual_fname)
+        source = read_sample(source_fname)
+        actual_len = len(actual)
+        source_len = len(source)
+        self.assertEqual(source_len, actual_len)
+        actual.sort()
+        source.sort()
+        self.assertSequenceEqual(source, actual)
 
     def _run_command(self, args=[]):
         self._remove_output()
+        logging.info("Running command with `%s'.", args)
         self.command_result = exec_command(args)
         self.parsed_result = parse_triple(self.command_result)
 

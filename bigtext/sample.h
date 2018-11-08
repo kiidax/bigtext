@@ -37,7 +37,7 @@ namespace bigtext
             return;
         }
 
-        for (auto& file_name : input_file_name_list)
+        for (auto &file_name : input_file_name_list)
         {
             file_line_source_default<CharT>(file_name, [&dist, &gen, &out](const CharT *s, size_t len)
             {
@@ -69,7 +69,7 @@ namespace bigtext
 
         for (size_t i = 0; i < num_outputs; i++)
         {
-            auto& spec = output_spec_list[i];
+            auto &spec = output_spec_list[i];
             if (spec.number_of_lines != 0)
             {
                 throw std::logic_error("Taget lines is not allowed.");
@@ -123,6 +123,12 @@ namespace bigtext
         size_t line_index = 0;
         for (auto &input_file_name : input_file_name_list)
         {
+            if (fs::file_size(input_file_name) == 0)
+            {
+                // Mmaping empty file fails. Skip it.
+                std::wcout << "`" << input_file_name.native() << "' is empty." << std::endl;
+                continue;
+            }
             size_t prev_line_index = line_index;
             file_list.emplace_back();
             auto &file = file_list.back();
@@ -146,7 +152,7 @@ namespace bigtext
                     line_position_list.push_back(&s[i + 1]);
                 }
             }
-            if (s[len - 1] != '\n')
+            if (len > 0 && s[len - 1] != '\n')
             {
                 line_index_list.push_back(line_index++);
                 line_position_list.push_back(&s[len]);
@@ -160,7 +166,7 @@ namespace bigtext
 
         size_t num_lines = line_index_list.size();
         std::cout << "\tLineCount\t" << num_lines << std::endl;
-        if (line_index - input_file_name_list.size() != num_lines)
+        if (line_index - file_list.size() != num_lines)
         {
             std::wcerr << "something wrong" << std::endl;
             return;
@@ -168,10 +174,13 @@ namespace bigtext
 
         rnd::mt19937_64 gen(std::time(nullptr));
         rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
-        for (size_t i = 0; i < num_lines - 1; i++)
+        if (num_lines > 0)
         {
-            size_t j = i + dist(num_lines - i);
-            std::swap(line_index_list[i], line_index_list[j]);
+            for (size_t i = 0; i < num_lines - 1; i++)
+            {
+                size_t j = i + dist(num_lines - i);
+                std::swap(line_index_list[i], line_index_list[j]);
+            }
         }
 
         // Write lines
@@ -193,7 +202,7 @@ namespace bigtext
                 line_count = static_cast<uintmax_t>(num_lines * output_spec.rate + 0.5);
             }
 
-            std::wcerr << output_spec.file_name << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
+            std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
 
             fs::basic_ofstream<CharT> out;
             out.open(output_spec.file_name, std::ios::out | std::ios::binary);
@@ -241,7 +250,7 @@ namespace bigtext
                 std::wcout << input_file_name.native() << "\tReading" << std::endl;
                 file_line_source_default<CharT>(input_file_name, [&p, last, &current_slice, &line_position_list, &line_count, interleaving_size](const CharT *s, size_t len)
                 {
-                    if (len > 0)
+                    if (s != nullptr)
                     {
                         if (--current_slice == 0)
                         {
@@ -269,10 +278,13 @@ namespace bigtext
 
             rnd::mt19937_64 gen(std::time(nullptr));
             rnd::random_number_generator<rnd::mt19937_64, size_t> dist(gen);
-            for (size_t i = 0; i < num_lines - 1; i++)
+            if (num_lines > 0)
             {
-                size_t j = i + dist(num_lines - i);
-                std::swap(line_index_list[i], line_index_list[j]);
+                for (size_t i = 0; i < num_lines - 1; i++)
+                {
+                    size_t j = i + dist(num_lines - i);
+                    std::swap(line_index_list[i], line_index_list[j]);
+                }
             }
 
             // Write lines
@@ -283,7 +295,16 @@ namespace bigtext
                 uintmax_t line_count;
                 if (output_spec.number_of_lines > 0)
                 {
-                    line_count = output_spec.number_of_lines;
+                    if (slice_start == interleaving_size)
+                    {
+                        uintmax_t u = slice_start * output_spec.number_of_lines / interleaving_size;
+                        uintmax_t t = (slice_start - 1) * output_spec.number_of_lines / interleaving_size;
+                        line_count = u - t;
+                    }
+                    else
+                    {
+                        line_count = output_spec.number_of_lines / interleaving_size;
+                    }
                 }
                 else if (output_spec.rate >= 1.0)
                 {

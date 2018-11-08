@@ -39,28 +39,11 @@ def generatemore():
         line = makerandomline(2000000)
         f.write(line)
 
-
-def verify():
-    i = 1
-    with open('result.txt', 'r') as f:
-        for line in f:
-            try:
-                s = line.rstrip('\r\n').split('\t')
-                s = [int(x) for x in s]
-            except:
-                raise Exception("Exception at line %d" % i)
-            if s[0] != sum(s[1:]):
-                raise Exception("Wrong data at line %d" % i)
-
-            i += 1
+    with open('test7.txt', 'wb') as f:
+        for _ in range(500):
+            line = makerandomline(3000)
+            f.write(line)
 
 if __name__ == '__main__':
-    c = sys.argv[1]
-    if c == 'generate':
-        generate()
-    elif c == 'generatemore':
-        generatemore()
-    elif c == 'verify':
-        verify()
-    else:
-        raise Exception("Unknown command")
+    generate()
+    generatemore()
