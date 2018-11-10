@@ -394,7 +394,7 @@ namespace bigtext
                 convert_to_number_of_lines(output_spec_list, total_number_of_lines);
             }
 
-            file_quick_sample_file_lines<char>(input_file_name_list[0], output_spec_list, shuffle_output);
+            file_quick_sample_file_lines<char>(input_file_name_list[0], output_spec_list);
         }
         else if (shuffle_output)
         {
@@ -428,7 +428,11 @@ namespace bigtext
                 size_t buffer_size = heap.size();
                 if (interleaving_size == 0)
                 {
-                    interleaving_size = (total_file_size * 8 / 10 + buffer_size) / buffer_size;
+                    // We use 60% of phsical memory at most.
+                    uintmax_t interleaving_size_memory = 1 + (total_file_size * 6 / 10) / physical_memory_size;
+                    // We use 80% of buffer size at most
+                    uintmax_t interleaving_size_buffer_size = 1 + (total_file_size * 8 / 10) / buffer_size;
+                    interleaving_size = std::max(interleaving_size_memory, interleaving_size_buffer_size);
                 }
                 assert(interleaving_size >= 1);
                 std::wcout << "\tInterleavingSize\t" << interleaving_size << std::endl;
@@ -447,7 +451,6 @@ namespace bigtext
 
             if (output_spec_list.size() == 1 && output_spec_list[0].number_of_lines == 0)
             {
-                std::wcout << "Only one output without target number of lines. Using simple mode." << std::endl;
                 assert(output_spec_list[0].number_of_lines == 0);
                 file_line_sample<char>(input_file_name_list, output_spec_list[0].rate, output_spec_list[0].file_name);
             }

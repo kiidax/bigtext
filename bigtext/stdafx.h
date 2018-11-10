@@ -1,5 +1,7 @@
 #pragma once
 
+#define NOMINMAX 1
+
 #include "targetver.h"
 
 #include <Windows.h>

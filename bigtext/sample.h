@@ -206,7 +206,7 @@ namespace bigtext
                 line_count = static_cast<uintmax_t>(num_lines * output_spec.rate + 0.5);
             }
 
-            std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
+            std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << std::min(line_count, num_lines - cur_index) << std::endl;
 
             fs::basic_ofstream<CharT> out;
             out.open(output_spec.file_name, std::ios::out | std::ios::binary);
@@ -314,7 +314,7 @@ namespace bigtext
                     line_count = static_cast<uintmax_t>(num_lines * output_spec.rate + 0.5);
                 }
 
-                std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << min(line_count, num_lines - cur_index) << std::endl;
+                std::wcerr << output_spec.file_name.native() << "\tLineCount\t" << std::min(line_count, num_lines - cur_index) << std::endl;
 
                 fs::basic_ofstream<CharT> out;
                 int mode = std::ios::out | std::ios::binary;
@@ -349,7 +349,7 @@ namespace bigtext
     }
 
     template <typename CharT>
-    void file_quick_sample_file_lines(fs::path &input_file_name, const std::vector<sample_output_spec> &output_spec_list, bool shuffle_output)
+    void file_quick_sample_file_lines(fs::path &input_file_name, const std::vector<sample_output_spec> &output_spec_list)
     {
         static_assert(sizeof(CharT) == sizeof(char), "Only char type is supported.");
         rnd::mt19937_64 gen(std::time(nullptr));
