@@ -51,6 +51,6 @@ def generateevenmore():
             f.write(line)
 
 if __name__ == '__main__':
-    #generate()
-    #generatemore()
-    generateevenmore()
+    generate()
+    generatemore()
+    #generateevenmore()
