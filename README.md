@@ -32,25 +32,98 @@ These tools are available
 
 ## Show help message
 
+Without arguments, bigtext shows list of available commands.
+
 ```
 $ bigtext
+usage: bigtext COMMAND [ARGS]
+
+bigtext is a collection of tools to process large text files.
+
+List of commands:
+
+   count      Count the number of lines in the files.
+   sample     Sample lines from the files.
+   vocab      Count the words in the files.
+   version    Show the version info.
 ```
 
-## Counting number of lines
+## Count number of lines
 
-```
-$ bigtext count test.txt
-```
+In many cases, you can tell the total number of samples
+in the training data by counting the total number of lines in the
+training data file as they have one sample data per one line.
+Knowing the number of samples are important to estimate the quality
+of the model after training.
+
+The count command has two modes, the quick mode and the full mode.
+The quick mode estimates the total number of lines in a file by
+reading only the first 100MB. The full mode actually counts lines
+and outputs accurate numbers.
 
 ### Quick
 
+The quick mode is enabled by default. EstLineCount is the estimated
+total number of lines.
+
+```
+$ bigtext count shakespeare.txt
+shakespeare.txt MinLineSize     1
+shakespeare.txt MaxLineSize     86
+shakespeare.txt AvgLineSize     43.79
+shakespeare.txt StdLineSize     17.58
+shakespeare.txt UsedLineCount   124796
+shakespeare.txt FileSize        5465397
+shakespeare.txt EstLineCount    124796
+```
+
 ### Full
 
-## Counting word frequency
+The full mode is enabled with the -c option.
 
-### Quick
+```
+$ bigtext count -c shakespeare.txt
+ 0.120902s wall, 0.046875s user + 0.000000s system = 0.046875s CPU (38.8%)
 
-### Full
+shakespeare.txt LineCount       124796
+```
+
+## Count word frequency
+
+The vocab command counts frequencies of words in text files and outputs a
+vocabulary file. A vocabulary file contains lines of tab separated word and
+frequency pairs and is sorted by descending frequencies.
+
+The input files should be tokenized in advance and stemmed if needed. The
+vocab command breaks text into words by white space characters, like
+spaces, tabs and new lines.
+
+```
+$ bigtext vocab shakespeare.txt -o vocab.txt
+vocab.txt       TargetColumn    0
+ 2.206307s wall, 1.265625s user + 0.843750s system = 2.109375s CPU (95.6%)
+```
+
+vocab.txt should contains something like this.
+
+```
+the     23407
+I       19540
+and     18358
+to      15682
+of      15649
+...
+```
+
+If the file is tab separated text, then the vocab command can counts words
+in the specified columns.
+
+```
+$ bigtext vocab parallel_corpus.txt -c 1 vocab_src.txt -c 2 vocab_tgt.txt
+vocab_src.txt       TargetColumn    1
+vocab_src.txt       TargetColumn    2
+ 2.159086s wall, 1.265625s user + 0.796875s system = 2.062500s CPU (95.5%)
+ ```
 
 ## Sampling
 
