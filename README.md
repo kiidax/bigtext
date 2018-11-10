@@ -138,7 +138,7 @@ vocab_tgt.txt   TargetColumn    2
  0.071133s wall, 0.000000s user + 0.015625s system = 0.015625s CPU (22.0%)
 ```
 
-## Sampling
+## Sample lines randomly
 
 The sampling command can be used to randomly sample lines from text files.
 
@@ -180,7 +180,7 @@ result.txt      TargetRate      0.5
  0.214666s wall, 0.031250s user + 0.062500s system = 0.093750s CPU (43.7%)
 ```
 
-## Shuffling
+## Shuffle lines randomly
 
 It is needed to shuffle traing data to train model efficiently. Shuffling
 requires large memory. One-pass mode reads all the lines in memory, so
