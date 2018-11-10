@@ -35,7 +35,7 @@ namespace bigtext {
     template <typename CharT>
     bool is_white_space(CharT ch)
     {
-        return ch <= ' ';
+        return ch >= '\0' && ch <= ' ';
     }
 
 #ifdef WIN32

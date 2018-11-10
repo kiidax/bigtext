@@ -44,6 +44,13 @@ def generatemore():
             line = makerandomline(3000)
             f.write(line)
 
+def generateevenmore():
+    with open('test8.txt', 'wb') as f:
+        for _ in range(20000000):
+            line = makerandomline()
+            f.write(line)
+
 if __name__ == '__main__':
     generate()
     generatemore()
+    #generateevenmore()

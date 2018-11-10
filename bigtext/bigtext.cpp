@@ -27,7 +27,7 @@ namespace bigtext
     const wchar_t *PROGRAM_NAME = L"bigtext";
     const int MAJOR_VERSION = 0;
     const int MINOR_VERSION = 9;
-    const int BUILD_VERSION = 3;
+    const int BUILD_VERSION = 4;
     const int REVISION_VERSION = 0;
 
     std::wstring get_version_string()
@@ -48,38 +48,46 @@ namespace bigtext
 
     int main(int argc, wchar_t *argv[])
     {
-        if (argc == 1)
+        try
         {
-            return main_usage();
-        }
-        else if (argc >= 2)
-        {
-            const std::wstring command_name(argv[1]);
-            if (command_name == L"count")
+            if (argc == 1)
             {
-                return count_command(argc - 1, argv + 1);
+                return main_usage();
             }
-            else if (command_name == L"sample")
+            else if (argc >= 2)
             {
-                return sample_command(argc - 1, argv + 1);
-            }
-            else if (command_name == L"vocab")
-            {
-                return vocab_command(argc - 1, argv + 1);
-            }
-            else if (command_name == L"version")
-            {
-                return version_command(argc - 1, argv + 1);
+                const std::wstring command_name(argv[1]);
+                if (command_name == L"count")
+                {
+                    return count_command(argc - 1, argv + 1);
+                }
+                else if (command_name == L"sample")
+                {
+                    return sample_command(argc - 1, argv + 1);
+                }
+                else if (command_name == L"vocab")
+                {
+                    return vocab_command(argc - 1, argv + 1);
+                }
+                else if (command_name == L"version")
+                {
+                    return version_command(argc - 1, argv + 1);
+                }
+                else
+                {
+                    std::wcerr << L"Unknown command `" << command_name << L"'." << std::endl;
+                    exit(1);
+                }
             }
             else
             {
-                std::wcerr << L"Unknown command `" << command_name << L"'." << std::endl;
-                exit(1);
+                return main_usage();
             }
         }
-        else
+        catch (const fs::filesystem_error &)
         {
-            return main_usage();
+            std::wcerr << "Unknown error" << std::endl;
+            return 1;
         }
         return 0;
     }

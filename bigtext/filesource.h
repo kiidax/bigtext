@@ -133,11 +133,11 @@ namespace bigtext
     {
         uintmax_t line_count = 0;
         std::basic_string<CharT> _previous_partial_line;
+        int column = 0;
 
-        file_source_default(file_name, [&line_count, &_previous_partial_line, callback](const char *_s, size_t _len)
+        file_source_default(file_name, [&line_count, &_previous_partial_line, &column, callback](const char *_s, size_t _len)
         {
             const CharT *s = reinterpret_cast<const CharT *>(_s);
-            int column = 0;
             size_t len = _len / sizeof(CharT);
 
             if (s == nullptr)

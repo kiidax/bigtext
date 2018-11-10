@@ -14,7 +14,7 @@ namespace bigtext
     static int count_usage()
     {
         std::wcout << "Usage: bigtext count [OPTION]... INPUTFILE..." << std::endl;
-        std::wcout << "Estimate number of lines in the file by reading only the first 100MB." << std::endl;
+        std::wcout << "Count number of lines in the file." << std::endl;
         std::wcout << std::endl;
         std::wcout << " -c         full count mode" << std::endl;
         std::wcout << " -h         show this help message" << std::endl;
@@ -23,7 +23,7 @@ namespace bigtext
     }
 
     template <typename CharT>
-    static void dump_file_stat(const fs::path file_name)
+    static void dump_file_stat(const fs::path &file_name)
     {
         guess_line_info info = file_stat_lines<CharT>(file_name);
         std::wcout << file_name.native() << "\tMinLineSize\t" << info.min_line_size << std::endl;
@@ -39,7 +39,7 @@ namespace bigtext
         }
         else
         {
-            double est_line_count = info.avg_line_size == 0 ? 1.0 : (size / (sizeof(CharT) * info.avg_line_size));
+            double est_line_count = info.avg_line_size == 0 ? 1.0 : (size / sizeof(CharT) / info.avg_line_size);
             std::wcout << file_name.native() << "\tEstLineCount\t" << est_line_count << std::endl;
         }
     }
@@ -102,7 +102,7 @@ namespace bigtext
             return 1;
         }
 
-        int status;
+        int status = 0;
 
         for (auto &file_name : input_file_name_list)
         {
@@ -119,7 +119,6 @@ namespace bigtext
             else
             {
                 dump_file_stat<char>(file_name);
-                status = 0;
             }
         }
 
