@@ -54,12 +54,12 @@ help message for the command.
 ```
 $ bigtext count
 Usage: bigtext count [OPTION]... INPUTFILE...
-Estimate number of lines in the file by reading only the first 100MB.
+Count number of lines in the file.
 
  -c         full count mode
  -h         show this help message
  INPUTFILE  input file
- ```
+```
 
 ## Count number of lines
 
@@ -140,23 +140,99 @@ vocab_tgt.txt   TargetColumn    2
 
 ## Sampling
 
-### Quick
+The sampling command can be used to randomly sample lines from text files.
 
-### Full
+### Quick mode
+
+If you want to sample small number of lines from large text files, then
+this mode is the quickest way. It is often used to see the sampled lines
+and check if the training data is correct manually.
+
+This mode repeats seeking the text file in the random position and sampling
+the next line to the position. If you want to sample 1 million lines
+from a file with 2 million lines, then this mode is not efficient.
+
+```
+$ bigtext sample -q shakespeare.txt -n 100 result.txt
+vocab_src.txt   TargetColumn    1
+vocab_tgt.txt   TargetColumn    2
+ 0.071133s wall, 0.000000s user + 0.015625s system = 0.015625s CPU (22.0%)
+```
+
+### Full mode
+
+This mode can be used to divide data into training/dev/test set. The
+following splits lines into 10% dev data, 10% test data, 80% training data.
+
+```
+$ bigtext sample shakespeare.txt -r 10% dev.txt -r 10% test.txt -o train.txt
+dev.txt TargetRate      0.1
+test.txt        TargetRate      0.1
+train.txt       TargetRate      1
+ 2.700869s wall, 0.125000s user + 0.093750s system = 0.218750s CPU (8.1%)
+```
+
+This mode also can be used to reduce the training data.
+
+```
+$ bigtext sample shakespeare.txt -r 50% result.txt
+result.txt      TargetRate      0.5
+ 0.214666s wall, 0.031250s user + 0.062500s system = 0.093750s CPU (43.7%)
+```
 
 ## Shuffling
 
-### One-pass
+It is needed to shuffle traing data to train model efficiently. Shuffling
+requires large memory. One-pass mode reads all the lines in memory, so
+the file size must be smaller than available memory size. Multi-pass mode
+scans files n-times and reads only one n-th of lines in memory at once.
+
+The sample command with the -s option shuffle files. The -c option
+specifies the number of passes. One-pass mode is enabled if the number
+of pass is 1 and the multi-pass mode is enabled if the number of pass
+is more than 1. If the -c option is not specified, then it automatically
+geuss which mode to use.
+
+### One-pass mode
+
+The following shuffles
+and splits lines into test data with 1000 lines and training data with
+remaining lines.
+
+```
+$ bigtext sample -s -c 1 shakespeare.txt -n 1000 test.txt -o train.txt
+test.txt        TargetLineCount 1000
+train.txt       TargetRate      1
+        PhysicalMemorySize      4116836352
+shakespeare.txt CharCount       5465397
+shakespeare.txt LineCount       124796
+        LineCount       124796
+test.txt        LineCount       1000
+train.txt       LineCount       123796
+ 0.729716s wall, 0.140625s user + 0.062500s system = 0.203125s CPU (27.8%)
+```
 
 ### Multi-pass
+
+The following also shuffles
+and splits lines into test data with 1000 lines and training data with
+remaining lines. If the input file size is 100GB, then it only uses around
+20GB memory at once, which probably works with a machine with 32GB memory.
+
+```
+$ bigtext sample -s -c 5 shakespeare.txt -n 1000 test.txt -o train.txt
+```
 
 ## Building from source code
 
 ### Getting source code
 
+The source code is available in GitHub.
 https://github.com/kiidax/bigtext
 
 ### Windows
+
+Open the solution file bigtext.sln and build it. 
 
 #### Prerequisites
 
