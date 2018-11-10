@@ -175,14 +175,13 @@ namespace bigtext
                 return 1;
             }
 
-            if (next_is_number)
+            std::wcout << p << "\tTargetColumn\t" << column_number << std::endl;
+            if (column_number > 0)
             {
-                std::wcout << p << "\tTargetColumn\t" << column_number << std::endl;
                 output_spec_list.emplace_back(p, static_cast<int>(column_number - 1));
             }
             else
             {
-                std::wcout << p << "\tTargetColumn\t" << 0 << std::endl;
                 output_spec_list.emplace_back(p);
             }
         }

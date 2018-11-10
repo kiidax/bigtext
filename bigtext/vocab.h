@@ -38,6 +38,7 @@ namespace bigtext
             std::wcerr << __wcserror(output_file_name.native().c_str());
             return false;
         }
+        out.exceptions(std::ifstream::failbit);
         for (auto &kv : sorted_key_value)
         {
             out << kv.first << '\t' << kv.second << std::endl;
@@ -61,13 +62,14 @@ namespace bigtext
     }
 
     template <typename CharT>
-    void file_count_vocab(const std::vector<fs::path> &input_file_name_list, const fs::path& output_file_name)
+    void file_count_vocab(const std::vector<fs::path> &input_file_name_list, const fs::path &output_file_name)
     {
         using StringT = std::basic_string<CharT>;
         std::unordered_map<StringT, uintmax_t> vocab_count;
         for (auto &file_name : input_file_name_list)
         {
-            file_word_source_default<CharT>(file_name, [&vocab_count](const CharT *s, size_t len) {
+            file_word_source_default<CharT>(file_name, [&vocab_count](const CharT *s, size_t len)
+            {
                 if (s != nullptr)
                 {
                     increment_vocab_count(vocab_count, s, len);
@@ -88,7 +90,8 @@ namespace bigtext
 
         for (auto &file_name : input_file_name_list)
         {
-            file_word_source_with_column_default<CharT>(file_name, [&vocab_count, target_column](const CharT *s, size_t len, int column) {
+            file_word_source_with_column_default<CharT>(file_name, [&vocab_count, target_column](const CharT *s, size_t len, int column)
+            {
                 if (s != nullptr)
                 {
                     if (column == target_column)
@@ -120,7 +123,8 @@ namespace bigtext
 
         for (auto &file_name : input_file_name_list)
         {
-            file_word_source_with_column_default<CharT>(file_name, [&vocab_count_list](const CharT *s, size_t len, int column) {
+            file_word_source_with_column_default<CharT>(file_name, [&vocab_count_list](const CharT *s, size_t len, int column)
+            {
                 if (s != nullptr)
                 {
                     if (column < vocab_count_list.size())
