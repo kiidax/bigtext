@@ -48,6 +48,19 @@ List of commands:
    version    Show the version info.
 ```
 
+With a command name without any extra arguments, bigtext shows
+help message for the command.
+
+```
+$ bigtext count
+Usage: bigtext count [OPTION]... INPUTFILE...
+Estimate number of lines in the file by reading only the first 100MB.
+
+ -c         full count mode
+ -h         show this help message
+ INPUTFILE  input file
+ ```
+
 ## Count number of lines
 
 In many cases, you can tell the total number of samples
@@ -61,7 +74,7 @@ The quick mode estimates the total number of lines in a file by
 reading only the first 100MB. The full mode actually counts lines
 and outputs accurate numbers.
 
-### Quick
+### Quick mode
 
 The quick mode is enabled by default. EstLineCount is the estimated
 total number of lines.
@@ -77,7 +90,7 @@ shakespeare.txt FileSize        5465397
 shakespeare.txt EstLineCount    124796
 ```
 
-### Full
+### Full mode
 
 The full mode is enabled with the -c option.
 
@@ -115,15 +128,15 @@ of      15649
 ...
 ```
 
-If the file is tab separated text, then the vocab command can counts words
-in the specified columns.
+If the file contains tab separated text, then the vocab command can count
+words in the specified columns.
 
 ```
 $ bigtext vocab parallel_corpus.txt -c 1 vocab_src.txt -c 2 vocab_tgt.txt
-vocab_src.txt       TargetColumn    1
-vocab_src.txt       TargetColumn    2
- 2.159086s wall, 1.265625s user + 0.796875s system = 2.062500s CPU (95.5%)
- ```
+vocab_src.txt   TargetColumn    1
+vocab_tgt.txt   TargetColumn    2
+ 0.071133s wall, 0.000000s user + 0.015625s system = 0.015625s CPU (22.0%)
+```
 
 ## Sampling
 
