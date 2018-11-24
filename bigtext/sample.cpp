@@ -429,9 +429,9 @@ namespace bigtext
                 if (interleaving_size == 0)
                 {
                     // We use 60% of phsical memory at most.
-                    uintmax_t interleaving_size_memory = 1 + (total_file_size * 6 / 10) / physical_memory_size;
+                    uintmax_t interleaving_size_memory = 1 + (total_file_size * 5) / (physical_memory_size * 3);
                     // We use 80% of buffer size at most
-                    uintmax_t interleaving_size_buffer_size = 1 + (total_file_size * 8 / 10) / buffer_size;
+                    uintmax_t interleaving_size_buffer_size = 1 + (total_file_size * 5) / (buffer_size * 4);
                     interleaving_size = std::max(interleaving_size_memory, interleaving_size_buffer_size);
                 }
                 assert(interleaving_size >= 1);
